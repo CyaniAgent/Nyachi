@@ -1,3 +1,7 @@
+# The current project is about to be archived and discontinued; please view the successor project [Asagity-Connect](https://github.com/CyaniAgent/Asagity-Connect).
+
+
+
 # CyaniTalk
 
 [**中文**](README_CN.md) | [**English**](README.md)
