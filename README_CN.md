@@ -1,3 +1,7 @@
+# 当前项目即将归档绝版，请查看继承的项目 [Asagity-Connect](https://github.com/CyaniAgent/Asagity-Connect)。
+
+
+
 # CyaniTalk
 
 [**中文**](README_CN.md) | [**English**](README.md)
