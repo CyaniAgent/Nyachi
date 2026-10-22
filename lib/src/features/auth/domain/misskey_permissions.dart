@@ -135,7 +135,7 @@ class MisskeyPermissions {
   static const writeAdminAd = 'write:admin:ad';
   static const readAdminAd = 'read:admin:ad';
 
-  /// CyaniTalk 登录时请求的所有权限
+  /// Nyachi 登录时请求的所有权限
   static const List<String> defaultScopes = [
     readAccount,
     writeAccount,

@@ -59,7 +59,7 @@ class AuthService extends _$AuthService {
     logger.debug('生成MiAuth会话ID: $session');
 
     final uri = Uri.https(sanitizedHost, '/miauth/$session', {
-      'name': 'CyaniTalk',
+      'name': 'Nyachi',
       'permission': MisskeyPermissions.toMiAuthString(),
     });
 

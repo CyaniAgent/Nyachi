@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:convert';
-import 'package:cyanitalk/src/features/auth/application/auth_service.dart';
-import 'package:cyanitalk/src/features/auth/domain/account.dart';
-import 'package:cyanitalk/src/features/auth/presentation/widgets/add_account_dialog.dart';
-import 'package:cyanitalk/src/features/auth/presentation/widgets/misskey_permissions_sheet.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_error_widget.dart';
+import 'package:nyachi/src/features/auth/application/auth_service.dart';
+import 'package:nyachi/src/features/auth/domain/account.dart';
+import 'package:nyachi/src/features/auth/presentation/widgets/add_account_dialog.dart';
+import 'package:nyachi/src/features/auth/presentation/widgets/misskey_permissions_sheet.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/shared/widgets/cyani_error_widget.dart';
 import 'user_details_view.dart';
 
 /// 统一登录管理器组件，与设置页整体样式保持一致。

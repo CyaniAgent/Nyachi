@@ -6,18 +6,18 @@
     "configurations": [
         
         {
-            "name": "CyaniTalk",
+            "name": "Nyachi",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "CyaniTalk (profile mode)",
+            "name": "Nyachi (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "CyaniTalk (release mode)",
+            "name": "Nyachi (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

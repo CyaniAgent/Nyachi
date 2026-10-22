@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:cyanitalk/src/core/api/misskey_api.dart';
-import 'package:cyanitalk/src/core/core.dart';
-import 'package:cyanitalk/src/features/auth/domain/account.dart';
-import 'package:cyanitalk/src/features/misskey/data/misskey_repository.dart';
-import 'package:cyanitalk/src/features/misskey/domain/misskey_user.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_error_widget.dart';
+import 'package:nyachi/src/core/api/misskey_api.dart';
+import 'package:nyachi/src/core/core.dart';
+import 'package:nyachi/src/features/auth/domain/account.dart';
+import 'package:nyachi/src/features/misskey/data/misskey_repository.dart';
+import 'package:nyachi/src/features/misskey/domain/misskey_user.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/shared/widgets/cyani_error_widget.dart';
 
 part 'user_details_view.g.dart';
 

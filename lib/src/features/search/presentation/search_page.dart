@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:cyanitalk/src/core/services/search/global_search_service.dart';
-import 'package:cyanitalk/src/core/utils/logger.dart';
-import 'package:cyanitalk/src/shared/widgets/circle_icon_button.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
-import 'package:cyanitalk/src/shared/widgets/toast_helper.dart';
+import 'package:nyachi/src/core/services/search/global_search_service.dart';
+import 'package:nyachi/src/core/utils/logger.dart';
+import 'package:nyachi/src/shared/widgets/circle_icon_button.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/shared/widgets/toast_helper.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});

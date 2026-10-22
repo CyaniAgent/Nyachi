@@ -1,6 +1,6 @@
-// CyaniTalk应用程序的主组件文件
+// Nyachi应用程序的主组件文件
 //
-// 该文件包含应用程序的根组件CyaniTalkApp，负责配置应用程序的主题、路由和整体结构。
+// 该文件包含应用程序的根组件NyachiApp，负责配置应用程序的主题、路由和整体结构。
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
@@ -26,7 +26,7 @@ import 'core/services/audio_engine.dart';
 import 'core/services/timeline_cache_database.dart';
 import 'shared/widgets/custom_title_bar.dart';
 
-/// CyaniTalk应用程序的根组件
+/// Nyachi应用程序的根组件
 ///
 /// 负责配置应用程序的主题、路由和整体结构，
 /// 是整个应用程序的入口组件。
@@ -36,17 +36,17 @@ import 'shared/widgets/custom_title_bar.dart';
 /// - 处理路由配置
 /// - 初始化Misskey流媒体服务
 /// - 响应外观设置的变化
-class CyaniTalkApp extends ConsumerStatefulWidget {
-  const CyaniTalkApp({super.key});
+class NyachiApp extends ConsumerStatefulWidget {
+  const NyachiApp({super.key});
 
   @override
-  ConsumerState<CyaniTalkApp> createState() => _CyaniTalkAppState();
+  ConsumerState<NyachiApp> createState() => _NyachiAppState();
 }
 
-/// CyaniTalkApp的状态管理类
+/// NyachiApp的状态管理类
 ///
 /// 负责管理应用程序的状态，包括主题缓存和外观设置。
-class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
+class _NyachiAppState extends ConsumerState<NyachiApp>
     with WidgetsBindingObserver {
   /// 缓存的亮色主题
   ThemeData? _cachedLightTheme;
@@ -104,11 +104,11 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    logger.debug('CyaniTalkApp: 应用生命周期状态变化: $state');
+    logger.debug('NyachiApp: 应用生命周期状态变化: $state');
 
     if (state == AppLifecycleState.resumed) {
       // 应用回到前台时刷新数据
-      logger.info('CyaniTalkApp: 应用回到前台，恢复实时心跳...');
+      logger.info('NyachiApp: 应用回到前台，恢复实时心跳...');
 
       // 恢复前台心跳频率 (30s)
       ref
@@ -126,7 +126,7 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       // 应用进入后台：降低心跳频率省电，保留通知流/时间线流
-      logger.info('CyaniTalkApp: 应用进入后台，降低心跳频率...');
+      logger.info('NyachiApp: 应用进入后台，降低心跳频率...');
       ref
           .read(misskeyStreamingServiceProvider.notifier)
           .setBackgroundMode(true);
@@ -134,21 +134,21 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
 
     if (state == AppLifecycleState.detached) {
       // 应用完全退出时清理资源
-      logger.info('CyaniTalkApp: 应用正在退出，清理资源...');
+      logger.info('NyachiApp: 应用正在退出，清理资源...');
 
       // 保存所有缓存到持久化存储
       try {
         MisskeyTimelineNotifier.cacheManager.saveAllToStorage();
-        logger.info('CyaniTalkApp: 缓存已保存到持久化存储');
+        logger.info('NyachiApp: 缓存已保存到持久化存储');
       } catch (e) {
-        logger.warning('CyaniTalkApp: 保存缓存失败: $e');
+        logger.warning('NyachiApp: 保存缓存失败: $e');
       }
 
       // 清理Misskey流媒体服务
       ref.read(misskeyStreamingServiceProvider.notifier).dispose();
       // 清理通知管理器
       ref.read(notificationManagerProvider).stop();
-      logger.info('CyaniTalkApp: 资源清理完成');
+      logger.info('NyachiApp: 资源清理完成');
     }
   }
 
@@ -158,11 +158,11 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
       final shouldRefresh = await TimelineCacheDatabase().shouldRefresh('Home');
       if (!shouldRefresh) return;
 
-      logger.info('CyaniTalkApp: SQLite 记录过期，触发 Home 时间线刷新');
+      logger.info('NyachiApp: SQLite 记录过期，触发 Home 时间线刷新');
       ref.read(misskeyTimelineProvider('Home').notifier).refresh();
     } catch (e) {
       if (e.toString().contains('disposed')) return;
-      logger.warning('CyaniTalkApp: 启动刷新失败: $e');
+      logger.warning('NyachiApp: 启动刷新失败: $e');
     }
   }
 
@@ -174,10 +174,10 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
   /// @return 返回MaterialApp.router组件，作为应用程序的根组件
   @override
   Widget build(BuildContext context) {
-    logger.info('CyaniTalkApp: 初始化应用程序');
+    logger.info('NyachiApp: 初始化应用程序');
 
     final goRouter = ref.watch(goRouterProvider);
-    logger.debug('CyaniTalkApp: 加载路由配置');
+    logger.debug('NyachiApp: 加载路由配置');
 
     // 监听欢迎页完成状态，触发路由刷新
     ref.listen(welcomeCompletedProvider, (prev, next) {
@@ -188,7 +188,7 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
     final appearanceSettingsAsync = ref.watch(appearanceSettingsProvider);
 
     // Initialize Misskey Streaming Service at app level
-    logger.debug('CyaniTalkApp: 初始化Misskey流媒体服务');
+    logger.debug('NyachiApp: 初始化Misskey流媒体服务');
     ref.watch(misskeyStreamingServiceProvider);
 
     // 监听字体刷新状态以触发重建
@@ -205,7 +205,7 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
     return appearanceSettingsAsync.when(
       loading: () => Container(color: Colors.white),
       error: (error, stack) {
-        logger.error('CyaniTalkApp: 加载外观设置失败', error);
+        logger.error('NyachiApp: 加载外观设置失败', error);
         // 使用默认设置
         const defaultSettings = AppearanceSettings(
           displayMode: ThemeMode.system,
@@ -220,7 +220,7 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
               config: toastConfig,
               child: MaterialApp.router(
                 routerConfig: goRouter,
-                title: 'CyaniTalk',
+                title: 'Nyachi',
                 theme: theme,
                 darkTheme: _buildTheme(defaultSettings, Brightness.dark),
                 themeMode: defaultSettings.displayMode,
@@ -236,7 +236,7 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
       },
       data: (appearanceSettings) {
         logger.debug(
-          'CyaniTalkApp: 加载外观设置 - 显示模式: ${appearanceSettings.displayMode}, 动态色彩: ${appearanceSettings.useDynamicColor}',
+          'NyachiApp: 加载外观设置 - 显示模式: ${appearanceSettings.displayMode}, 动态色彩: ${appearanceSettings.useDynamicColor}',
         );
 
         final colorService = DynamicColorService.instance;
@@ -264,7 +264,7 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
               windowManager.setTitleBarStyle(TitleBarStyle.normal);
             }
 
-            logger.debug('CyaniTalkApp: 构建MaterialApp');
+            logger.debug('NyachiApp: 构建MaterialApp');
 
             Widget app = GlobalFontRefresher(
               child: _UpdateHandler(
@@ -272,7 +272,7 @@ class _CyaniTalkAppState extends ConsumerState<CyaniTalkApp>
                   config: toastConfig,
                   child: MaterialApp.router(
                     routerConfig: goRouter,
-                    title: 'CyaniTalk',
+                    title: 'Nyachi',
                     theme: theme,
                     darkTheme: darkTheme,
                     themeMode: appearanceSettings.displayMode,

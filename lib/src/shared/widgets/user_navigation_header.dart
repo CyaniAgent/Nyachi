@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cyanitalk/src/features/auth/application/auth_service.dart';
-import 'package:cyanitalk/src/features/auth/data/auth_repository.dart';
-import 'package:cyanitalk/src/features/auth/domain/account.dart';
-import 'package:cyanitalk/src/features/auth/presentation/widgets/add_account_dialog.dart';
-import 'package:cyanitalk/src/features/misskey/application/misskey_notifier.dart';
-import 'package:cyanitalk/src/features/misskey/application/misskey_notifications_notifier.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/features/auth/application/auth_service.dart';
+import 'package:nyachi/src/features/auth/data/auth_repository.dart';
+import 'package:nyachi/src/features/auth/domain/account.dart';
+import 'package:nyachi/src/features/auth/presentation/widgets/add_account_dialog.dart';
+import 'package:nyachi/src/features/misskey/application/misskey_notifier.dart';
+import 'package:nyachi/src/features/misskey/application/misskey_notifications_notifier.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
 
 class UserNavigationHeader extends ConsumerStatefulWidget {
   final bool isExtended;

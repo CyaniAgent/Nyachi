@@ -1,4 +1,4 @@
-name: cyanitalk
+name: nyachi
 description: "A comprehensive, multi-functional social application built with Flutter, connecting Misskey and Flarum, and belonging to CyaniAgent."
 # 以下行防止包被意外发布到
 # 使用 `flutter pub publish` 发布到 pub.dev。这是私有包的首选设置。

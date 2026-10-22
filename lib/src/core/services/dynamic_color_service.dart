@@ -15,7 +15,7 @@ class DynamicColorService extends WidgetsBindingObserver {
   static final instance = DynamicColorService._();
 
   /// MethodChannel — 接收 Windows 原生推送的强调色变化
-  static const _channel = MethodChannel('com.cyaniTalk/accent_color');
+  static const _channel = MethodChannel('com.nyachi/accent_color');
 
   /// 当前系统强调色（null 表示平台不支持或尚未获取）
   final ValueNotifier<Color?> accentColor = ValueNotifier<Color?>(null);

@@ -283,7 +283,7 @@ misskey_user_profile_page.dart          # 主页面
 
 ## 7. 与 Misskey Web 的对比
 
-| 功能 | Misskey Web | CyaniTalk (计划) |
+| 功能 | Misskey Web | Nyachi (计划) |
 |------|-------------|------------------|
 | 标签页数量 | 12+ | 12 |
 | 概览页 | ✅ 包含简介+字段+置顶 | ✅ 计划实现 |

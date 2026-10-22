@@ -1,4 +1,4 @@
 <: "Miku Miku Ni Shite Ageru! (oﾟ▽ﾟ)o"
 <: "Senpai, look! I'm running in the AIScript Console!"
 <: "Primary color is #39C5BB, just like my hair! 01!"
-Mk:api("notes/create", { text: "Miku Miku Ni Shite Ageru! (oﾟ▽ﾟ)o Posted from CyaniTalk AIScript Console! #Misskey #AiScript" })
+Mk:api("notes/create", { text: "Miku Miku Ni Shite Ageru! (oﾟ▽ﾟ)o Posted from Nyachi AIScript Console! #Misskey #AiScript" })

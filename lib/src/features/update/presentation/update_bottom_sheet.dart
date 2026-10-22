@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:cyanitalk/src/core/utils/logger.dart';
-import 'package:cyanitalk/src/features/update/application/update_notifier.dart';
-import 'package:cyanitalk/src/features/update/domain/app_update.dart';
-import 'package:cyanitalk/src/shared/widgets/adaptive_sheet.dart';
-import 'package:cyanitalk/src/shared/widgets/toast_helper.dart';
+import 'package:nyachi/src/core/utils/logger.dart';
+import 'package:nyachi/src/features/update/application/update_notifier.dart';
+import 'package:nyachi/src/features/update/domain/app_update.dart';
+import 'package:nyachi/src/shared/widgets/adaptive_sheet.dart';
+import 'package:nyachi/src/shared/widgets/toast_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<void> showUpdateBottomSheet(BuildContext context, AppUpdate update) {
@@ -123,7 +123,7 @@ class _UpdateBottomSheetContent extends ConsumerWidget {
   }
 
   Future<void> _openGitHubReleases(BuildContext context) async {
-    const url = 'https://github.com/CyaniAgent/CyaniTalk/releases';
+    const url = 'https://github.com/CyaniAgent/Nyachi/releases';
     try {
       logger.info('UpdateBottomSheet: Opening GitHub releases: $url');
       final uri = Uri.parse(url);

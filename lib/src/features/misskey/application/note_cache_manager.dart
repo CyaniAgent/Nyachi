@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:cyanitalk/src/features/misskey/domain/note.dart';
+import 'package:nyachi/src/features/misskey/domain/note.dart';
 import '/src/core/core.dart';
 
 /// 笔记缓存项

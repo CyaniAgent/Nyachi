@@ -35,7 +35,7 @@ class AboutPage extends ConsumerStatefulWidget {
 /// AboutPage的状态管理类
 class _AboutPageState extends ConsumerState<AboutPage> {
   /// 应用程序名称
-  String _appName = 'CyaniTalk';
+  String _appName = 'Nyachi';
 
   /// 应用程序版本号
   String _version = '';
@@ -106,7 +106,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
       logger.info('AboutPage: Initializing package info');
       final info = await PackageInfo.fromPlatform();
       setState(() {
-        _appName = "CyaniTalk";
+        _appName = "Nyachi";
         _version = '${info.version}+${info.buildNumber}';
       });
       logger.info(
@@ -143,7 +143,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
       logger.info('AboutPage: Fetching GitHub contributors from API');
       final dio = NetworkClient().createDio(host: 'api.github.com');
       final response = await dio.get(
-        '/repos/CyaniAgent/CyaniTalk/contributors',
+        '/repos/CyaniAgent/Nyachi/contributors',
         options: Options(
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
@@ -215,7 +215,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
       logger.info('AboutPage: Refreshing contributors in background');
       final dio = NetworkClient().createDio(host: 'api.github.com');
       final response = await dio.get(
-        '/repos/CyaniAgent/CyaniTalk/contributors',
+        '/repos/CyaniAgent/Nyachi/contributors',
         options: Options(
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
@@ -244,7 +244,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
   Future<void> _launchGitHub() async {
     try {
       logger.info('AboutPage: Launching GitHub project page');
-      final url = Uri.parse('https://github.com/CyaniAgent/CyaniTalk');
+      final url = Uri.parse('https://github.com/CyaniAgent/Nyachi');
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         if (mounted) {
           logger.warning('AboutPage: Failed to launch GitHub page');

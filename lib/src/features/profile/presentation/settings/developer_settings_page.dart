@@ -152,14 +152,14 @@ class _DeveloperSettingsPageState extends ConsumerState<DeveloperSettingsPage> {
                   iconColor: SettingsIconColors.brown,
                   title: 'settings_developer_submit_issue'.tr(),
                   onTap: () =>
-                      _launchUrl('https://github.com/CyaniAgent/CyaniTalk/issues'),
+                      _launchUrl('https://github.com/CyaniAgent/Nyachi/issues'),
                 ),
                 SettingsTile(
                   icon: Icons.merge_type,
                   iconColor: SettingsIconColors.brown,
                   title: 'settings_developer_submit_pr'.tr(),
                   onTap: () =>
-                      _launchUrl('https://github.com/CyaniAgent/CyaniTalk/pulls'),
+                      _launchUrl('https://github.com/CyaniAgent/Nyachi/pulls'),
                 ),
               ],
             ),

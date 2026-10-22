@@ -30,7 +30,7 @@ bool FlutterWindow::OnCreate() {
   // Create the MethodChannel for accent color change notifications.
   accent_color_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
       flutter_controller_->engine()->messenger(),
-      "com.cyaniTalk/accent_color",
+      "com.nyachi/accent_color",
       &flutter::StandardMethodCodec::GetInstance());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {

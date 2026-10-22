@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:cyanitalk/src/features/misskey/application/misskey_notifier.dart';
+import 'package:nyachi/src/features/misskey/application/misskey_notifier.dart';
 import '/src/shared/widgets/cyani_loading_indicator.dart';
 import 'misskey_clip_notes_page.dart';
 

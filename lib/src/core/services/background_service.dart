@@ -29,9 +29,9 @@ Future<void> initializeBackgroundService() async {
 
   // Android notification channel setup
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'cyanitalk_backstage_channel',
-    'CyaniTalk Backstage Service',
-    description: 'This channel is used for CyaniTalk background process.',
+    'nyachi_backstage_channel',
+    'Nyachi Backstage Service',
+    description: 'This channel is used for Nyachi background process.',
     importance: Importance.low,
   );
 
@@ -51,8 +51,8 @@ Future<void> initializeBackgroundService() async {
       onStart: onStart,
       autoStart: true,
       isForegroundMode: true,
-      notificationChannelId: 'cyanitalk_backstage_channel',
-      initialNotificationTitle: 'CyaniTalk Backstage',
+      notificationChannelId: 'nyachi_backstage_channel',
+      initialNotificationTitle: 'Nyachi Backstage',
       initialNotificationContent: 'Running in background to ensure stability',
       foregroundServiceNotificationId: 888,
     ),
@@ -109,13 +109,13 @@ void onStart(ServiceInstance service) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         service.setForegroundNotificationInfo(
-          title: "CyaniTalk Backstage",
+          title: "Nyachi Backstage",
           content: "Keep your connection alive (≧▽≦)",
         );
       }
     }
 
     // Perform light background tasks if needed
-    debugPrint('CyaniTalk Backstage is humming... desu!');
+    debugPrint('Nyachi Backstage is humming... desu!');
   });
 }

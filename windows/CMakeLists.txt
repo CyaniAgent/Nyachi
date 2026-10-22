@@ -1,6 +1,6 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(cyanitalk LANGUAGES CXX)
+project(Nyachi LANGUAGES CXX)
 
 # Suppress CMP0175 warning from plugins using add_custom_command(TARGET ... DEPENDS)
 # Must be set after cmake_minimum_required and before add_subdirectory/plugin includes
@@ -11,7 +11,7 @@ endif()
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "cyanitalk")
+set(BINARY_NAME "Nyachi")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

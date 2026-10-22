@@ -331,8 +331,8 @@ class AppLogger {
   /// 获取导出目录
   Future<Directory> _getExportDirectory() async {
     if (Platform.isAndroid) {
-      // Android 平台：/storage/emulated/0/Download/CyaniTalk Logs
-      return Directory('/storage/emulated/0/Download/CyaniTalk Logs');
+      // Android 平台：/storage/emulated/0/Download/Nyachi Logs
+      return Directory('/storage/emulated/0/Download/Nyachi Logs');
     }
 
     // 其他平台默认使用内部日志目录

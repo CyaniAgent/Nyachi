@@ -175,7 +175,7 @@ class LogoSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'CyaniTalk',
+            'Nyachi',
             style: theme.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.surface,

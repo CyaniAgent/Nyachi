@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'package:cyanitalk/src/core/core.dart';
+import 'package:nyachi/src/core/core.dart';
 
 /// Controller for the custom title bar.
 ///
 /// Pages can use [CustomTitleBar.of] to access the controller and update the
 /// title bar's title and actions.
 class TitleBarController extends ChangeNotifier {
-  String _title = 'CyaniTalk';
+  String _title = 'Nyachi';
   List<Widget> _actions = const [];
 
   String get title => _title;
@@ -32,7 +32,7 @@ class TitleBarController extends ChangeNotifier {
 
   /// Reset title bar to defaults.
   void reset() {
-    _title = 'CyaniTalk';
+    _title = 'Nyachi';
     _actions = const [];
     notifyListeners();
   }

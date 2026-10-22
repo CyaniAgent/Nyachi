@@ -26,7 +26,7 @@ class Constants {
   /// 默认日志文件前缀
   ///
   /// 日志文件的命名前缀，后续会添加时间戳。
-  static const String logFilePrefix = 'CyaniTalk_Console_log';
+  static const String logFilePrefix = 'Nyachi_Console_log';
 
   /// 默认日志级别
   ///
@@ -37,6 +37,6 @@ class Constants {
   ///
   /// 精简 UA，符合 RFC 7231 规范，不包含具体浏览器版本号。
   static String getUserAgent() {
-    return 'CyaniTalk/$appVersion (Misskey Client; +https://github.com/user/CyaniTalk)';
+    return 'Nyachi/$appVersion (Misskey Client; +https://github.com/CyaniAgent/Nyachi)';
   }
 }

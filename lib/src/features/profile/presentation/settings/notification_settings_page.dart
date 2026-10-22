@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:cyanitalk/src/core/services/notification_service.dart';
-import 'package:cyanitalk/src/core/theme/color_constants.dart';
-import 'package:cyanitalk/src/core/widgets/settings_widgets.dart';
-import 'package:cyanitalk/src/features/profile/application/notification_settings_provider.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
-import 'package:cyanitalk/src/shared/widgets/toast_helper.dart';
+import 'package:nyachi/src/core/services/notification_service.dart';
+import 'package:nyachi/src/core/theme/color_constants.dart';
+import 'package:nyachi/src/core/widgets/settings_widgets.dart';
+import 'package:nyachi/src/features/profile/application/notification_settings_provider.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/shared/widgets/toast_helper.dart';
 
 class NotificationSettingsPage extends ConsumerWidget {
   const NotificationSettingsPage({super.key});

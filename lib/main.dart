@@ -1,4 +1,4 @@
-// CyaniTalk应用程序的主入口文件
+// Nyachi应用程序的主入口文件
 //
 // 该文件包含应用程序的启动逻辑，负责初始化Flutter应用并运行主组件。
 import 'package:flutter/material.dart';
@@ -27,7 +27,7 @@ import 'package:window_manager/window_manager.dart';
 /// - 初始化国际化支持
 /// - 创建Riverpod的ProviderContainer
 /// - 初始化核心服务
-/// - 运行CyaniTalkApp组件
+/// - 运行NyachiApp组件
 /// - 延迟加载非核心服务
 ///
 /// 这是应用程序的启动点，负责所有必要的初始化工作。
@@ -66,7 +66,7 @@ void main() async {
 
   // 初始化日志系统，传入用户的日志级别设置
   await logger.initialize(logLevel: storedLogLevel);
-  logger.info('CyaniTalk app started');
+  logger.info('Nyachi app started');
 
   // 初始化性能监控
   performanceMonitor.initialize();
@@ -101,7 +101,7 @@ void main() async {
       fallbackLocale: const Locale('ja', 'JP'),
       child: UncontrolledProviderScope(
         container: container,
-        child: const CyaniTalkApp(),
+        child: const NyachiApp(),
       ),
     ),
   );

@@ -570,7 +570,7 @@ class MisskeyRepository implements IMisskeyRepository {
 
   @override
   Future<String?> getOrCreateAppFolder() async {
-    const folderName = 'CyaniTalk App Transfered';
+    const folderName = 'Nyachi App Transfered';
     try {
       logger.info('MisskeyRepository: Looking for folder "$folderName"');
       final folders = await getDriveFolders();
@@ -694,7 +694,7 @@ class MisskeyRepository implements IMisskeyRepository {
       'MisskeyRepository: Uploading drive file "$filename", folderId=$folderId',
     );
     try {
-      // If no folderId is specified, we try to use the CyaniTalk App Transfered folder
+      // If no folderId is specified, we try to use the Nyachi App Transfered folder
       final targetFolderId = folderId ?? await getOrCreateAppFolder();
 
       final (data, error) = await api.uploadDriveFile(
@@ -1069,7 +1069,7 @@ class MisskeyRepository implements IMisskeyRepository {
         );
         final newClip = await api.createClip(
           'Bookmarks',
-          description: 'Created by CyaniTalk',
+          description: 'Created by Nyachi',
         );
         clipId = newClip['id'];
       }

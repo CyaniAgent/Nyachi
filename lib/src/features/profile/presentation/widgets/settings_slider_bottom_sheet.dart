@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:cyanitalk/src/shared/widgets/adaptive_sheet.dart';
-import 'package:cyanitalk/src/shared/widgets/expressive_slider.dart';
+import 'package:nyachi/src/shared/widgets/adaptive_sheet.dart';
+import 'package:nyachi/src/shared/widgets/expressive_slider.dart';
 
 /// 底部弹窗滑块组件
 class SettingsSliderBottomSheet extends StatefulWidget {

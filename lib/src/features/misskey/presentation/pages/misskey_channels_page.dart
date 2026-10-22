@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:cyanitalk/src/features/misskey/application/misskey_notifier.dart';
-import 'package:cyanitalk/src/features/misskey/domain/channel.dart';
-import 'package:cyanitalk/src/features/misskey/presentation/pages/misskey_channel_details_page.dart';
+import 'package:nyachi/src/features/misskey/application/misskey_notifier.dart';
+import 'package:nyachi/src/features/misskey/domain/channel.dart';
+import 'package:nyachi/src/features/misskey/presentation/pages/misskey_channel_details_page.dart';
 import '/src/shared/widgets/cyani_loading_indicator.dart';
 
 /// Misskey 频道页面组件

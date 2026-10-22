@@ -196,7 +196,7 @@ class CacheItem {
 /// 支持不同类型缓存的分类管理和自动清理。
 class CacheManager {
   /// 缓存目录名称
-  static const String _cacheDirName = 'CyaniTalk Cached Files';
+  static const String _cacheDirName = 'Nyachi Cached Files';
 
   /// 首选项键：缓存目录路径
   static const String _prefKey = 'cache_directory_path';
@@ -242,7 +242,7 @@ class CacheManager {
   /// 获取缓存目录
   ///
   /// 首先尝试从首选项中获取保存的缓存目录路径，
-  /// 如果不存在或路径无效，则使用默认路径（下载目录下的CyaniTalk Cached Files文件夹）。
+  /// 如果不存在或路径无效，则使用默认路径（下载目录下的Nyachi Cached Files文件夹）。
   ///
   /// @return 缓存目录的Directory对象
   /// @throws Exception 如果无法获取缓存目录

@@ -47,11 +47,11 @@ class Update extends _$Update {
           receiveTimeout: const Duration(seconds: 15),
         ),
       ).get(
-        'https://api.github.com/repos/CyaniAgent/CyaniTalk/releases/latest',
+        'https://api.github.com/repos/CyaniAgent/Nyachi/releases/latest',
         options: Options(
           headers: {
             'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'CyaniTalk',
+            'User-Agent': 'Nyachi',
           },
         ),
       );

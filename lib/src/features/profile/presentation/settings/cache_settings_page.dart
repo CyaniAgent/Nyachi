@@ -3,16 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:cyanitalk/src/core/utils/cache_manager.dart';
-import 'package:cyanitalk/src/core/utils/logger.dart';
-import 'package:cyanitalk/src/core/services/app_reset_service.dart';
-import 'package:cyanitalk/src/core/services/misskey_image_cache_database.dart';
-import 'package:cyanitalk/src/core/services/timeline_cache_database.dart';
-import 'package:cyanitalk/src/features/auth/application/auth_service.dart';
-import 'package:cyanitalk/src/core/widgets/settings_widgets.dart';
-import 'package:cyanitalk/src/features/profile/presentation/widgets/settings_slider_bottom_sheet.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
-import 'package:cyanitalk/src/shared/widgets/toast_helper.dart';
+import 'package:nyachi/src/core/utils/cache_manager.dart';
+import 'package:nyachi/src/core/utils/logger.dart';
+import 'package:nyachi/src/core/services/app_reset_service.dart';
+import 'package:nyachi/src/core/services/misskey_image_cache_database.dart';
+import 'package:nyachi/src/core/services/timeline_cache_database.dart';
+import 'package:nyachi/src/features/auth/application/auth_service.dart';
+import 'package:nyachi/src/core/widgets/settings_widgets.dart';
+import 'package:nyachi/src/features/profile/presentation/widgets/settings_slider_bottom_sheet.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/shared/widgets/toast_helper.dart';
 
 class CacheSettingsPage extends ConsumerStatefulWidget {
   const CacheSettingsPage({super.key});

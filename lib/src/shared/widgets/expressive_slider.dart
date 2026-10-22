@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cyanitalk/src/core/theme/design_tokens.dart';
+import 'package:nyachi/src/core/theme/design_tokens.dart';
 
 class ExpressiveSlider extends StatefulWidget {
   final double value;

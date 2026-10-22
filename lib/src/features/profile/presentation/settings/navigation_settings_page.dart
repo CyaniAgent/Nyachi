@@ -2,11 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cyanitalk/src/core/navigation/navigation.dart';
-import 'package:cyanitalk/src/core/navigation/navigation_element.dart';
-import 'package:cyanitalk/src/core/theme/desktop_semantic_colors.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
-import 'package:cyanitalk/src/shared/widgets/toast_helper.dart';
+import 'package:nyachi/src/core/navigation/navigation.dart';
+import 'package:nyachi/src/core/navigation/navigation_element.dart';
+import 'package:nyachi/src/core/theme/desktop_semantic_colors.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/shared/widgets/toast_helper.dart';
 
 class NavigationSettingsPage extends ConsumerStatefulWidget {
   const NavigationSettingsPage({super.key});

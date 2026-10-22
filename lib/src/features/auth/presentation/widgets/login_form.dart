@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:cyanitalk/src/shared/widgets/toast_helper.dart';
+import 'package:nyachi/src/shared/widgets/toast_helper.dart';
 import 'login_form_components.dart';
-import 'package:cyanitalk/src/features/auth/application/auth_service.dart';
-import 'package:cyanitalk/src/core/utils/logger.dart';
+import 'package:nyachi/src/features/auth/application/auth_service.dart';
+import 'package:nyachi/src/core/utils/logger.dart';
 
 /// 统一的登录表单控件
 ///

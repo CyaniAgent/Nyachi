@@ -1,8 +1,4 @@
-# 当前项目即将归档绝版，请查看继承的项目 [Asagity-Connect](https://github.com/CyaniAgent/Asagity-Connect)。
-
-
-
-# CyaniTalk
+# Nyachi
 
 [**中文**](README_CN.md) | [**English**](README.md)
 
@@ -14,16 +10,16 @@
 ![Flarum](https://img.shields.io/badge/Flarum-E7742E?style=for-the-badge&logo=flarum&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=for-the-badge)
 
-**CyaniTalk** 是一个基于 Flutter 开发的多元化跨平台社交客户端。它连接了 **Misskey**（去中心化的动态社交平台）与 **Flarum**（结构化的轻论坛），旨在为用户提供从“广场喧嚣”到“深度讨论”的统一社区体验。
+**Nyachi** 是一个基于 Flutter 开发的多元化跨平台社交客户端。它连接了 **Misskey**（去中心化的动态社交平台）与 **Flarum**（结构化的轻论坛），旨在为用户提供从“广场喧嚣”到“深度讨论”的统一社区体验。
 
-CyaniTalk 采用**响应式外壳 (Responsive Shell)** 设计，能够完美适配移动端（iOS/Android）和桌面端（Windows/macOS/Linux），并提供原生级的实时流体验与高级管理工具。
+Nyachi 采用**响应式外壳 (Responsive Shell)** 设计，能够完美适配移动端（iOS/Android）和桌面端（Windows/macOS/Linux），并提供原生级的实时流体验与高级管理工具。
 
 ---
 
 ## 🌟 核心功能
 
 ### 🎨 自适应 UI/UX
-CyaniTalk 将导航逻辑与内容展示分离，在不同设备上提供符合直觉的操作体验：
+Nyachi 将导航逻辑与内容展示分离，在不同设备上提供符合直觉的操作体验：
 *   **移动端：** 经典的 **底部导航栏 (Bottom Navigation)**，便于单手操作。
 *   **桌面端：** 垂直的 **侧边导航轨 (Navigation Rail)**，利用宽屏优势，支持 Master-Detail（列表-详情）分栏浏览。
 *   **统一分类：** 无缝切换 Misskey 动态、论坛讨论、网盘资源、消息通知与个人中心。
@@ -107,8 +103,8 @@ CyaniTalk 将导航逻辑与内容展示分离，在不同设备上提供符合�
 
 1.  **克隆仓库：**
     ```bash
-    git clone https://github.com/CyaniAgent/CyaniTalk.git
-    cd CyaniTalk
+    git clone https://github.com/CyaniAgent/Nyachi.git
+    cd Nyachi
     ```
 
 2.  **安装依赖：**

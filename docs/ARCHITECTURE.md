@@ -1,7 +1,7 @@
 # Architecture Design Document
 
 ## 1. Overview
-CyaniTalk is a complex, data-intensive Flutter application that interacts with the **Misskey** (Node.js/Postgres) backend ecosystem.
+Nyachi is a complex, data-intensive Flutter application that interacts with the **Misskey** (Node.js/Postgres) backend ecosystem.
 
 The architecture follows a **Feature-First, Layered Architecture** powered by **Riverpod** for dependency injection and state management. This approach ensures scalability, testability, and a clean separation of concerns.
 
@@ -12,7 +12,7 @@ The architecture follows a **Feature-First, Layered Architecture** powered by **
 We utilize a **Feature-Based** directory structure. Code is organized by what it *does* (e.g., Auth, Forum, Timeline) rather than what it *is* (e.g., Screens, Widgets).
 
 ```text
-CyaniTalk/
+Nyachi/
 ├── assets/                  # Static resources
 │   ├── fonts/               # Custom fonts (Google Sans, JetBrains Mono, etc.)
 │   ├── images/              # Icons, logos, placeholders
@@ -70,7 +70,7 @@ We use Riverpod to manage state and inject dependencies.
 
 ## 5. Adaptive UI/UX Strategy
 
-CyaniTalk uses a Responsive Shell architecture to separate navigation logic from content.
+Nyachi uses a Responsive Shell architecture to separate navigation logic from content.
 
 ### 5.1. The Breakpoint System
 

@@ -1,4 +1,4 @@
-# CyaniTalk 项目分析报告
+# Nyachi 项目分析报告
 
 > 生成日期: 2026-06-30
 > SDK: Flutter 3.44.3
@@ -204,7 +204,7 @@
 
 ### 2.1 `SaucePalette.lightScheme()` + `MaterialTheme` — 两套代码均死代码 🔴
 
-`SaucePalette` 定义了手写的完整亮/暗色 `ColorScheme`（[sauce_palette.dart](file:///d:/Users/li/Documents/GitHub/CyaniTalk/lib/src/core/theme/sauce_palette.dart#L79-L154)），`MaterialTheme` 使用了它们（[material_theme.dart](file:///d:/Users/li/Documents/GitHub/CyaniTalk/lib/src/core/theme/material_theme.dart#L19-L25)），但**没有任何地方调用 `MaterialTheme`**：
+`SaucePalette` 定义了手写的完整亮/暗色 `ColorScheme`（[sauce_palette.dart](file:///d:/Users/li/Documents/GitHub/Nyachi/lib/src/core/theme/sauce_palette.dart#L79-L154)），`MaterialTheme` 使用了它们（[material_theme.dart](file:///d:/Users/li/Documents/GitHub/Nyachi/lib/src/core/theme/material_theme.dart#L19-L25)），但**没有任何地方调用 `MaterialTheme`**：
 
 - `app.dart` 的 `_buildTheme` 方法（第 330-392 行）直接使用 `ColorScheme.fromSeed()` 构建配色
 - `SaucePalette.lightScheme()` 和 `SaucePalette.darkScheme()` 从未被执行
@@ -229,7 +229,7 @@ final seedColor = const Color(0xFF39C5BB);  // mikuGreen
 
 ### 2.3 `useDynamicColor` 命名误导 + secondary 硬编码风格断裂 🟡
 
-在 [app.dart](file:///d:/Users/li/Documents/GitHub/CyaniTalk/lib/src/app.dart#L330-L337) 中：
+在 [app.dart](file:///d:/Users/li/Documents/GitHub/Nyachi/lib/src/app.dart#L330-L337) 中：
 ```dart
 colorScheme: settings.useDynamicColor
     ? ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness)
@@ -249,7 +249,7 @@ colorScheme: settings.useDynamicColor
 
 ### 2.4 Welcome 页硬编码 `SaucePalette.mikuGreen` — 不响应主题切换 🟡
 
-[welcome_page.dart](file:///d:/Users/li/Documents/GitHub/CyaniTalk/lib/src/features/welcome/presentation/welcome_page.dart) 中 **19 处**使用了 `SaucePalette.mikuGreen` 硬编码颜色，而非 `Theme.of(context).colorScheme.primary`：
+[welcome_page.dart](file:///d:/Users/li/Documents/GitHub/Nyachi/lib/src/features/welcome/presentation/welcome_page.dart) 中 **19 处**使用了 `SaucePalette.mikuGreen` 硬编码颜色，而非 `Theme.of(context).colorScheme.primary`：
 
 | 行号                         | 使用方式           |
 | ---------------------------- | ------------------ |
@@ -263,7 +263,7 @@ colorScheme: settings.useDynamicColor
 
 ### 2.5 `desktopNullAppBar` 函数 — 多余抽象 🟢
 
-[platform_app_bar.dart](file:///d:/Users/li/Documents/GitHub/CyaniTalk/lib/src/shared/widgets/platform_app_bar.dart) 中定义了两个函数：
+[platform_app_bar.dart](file:///d:/Users/li/Documents/GitHub/Nyachi/lib/src/shared/widgets/platform_app_bar.dart) 中定义了两个函数：
 - `desktopNullAppBar(AppBar? appBar)`: 桌面端返回 null，移动端返回传入的 AppBar
 - `rootAppBar(AppBar? appBar)`: 始终返回传入的 AppBar
 
@@ -283,7 +283,7 @@ colorScheme: settings.useDynamicColor
 
 ```dart
 final response = await Dio().get(
-  'https://api.github.com/repos/CyaniAgent/CyaniTalk/releases/latest',
+  'https://api.github.com/repos/CyaniAgent/Nyachi/releases/latest',
   // 无超时、无重试、无日志拦截器、无限流
 );
 ```
@@ -556,7 +556,7 @@ misskeyUser
 
 #### 2.9.7 `showAdaptiveSheet` — 桌面端使用 `showGeneralDialog` 弹出诡异侧边栏 🔴
 
-最特殊的是 `AddAccountBottomSheet`（登录/添加账户弹窗），它通过 `showAdaptiveSheet()`（[adaptive_sheet.dart](file:///d:/Users/li/Documents/GitHub/CyaniTalk/lib/src/shared/widgets/adaptive_sheet.dart)） 弹出：
+最特殊的是 `AddAccountBottomSheet`（登录/添加账户弹窗），它通过 `showAdaptiveSheet()`（[adaptive_sheet.dart](file:///d:/Users/li/Documents/GitHub/Nyachi/lib/src/shared/widgets/adaptive_sheet.dart)） 弹出：
 
 ```dart
 // mobile  → showModalBottomSheet (正常)
@@ -664,7 +664,7 @@ AddAccountBottomSheet.show()
 | -------------------- | ------------------------------------------------------- | ---------- |
 | **A - 相对路径**     | `import '../widgets/settings_slider_bottom_sheet.dart'` | 少量       |
 | **B - 绝对 `/src/`** | `import '/src/core/utils/logger.dart'`                  | 大量       |
-| **C - package**      | `import 'package:cyanitalk/src/...'`                    | 约 24 处   |
+| **C - package**      | `import 'package:nyachi/src/...'`                    | 约 24 处   |
 
 **严重混用示例**:
 - `settings_page.dart`: 风格 A + 风格 B 混用

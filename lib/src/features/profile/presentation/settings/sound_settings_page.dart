@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cyanitalk/src/core/services/audio_engine.dart';
-import 'package:cyanitalk/src/core/theme/color_constants.dart';
-import 'package:cyanitalk/src/core/widgets/settings_widgets.dart';
-import 'package:cyanitalk/src/core/widgets/sound_picker.dart';
-import 'package:cyanitalk/src/features/profile/application/sound_settings_provider.dart';
-import 'package:cyanitalk/src/shared/widgets/cyani_loading_indicator.dart';
-import 'package:cyanitalk/src/shared/widgets/toast_helper.dart';
+import 'package:nyachi/src/core/services/audio_engine.dart';
+import 'package:nyachi/src/core/theme/color_constants.dart';
+import 'package:nyachi/src/core/widgets/settings_widgets.dart';
+import 'package:nyachi/src/core/widgets/sound_picker.dart';
+import 'package:nyachi/src/features/profile/application/sound_settings_provider.dart';
+import 'package:nyachi/src/shared/widgets/cyani_loading_indicator.dart';
+import 'package:nyachi/src/shared/widgets/toast_helper.dart';
 
 /// 声音插槽配置
 class _SoundSlotConfig {

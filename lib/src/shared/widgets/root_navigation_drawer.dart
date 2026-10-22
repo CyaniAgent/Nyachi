@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cyanitalk/src/core/navigation/navigation.dart';
-import 'package:cyanitalk/src/core/navigation/navigation_element.dart';
-import 'package:cyanitalk/src/core/navigation/sub_navigation_notifier.dart';
-import 'package:cyanitalk/src/shared/widgets/user_navigation_header.dart';
+import 'package:nyachi/src/core/navigation/navigation.dart';
+import 'package:nyachi/src/core/navigation/navigation_element.dart';
+import 'package:nyachi/src/core/navigation/sub_navigation_notifier.dart';
+import 'package:nyachi/src/shared/widgets/user_navigation_header.dart';
 
 class RootNavigationDrawer extends ConsumerWidget {
   final int selectedRootIndex;

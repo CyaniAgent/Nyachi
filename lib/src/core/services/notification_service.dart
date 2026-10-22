@@ -39,7 +39,7 @@ class NotificationService {
       macOS: initializationSettingsDarwin,
       linux: initializationSettingsLinux,
       windows: WindowsInitializationSettings(
-        appName: 'CyaniTalk',
+        appName: 'Nyachi',
         appUserModelId: 'app.CyaniAgent.Talk',
         guid: '3F2504E0-4F89-11D3-9A0C-0305E82C3301',
       ),
@@ -74,9 +74,9 @@ class NotificationService {
           >();
       if (androidImplementation != null) {
         const channel = AndroidNotificationChannel(
-          'cyanitalk_general_channel',
-          'CyaniTalk Notifications',
-          description: 'General notifications for CyaniTalk',
+          'nyachi_general_channel',
+          'Nyachi Notifications',
+          description: 'General notifications for Nyachi',
           importance: Importance.max,
         );
         await androidImplementation.createNotificationChannel(channel);
@@ -159,9 +159,9 @@ class NotificationService {
     }
 
     final androidNotificationDetails = AndroidNotificationDetails(
-      'cyanitalk_general_channel',
-      'CyaniTalk Notifications',
-      channelDescription: 'General notifications for CyaniTalk',
+      'nyachi_general_channel',
+      'Nyachi Notifications',
+      channelDescription: 'General notifications for Nyachi',
       importance: Importance.max,
       priority: Priority.high,
       groupKey: groupKey,

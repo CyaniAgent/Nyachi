@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "CyaniTalk" "\0"
+            VALUE "FileDescription", "Nyachi" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "CyaniTalk" "\0"
+            VALUE "InternalName", "Nyachi" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 CyaniAgent. All rights reserved." "\0"
-            VALUE "OriginalFilename", "CyaniTalk.exe" "\0"
-            VALUE "ProductName", "CyaniTalk" "\0"
+            VALUE "OriginalFilename", "Nyachi.exe" "\0"
+            VALUE "ProductName", "Nyachi" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

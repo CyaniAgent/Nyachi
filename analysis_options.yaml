@@ -10,6 +10,13 @@
 analyzer:
   errors:
     use_null_aware_elements: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
+    - linux/**
 include: package:flutter_lints/flutter.yaml
 
 linter:

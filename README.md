@@ -1,8 +1,4 @@
-# The current project is about to be archived and discontinued; please view the successor project [Asagity-Connect](https://github.com/CyaniAgent/Asagity-Connect).
-
-
-
-# CyaniTalk
+# Nyachi
 
 [**中文**](README_CN.md) | [**English**](README.md)
 
@@ -14,16 +10,16 @@
 ![Flarum](https://img.shields.io/badge/Flarum-E7742E?style=for-the-badge&logo=flarum&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=for-the-badge)
 
-**CyaniTalk** is a diversified, cross-platform social client built with Flutter. It bridges the gap between **Misskey** (decentralized micro-blogging) and **Flarum** (structured community forums), offering a unified experience for both casual social interaction and deep technical discussions.
+**Nyachi** is a diversified, cross-platform social client built with Flutter. It bridges the gap between **Misskey** (decentralized micro-blogging) and **Flarum** (structured community forums), offering a unified experience for both casual social interaction and deep technical discussions.
 
-Designed with a **Responsive Shell**, CyaniTalk adapts seamlessly between mobile (iOS/Android) and desktop (Windows/macOS/Linux) environments, providing native-tier features like real-time streaming and advanced administrative tools.
+Designed with a **Responsive Shell**, Nyachi adapts seamlessly between mobile (iOS/Android) and desktop (Windows/macOS/Linux) environments, providing native-tier features like real-time streaming and advanced administrative tools.
 
 ---
 
 ## 🌟 Key Features
 
 ### 🎨 Adaptive UI/UX
-CyaniTalk decouples the navigation logic from the content to provide an ergonomic experience on any device:
+Nyachi decouples the navigation logic from the content to provide an ergonomic experience on any device:
 *   **Mobile:** Classic **Bottom Navigation Bar** for one-handed use.
 *   **Desktop:** Vertical **Navigation Rail** for wide screens, utilizing a Master-Detail view for efficient browsing.
 *   **Unified Sections:** Access Misskey, Forum, Drive, Messages, and Profile seamlessly.
@@ -107,8 +103,8 @@ CyaniTalk decouples the navigation logic from the content to provide an ergonomi
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/CyaniAgent/CyaniTalk.git
-    cd CyaniTalk
+    git clone https://github.com/CyaniAgent/Nyachi.git
+    cd Nyachi
     ```
 
 2.  **Install dependencies:**

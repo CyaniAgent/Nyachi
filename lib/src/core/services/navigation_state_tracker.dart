@@ -15,7 +15,7 @@ class NavigationPath extends _$NavigationPath {
   static const rootPaths = ['/misskey', '/cloud', '/messaging', '/profile'];
 
   String pageName(String path) {
-    if (path.isEmpty) return 'CyaniTalk';
+    if (path.isEmpty) return 'Nyachi';
 
     for (final rootPath in rootPaths) {
       if (path == rootPath ||
@@ -41,7 +41,7 @@ class NavigationPath extends _$NavigationPath {
       case '/profile':
         return '我';
       default:
-        return 'CyaniTalk';
+        return 'Nyachi';
     }
   }
 
@@ -57,6 +57,6 @@ class NavigationPath extends _$NavigationPath {
     if (location == '/misskey/notifications') return '通知';
     if (location.startsWith('/misskey/user/')) return '用户资料';
     if (location.startsWith('/messaging/chat/')) return '聊天';
-    return 'CyaniTalk';
+    return 'Nyachi';
   }
 }

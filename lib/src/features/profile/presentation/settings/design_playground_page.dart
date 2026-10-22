@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cyanitalk/src/core/theme/design_tokens.dart';
+import 'package:nyachi/src/core/theme/design_tokens.dart';
 
 class DesignPlaygroundPage extends StatelessWidget {
   const DesignPlaygroundPage({super.key});
