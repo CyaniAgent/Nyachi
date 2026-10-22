@@ -1,0 +1,62 @@
+name: Feature request
+description: Propose a feature or improvement for Nyachi
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem before the solution. The project is in a rewrite;
+        some features may be intentionally out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem does this solve?
+      placeholder: As a ... I cannot ... because ...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should happen?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Timeline / notes
+        - Posting / composer
+        - Notifications
+        - Messaging
+        - Drive / media
+        - Search
+        - Settings / accessibility
+        - Theming / UI
+        - Build / platform
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, links, prior art, or scope notes.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and discussions.
+          required: true
+        - label: This request does not contain secrets or personal data.
+          required: true

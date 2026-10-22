@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/CyaniAgent/Nyachi/security/advisories/new
+    about: Report vulnerabilities privately. Do not open a public issue.
+  - name: Support and contribution guide
+    url: https://github.com/CyaniAgent/Nyachi/blob/develop/SUPPORT.md
+    about: Read the support scope and contribution requirements first.
+  - name: Contributor License Agreement
+    url: https://github.com/CyaniAgent/Nyachi/blob/develop/CLA.md
+    about: Required before your first contribution is merged.
