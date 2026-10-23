@@ -1,16 +1,67 @@
 # Nyachi
 
-Nyachi is a Misskey client being rewritten from scratch. The legacy code is
-archived at `archive/legacy-1.3.4`; it is no longer used as rewrite input and is
-no longer maintained.
+Nyachi is a Misskey client for Android, iOS, Windows, macOS, Linux, and the web.
+The rewrite on `develop` replaces the archived 1.3.4 app. The legacy snapshot at
+`archive/legacy-1.3.4` is reference-only and is not used as rewrite input.
 
 ## Status
 
-- Rewrite in progress on `develop`.
-- `main` still points to the legacy 1.3.4 line; it will become the stable line
-  after the rewrite is ready.
-- There is no releasable build yet.
-- Legacy snapshot: `archive/legacy-1.3.4` (read-only).
+- Foundation and first vertical slice implemented: MiAuth/token multi-account
+  login, Home/Local/Hybrid/Global timelines with Home streaming, notes,
+  reactions, renotes, replies, composer drafts, notifications, explore/search,
+  tags, profiles, and 1:1/room chat with text and media.
+- `main` remains the legacy line until the rewrite is release-ready.
+- There is no published app release yet.
+
+## Requirements
+
+- Flutter 3.47.7 / Dart 3.13.5.
+- Drift web assets are committed under `web/`.
+- Linux desktop also needs the platform libraries used by
+  `flutter_secure_storage`, `file_picker`, and `media_kit`.
+
+## Setup and run
+
+```sh
+flutter pub get
+flutter gen-l10n
+dart run build_runner build
+flutter run -d chrome        # or -d windows
+```
+
+Generated Riverpod, Freezed, Drift, JSON, and typed-route files are committed.
+Do not add `*.g.dart` or `*.freezed.dart` to `.gitignore`. See
+[docs/CODEGEN.md](docs/CODEGEN.md).
+
+## Verification
+
+```sh
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test
+flutter build web --release
+```
+
+CI runs the same steps after regenerating code and requires a clean
+`git diff --exit-code`.
+
+## Web notes
+
+`web/sqlite3.wasm` and `web/drift_worker.js` must be served with the app. Serve
+`sqlite3.wasm` as `application/wasm`. COOP/COEP headers are recommended but not
+required; Drift falls back to IndexedDB/FileSystem storage. Private/incognito
+browsing may reduce or disable persistence.
+
+Tokens use platform secure storage. On the web that is browser storage, not an
+OS keychain; if the browser blocks storage, account saving fails with a visible
+error. No token is written to Drift, SharedPreferences, logs, or exceptions.
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Style guide](docs/STYLE_GUIDE.md)
+- [Code generation](docs/CODEGEN.md)
+- [Foundation ADR](docs/adr/0001-foundation.md)
 
 ## License and copyright
 
@@ -19,19 +70,6 @@ no longer maintained.
 - Copyright: Copyright (C) 2026 AyaxYuna.
 - Third-party components and assets: see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
 - Project name and marks: see [TRADEMARK.md](TRADEMARK.md).
-
-## Branch model
-
-| Branch | Purpose |
-|---|---|
-| `main` | Legacy history line; stable release line after the rewrite |
-| `develop` | Rewrite integration branch |
-| `feature/*` | Feature branches from `develop` |
-| `fix/*` | Fix branches from `develop` |
-| `release/*` | Release stabilization branches from `develop` |
-| `archive/*` | Read-only historical snapshots |
-
-Flow: `feature/*` / `fix/*` → `develop` → `release/*` → `main`.
 
 ## Contributing
 
@@ -53,3 +91,16 @@ vulnerability details in a public issue: [SECURITY.md](SECURITY.md).
 
 These documents are project policy drafts, not legal advice. Have counsel
 review them before a public release.
+
+## Branch model
+
+| Branch | Purpose |
+|---|---|
+| `main` | Legacy history line; stable release line after the rewrite |
+| `develop` | Rewrite integration branch |
+| `feature/*` | Feature branches from `develop` |
+| `fix/*` | Fix branches from `develop` |
+| `release/*` | Release stabilization branches from `develop` |
+| `archive/*` | Read-only historical snapshots |
+
+Flow: `feature/*` / `fix/*` → `develop` → `release/*` → `main`.

@@ -1,5 +1,8 @@
 include: package:flutter_lints/flutter.yaml
 
+plugins:
+  riverpod_lint: ^3.1.9
+
 analyzer:
   exclude:
     - build/**
@@ -8,3 +11,18 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+    - lib/app/l10n/app_localizations*.dart
+    - web/**
+
+linter:
+  rules:
+    always_declare_return_types: true
+    avoid_print: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    unawaited_futures: true
+    use_build_context_synchronously: true
+
+# Riverpod's generated annotations intentionally target constructor parameters.
