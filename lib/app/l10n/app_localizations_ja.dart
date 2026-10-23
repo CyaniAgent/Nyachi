@@ -532,4 +532,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get removeAccount => 'アカウントを削除';
+
+  @override
+  String get signIn => 'サインイン';
 }

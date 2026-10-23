@@ -1131,6 +1131,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove account'**
   String get removeAccount;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
 }
 
 class _AppLocalizationsDelegate

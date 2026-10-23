@@ -199,5 +199,6 @@
     }
   },
   "noteDetail": "投稿",
-  "removeAccount": "アカウントを削除"
+  "removeAccount": "アカウントを削除",
+  "signIn": "サインイン"
 }

@@ -532,4 +532,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get removeAccount => '移除账号';
+
+  @override
+  String get signIn => '登录';
 }

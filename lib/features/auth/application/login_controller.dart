@@ -27,6 +27,14 @@ const miAuthPermissions = [
   'write:drive',
 ];
 
+bool isMiAuthPending(MisskeyApiException error) {
+  if (error.statusCode == 404) return true;
+  if (error.statusCode == 200 && error.raw is Map) {
+    return (error.raw as Map)['ok'] == false;
+  }
+  return false;
+}
+
 class MiAuthService {
   MiAuthService(String host)
     : _client = MisskeyClient.fromHost(host, authMode: MisskeyAuthMode.none);
@@ -120,7 +128,7 @@ class LoginController extends _$LoginController {
           if (!_cancelled) state = const LoginState();
           return true;
         } on MisskeyApiException catch (error) {
-          if (error.statusCode == 404) continue;
+          if (isMiAuthPending(error)) continue;
           if (error.statusCode == null) {
             networkFailures++;
             if (networkFailures < 3) continue;

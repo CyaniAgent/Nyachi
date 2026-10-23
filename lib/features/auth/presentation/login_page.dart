@@ -23,6 +23,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _host = TextEditingController();
   final _token = TextEditingController();
   var _showToken = false;
+  var _showTokenForm = false;
 
   @override
   void dispose() {
@@ -170,54 +171,71 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 8),
-                          ExpansionTile(
-                            tilePadding: EdgeInsets.zero,
-                            childrenPadding: EdgeInsets.zero,
-                            title: Text(l10n.manualToken),
-                            children: [
-                              TextField(
-                                controller: _token,
-                                obscureText: !_showToken,
-                                decoration: InputDecoration(
-                                  labelText: l10n.token,
-                                  suffixIcon: IconButton(
-                                    onPressed: () => setState(
-                                      () => _showToken = !_showToken,
-                                    ),
-                                    icon: Icon(
-                                      _showToken
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
+                          const SizedBox(height: 12),
+                          if (!_showTokenForm)
+                            OutlinedButton.icon(
+                              onPressed: state.busy
+                                  ? null
+                                  : () => setState(() => _showTokenForm = true),
+                              icon: const Icon(Icons.key_outlined),
+                              label: Text(l10n.manualToken),
+                            )
+                          else ...[
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                l10n.manualToken,
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _token,
+                              obscureText: !_showToken,
+                              decoration: InputDecoration(
+                                labelText: l10n.token,
+                                suffixIcon: IconButton(
+                                  onPressed: () =>
+                                      setState(() => _showToken = !_showToken),
+                                  icon: Icon(
+                                    _showToken
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                   ),
                                 ),
-                                autocorrect: false,
                               ),
-                              const SizedBox(height: 8),
-                              FilledButton.tonal(
-                                onPressed: state.busy
-                                    ? null
-                                    : () async {
-                                        if (_host.text.trim().isEmpty) {
-                                          _snack(l10n.hostRequired);
-                                          return;
-                                        }
-                                        if (_token.text.trim().isEmpty) {
-                                          _snack(l10n.tokenRequired);
-                                          return;
-                                        }
-                                        final ok = await controller
-                                            .loginWithToken(
-                                              _host.text,
-                                              _token.text,
-                                            );
-                                        if (ok && context.mounted) _done();
-                                      },
-                                child: Text(l10n.manualToken),
-                              ),
-                            ],
-                          ),
+                              autocorrect: false,
+                            ),
+                            const SizedBox(height: 8),
+                            FilledButton.tonal(
+                              onPressed: state.busy
+                                  ? null
+                                  : () async {
+                                      if (_host.text.trim().isEmpty) {
+                                        _snack(l10n.hostRequired);
+                                        return;
+                                      }
+                                      if (_token.text.trim().isEmpty) {
+                                        _snack(l10n.tokenRequired);
+                                        return;
+                                      }
+                                      final ok = await controller
+                                          .loginWithToken(
+                                            _host.text,
+                                            _token.text,
+                                          );
+                                      if (ok && context.mounted) _done();
+                                    },
+                              child: Text(l10n.signIn),
+                            ),
+                            TextButton(
+                              onPressed: state.busy
+                                  ? null
+                                  : () =>
+                                        setState(() => _showTokenForm = false),
+                              child: Text(l10n.cancel),
+                            ),
+                          ],
                         ],
                       ),
                     ),

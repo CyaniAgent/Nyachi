@@ -199,5 +199,6 @@
     }
   },
   "noteDetail": "Note",
-  "removeAccount": "Remove account"
+  "removeAccount": "Remove account",
+  "signIn": "Sign in"
 }

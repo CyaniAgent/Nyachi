@@ -535,4 +535,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeAccount => 'Remove account';
+
+  @override
+  String get signIn => 'Sign in';
 }
