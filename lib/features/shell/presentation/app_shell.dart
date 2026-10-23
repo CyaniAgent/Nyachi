@@ -9,9 +9,10 @@ import '../../../core/ui/l10n_ext.dart';
 import '../../settings/application/app_settings.dart';
 
 class AppShell extends ConsumerStatefulWidget {
-  const AppShell({required this.navigationShell, super.key});
+  const AppShell({required this.navigationShell, this.children, super.key});
 
   final StatefulNavigationShell navigationShell;
+  final List<Widget>? children;
 
   @override
   ConsumerState<AppShell> createState() => _AppShellState();
@@ -31,6 +32,12 @@ class _AppShellState extends ConsumerState<AppShell> {
       });
     }
     final width = MediaQuery.sizeOf(context).width;
+    final body = widget.children == null
+        ? widget.navigationShell
+        : _AnimatedBranchContainer(
+            currentIndex: widget.navigationShell.currentIndex,
+            children: widget.children!,
+          );
     final destinations = visible
         .map(
           (tab) => _Destination(
@@ -43,7 +50,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     if (width < 840) {
       return Scaffold(
-        body: widget.navigationShell,
+        body: body,
         bottomNavigationBar: NavigationBar(
           selectedIndex: visible.indexOf(current).clamp(0, visible.length - 1),
           onDestinationSelected: (index) {
@@ -82,7 +89,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                 .toList(growable: false),
           ),
           const VerticalDivider(width: 1),
-          Expanded(child: widget.navigationShell),
+          Expanded(child: body),
         ],
       ),
     );
@@ -103,6 +110,45 @@ class _AppShellState extends ConsumerState<AppShell> {
     AppTab.chat => context.l10n.chat,
     AppTab.profile => context.l10n.profile,
   };
+}
+
+class _AnimatedBranchContainer extends StatelessWidget {
+  const _AnimatedBranchContainer({
+    required this.currentIndex,
+    required this.children,
+  });
+
+  final int currentIndex;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        for (var index = 0; index < children.length; index++)
+          IgnorePointer(
+            ignoring: index != currentIndex,
+            child: TickerMode(
+              enabled: index == currentIndex,
+              child: AnimatedOpacity(
+                opacity: index == currentIndex ? 1 : 0,
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                child: AnimatedSlide(
+                  offset: index == currentIndex
+                      ? Offset.zero
+                      : const Offset(0.015, 0),
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  child: children[index],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class _Destination {

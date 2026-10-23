@@ -26,7 +26,7 @@ class ProfilePage extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: l10n.accountSwitch,
-            onPressed: () => context.push('/settings'),
+            onPressed: () => context.push('/settings/accounts'),
             icon: const Icon(Icons.switch_account_outlined),
           ),
           IconButton(

@@ -16,6 +16,10 @@ List<RouteBase> get $appRoutes => [
   $chatUserRoute,
   $chatRoomRoute,
   $settingsRoute,
+  $settingsAccountsRoute,
+  $settingsNavigationRoute,
+  $settingsAppearanceRoute,
+  $settingsAboutRoute,
   $appShellRouteData,
 ];
 
@@ -280,7 +284,116 @@ mixin $SettingsRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
+RouteBase get $settingsAccountsRoute => GoRouteData.$route(
+  path: '/settings/accounts',
+  hasOverriddenOnExit: false,
+  factory: $SettingsAccountsRoute._fromState,
+);
+
+mixin $SettingsAccountsRoute on GoRouteData {
+  static SettingsAccountsRoute _fromState(GoRouterState state) =>
+      const SettingsAccountsRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/accounts');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsNavigationRoute => GoRouteData.$route(
+  path: '/settings/navigation',
+  hasOverriddenOnExit: false,
+  factory: $SettingsNavigationRoute._fromState,
+);
+
+mixin $SettingsNavigationRoute on GoRouteData {
+  static SettingsNavigationRoute _fromState(GoRouterState state) =>
+      const SettingsNavigationRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/navigation');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsAppearanceRoute => GoRouteData.$route(
+  path: '/settings/appearance',
+  hasOverriddenOnExit: false,
+  factory: $SettingsAppearanceRoute._fromState,
+);
+
+mixin $SettingsAppearanceRoute on GoRouteData {
+  static SettingsAppearanceRoute _fromState(GoRouterState state) =>
+      const SettingsAppearanceRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/appearance');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsAboutRoute => GoRouteData.$route(
+  path: '/settings/about',
+  hasOverriddenOnExit: false,
+  factory: $SettingsAboutRoute._fromState,
+);
+
+mixin $SettingsAboutRoute on GoRouteData {
+  static SettingsAboutRoute _fromState(GoRouterState state) =>
+      const SettingsAboutRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/about');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
 RouteBase get $appShellRouteData => StatefulShellRouteData.$route(
+  navigatorContainerBuilder: AppShellRouteData.$navigatorContainerBuilder,
   factory: $AppShellRouteDataExtension._fromState,
   branches: [
     StatefulShellBranchData.$branch(

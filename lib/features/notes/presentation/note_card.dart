@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:misskey_dart_api/misskey_dart_api.dart';
+import 'package:misskey_dart_api/misskey_dart_api.dart' hide Clip;
 
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
@@ -37,115 +37,119 @@ class _NoteCardState extends ConsumerState<NoteCard> {
     final isRenote = widget.note.renote != null;
     final showContent = note.cw == null || _showCw;
 
-    return InkWell(
-      onTap: () => context.push('/notes/${note.id}'),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GestureDetector(
-              onTap: () => context.push('/users/${note.user.id}'),
-              child: _NoteAvatar(url: note.user.avatarUrl),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isRenote)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        '${widget.note.user.name ?? widget.note.user.username} ${context.l10n.renoted}',
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                    ),
-                  Row(
-                    children: [
-                      Flexible(
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/notes/${note.id}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () => context.push('/users/${note.user.id}'),
+                child: _NoteAvatar(url: note.user.avatarUrl),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isRenote)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          note.user.name?.isNotEmpty == true
-                              ? note.user.name!
-                              : note.user.username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall,
+                          '${widget.note.user.name ?? widget.note.user.username} ${context.l10n.renoted}',
+                          style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          '@${note.user.username}${note.user.host == null ? '' : '@${note.user.host}'}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            note.user.name?.isNotEmpty == true
+                                ? note.user.name!
+                                : note.user.username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '@${note.user.username}${note.user.host == null ? '' : '@${note.user.host}'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                        Text(
+                          ' · ${relativeTime(context, note.createdAt)}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
-                      ),
+                      ],
+                    ),
+                    if (note.cw != null) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        ' · ${relativeTime(context, note.createdAt)}',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        note.cw!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _showCw = !_showCw),
+                        child: Text(
+                          showContent
+                              ? context.l10n.close
+                              : context.l10n.showContent,
+                        ),
                       ),
                     ],
-                  ),
-                  if (note.cw != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      note.cw!,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() => _showCw = !_showCw),
-                      child: Text(
-                        showContent
-                            ? context.l10n.close
-                            : context.l10n.showContent,
-                      ),
-                    ),
-                  ],
-                  if (showContent) ...[
-                    if (note.text?.isNotEmpty == true)
-                      NoteContent(text: note.text!),
-                    if (note.files?.isNotEmpty == true)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: NoteMedia(files: note.files!, noteId: note.id),
-                      ),
-                  ],
-                  if (note.reactions.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: [
-                        for (final entry in note.reactions.entries.take(4))
-                          Chip(
-                            visualDensity: VisualDensity.compact,
-                            label: Text(
-                              '${_reactionLabel(entry.key)} ${compactCount(context, entry.value)}',
+                    if (showContent) ...[
+                      if (note.text?.isNotEmpty == true)
+                        NoteContent(text: note.text!),
+                      if (note.files?.isNotEmpty == true)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: NoteMedia(files: note.files!, noteId: note.id),
+                        ),
+                    ],
+                    if (note.reactions.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          for (final entry in note.reactions.entries.take(4))
+                            Chip(
+                              visualDensity: VisualDensity.compact,
+                              label: Text(
+                                '${_reactionLabel(entry.key)} ${compactCount(context, entry.value)}',
+                              ),
                             ),
-                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        _Count(
+                          icon: Icons.chat_bubble_outline,
+                          value: note.repliesCount,
+                        ),
+                        _Count(icon: Icons.repeat, value: note.renoteCount),
+                        _Count(
+                          icon: Icons.favorite_border,
+                          value: note.reactionCount,
+                        ),
                       ],
                     ),
                   ],
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      _Count(
-                        icon: Icons.chat_bubble_outline,
-                        value: note.repliesCount,
-                      ),
-                      _Count(icon: Icons.repeat, value: note.renoteCount),
-                      _Count(
-                        icon: Icons.favorite_border,
-                        value: note.reactionCount,
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

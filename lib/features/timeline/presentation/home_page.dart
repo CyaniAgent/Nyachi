@@ -32,6 +32,9 @@ class HomePage extends ConsumerWidget {
             ),
           ],
           bottom: TabBar(
+            indicatorSize: TabBarIndicatorSize.label,
+            dividerColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             tabs: [
               Tab(text: l10n.home),
               Tab(text: l10n.local),

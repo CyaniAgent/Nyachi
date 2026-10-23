@@ -68,7 +68,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorServer => 'The server could not complete the request';
 
   @override
-  String get errorNetwork => 'Network unavailable';
+  String get errorNetwork =>
+      'Could not reach the instance. Check your connection and try again.';
 
   @override
   String get errorStorage => 'Secure storage is unavailable';

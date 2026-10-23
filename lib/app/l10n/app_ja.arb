@@ -19,7 +19,7 @@
   "errorAuth": "セッションの有効期限が切れました",
   "errorRateLimit": "リクエストが多すぎます。しばらく待って再試行してください。",
   "errorServer": "サーバーがリクエストを完了できませんでした",
-  "errorNetwork": "ネットワークに接続できません",
+  "errorNetwork": "インスタンスに接続できません。ネットワークを確認して再試行してください。",
   "errorStorage": "安全なストレージを利用できません",
   "loginTitle": "Misskey にサインイン",
   "loginSubtitle": "MiAuth またはアクセストークンを使用します。",

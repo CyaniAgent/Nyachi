@@ -52,7 +52,7 @@ class NoteList extends ConsumerWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount:
           state.items.length + bannerCount + footer + (showEmpty ? 1 : 0),
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
       itemBuilder: (context, index) {
         var cursor = 0;
         if (header != null) {

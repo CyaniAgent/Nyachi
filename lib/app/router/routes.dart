@@ -120,6 +120,48 @@ class SettingsRoute extends GoRouteData with $SettingsRoute {
   }
 }
 
+@TypedGoRoute<SettingsAccountsRoute>(path: '/settings/accounts')
+class SettingsAccountsRoute extends GoRouteData with $SettingsAccountsRoute {
+  const SettingsAccountsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const AccountsSettingsPage();
+  }
+}
+
+@TypedGoRoute<SettingsNavigationRoute>(path: '/settings/navigation')
+class SettingsNavigationRoute extends GoRouteData
+    with $SettingsNavigationRoute {
+  const SettingsNavigationRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const NavigationSettingsPage();
+  }
+}
+
+@TypedGoRoute<SettingsAppearanceRoute>(path: '/settings/appearance')
+class SettingsAppearanceRoute extends GoRouteData
+    with $SettingsAppearanceRoute {
+  const SettingsAppearanceRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const AppearanceSettingsPage();
+  }
+}
+
+@TypedGoRoute<SettingsAboutRoute>(path: '/settings/about')
+class SettingsAboutRoute extends GoRouteData with $SettingsAboutRoute {
+  const SettingsAboutRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const AboutSettingsPage();
+  }
+}
+
 @TypedStatefulShellRoute<AppShellRouteData>(
   branches: <TypedStatefulShellBranch<StatefulShellBranchData>>[
     TypedStatefulShellBranch<HomeBranchData>(
@@ -155,6 +197,14 @@ class AppShellRouteData extends StatefulShellRouteData {
     StatefulNavigationShell navigationShell,
   ) {
     return AppShell(navigationShell: navigationShell);
+  }
+
+  static Widget $navigatorContainerBuilder(
+    BuildContext context,
+    StatefulNavigationShell navigationShell,
+    List<Widget> children,
+  ) {
+    return AppShell(navigationShell: navigationShell, children: children);
   }
 }
 

@@ -53,8 +53,10 @@ required; Drift falls back to IndexedDB/FileSystem storage. Private/incognito
 browsing may reduce or disable persistence.
 
 Tokens use platform secure storage. On the web that is browser storage, not an
-OS keychain; if the browser blocks storage, account saving fails with a visible
-error. No token is written to Drift, SharedPreferences, logs, or exceptions.
+OS keychain; it requires a secure context (`https://` or `localhost`). If the
+browser blocks storage or the page is served over plain HTTP on a LAN address,
+account saving fails with a visible storage error. No token is written to Drift,
+SharedPreferences, logs, or exceptions.
 
 ## Documentation
 

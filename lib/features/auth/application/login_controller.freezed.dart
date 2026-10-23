@@ -13,7 +13,7 @@ part of 'login_controller.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$LoginState {
+mixin _$LoginState implements DiagnosticableTreeMixin {
 
  bool get busy; bool get waiting; Uri? get authorizationUri; AppFailure? get error;
 /// Create a copy of LoginState
@@ -23,6 +23,13 @@ mixin _$LoginState {
 $LoginStateCopyWith<LoginState> get copyWith => _$LoginStateCopyWithImpl<LoginState>(this as LoginState, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  final _this = this as LoginState;
+  properties
+    ..add(DiagnosticsProperty('type', 'LoginState'))
+    ..add(DiagnosticsProperty('busy', _this.busy))..add(DiagnosticsProperty('waiting', _this.waiting))..add(DiagnosticsProperty('authorizationUri', _this.authorizationUri))..add(DiagnosticsProperty('error', _this.error));
+}
 
 @override
 bool operator ==(Object other) {
@@ -38,7 +45,7 @@ int get hashCode {
 }
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   final _this = this as LoginState;
   return 'LoginState(busy: ${_this.busy}, waiting: ${_this.waiting}, authorizationUri: ${_this.authorizationUri}, error: ${_this.error})';
 }
@@ -214,7 +221,7 @@ return $default(_that.busy,_that.waiting,_that.authorizationUri,_that.error);cas
 /// @nodoc
 
 
-class _LoginState implements LoginState {
+class _LoginState with DiagnosticableTreeMixin implements LoginState {
   const _LoginState({this.busy = false, this.waiting = false, this.authorizationUri, this.error});
   
 
@@ -230,6 +237,12 @@ class _LoginState implements LoginState {
 _$LoginStateCopyWith<_LoginState> get copyWith => __$LoginStateCopyWithImpl<_LoginState>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'LoginState'))
+    ..add(DiagnosticsProperty('busy', busy))..add(DiagnosticsProperty('waiting', waiting))..add(DiagnosticsProperty('authorizationUri', authorizationUri))..add(DiagnosticsProperty('error', error));
+}
 
 @override
 bool operator ==(Object other) {
@@ -243,7 +256,7 @@ int get hashCode {
 }
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
     return 'LoginState(busy: $busy, waiting: $waiting, authorizationUri: $authorizationUri, error: $error)';
 }
 

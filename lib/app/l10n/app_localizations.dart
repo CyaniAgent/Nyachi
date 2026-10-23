@@ -217,7 +217,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorNetwork.
   ///
   /// In en, this message translates to:
-  /// **'Network unavailable'**
+  /// **'Could not reach the instance. Check your connection and try again.'**
   String get errorNetwork;
 
   /// No description provided for @errorStorage.

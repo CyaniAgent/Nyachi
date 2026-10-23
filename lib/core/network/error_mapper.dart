@@ -2,11 +2,12 @@
 
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../app/l10n/app_localizations.dart';
 
-enum AppFailureKind { auth, rateLimit, server, network, unknown }
+enum AppFailureKind { auth, rateLimit, server, network, storage, unknown }
 
 class AppFailure {
   const AppFailure(this.kind, [this.cause]);
@@ -19,6 +20,7 @@ class AppFailure {
     AppFailureKind.rateLimit => l10n.errorRateLimit,
     AppFailureKind.server => l10n.errorServer,
     AppFailureKind.network => l10n.errorNetwork,
+    AppFailureKind.storage => l10n.errorStorage,
     AppFailureKind.unknown => l10n.errorGeneric,
   };
 }
@@ -38,10 +40,15 @@ AppFailure mapFailure(Object error) {
     if (status != null && status >= 500) {
       return AppFailure(AppFailureKind.server, error);
     }
-    if (_looksLikeNetwork(error.cause)) {
+    if (status == null || _looksLikeNetwork(error.cause)) {
       return AppFailure(AppFailureKind.network, error);
     }
     return AppFailure(AppFailureKind.unknown, error);
+  }
+  if (error is MissingPluginException ||
+      error is PlatformException ||
+      error is UnsupportedError) {
+    return AppFailure(AppFailureKind.storage, error);
   }
   if (error is TimeoutException || _looksLikeNetwork(error)) {
     return AppFailure(AppFailureKind.network, error);

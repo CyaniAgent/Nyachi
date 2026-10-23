@@ -67,7 +67,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorServer => '服务器无法完成请求';
 
   @override
-  String get errorNetwork => '网络不可用';
+  String get errorNetwork => '无法连接实例，请检查网络后重试。';
 
   @override
   String get errorStorage => '安全存储不可用';

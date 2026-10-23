@@ -19,7 +19,7 @@
   "errorAuth": "登录已过期",
   "errorRateLimit": "请求过于频繁，请稍后再试。",
   "errorServer": "服务器无法完成请求",
-  "errorNetwork": "网络不可用",
+  "errorNetwork": "无法连接实例，请检查网络后重试。",
   "errorStorage": "安全存储不可用",
   "loginTitle": "登录 Misskey",
   "loginSubtitle": "使用 MiAuth 或访问令牌。",

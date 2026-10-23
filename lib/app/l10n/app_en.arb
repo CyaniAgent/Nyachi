@@ -19,7 +19,7 @@
   "errorAuth": "Your session has expired",
   "errorRateLimit": "Too many requests. Wait a moment and try again.",
   "errorServer": "The server could not complete the request",
-  "errorNetwork": "Network unavailable",
+  "errorNetwork": "Could not reach the instance. Check your connection and try again.",
   "errorStorage": "Secure storage is unavailable",
   "loginTitle": "Sign in to Misskey",
   "loginSubtitle": "Use MiAuth or an access token.",

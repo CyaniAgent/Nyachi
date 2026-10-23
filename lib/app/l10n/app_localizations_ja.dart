@@ -67,7 +67,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errorServer => 'サーバーがリクエストを完了できませんでした';
 
   @override
-  String get errorNetwork => 'ネットワークに接続できません';
+  String get errorNetwork => 'インスタンスに接続できません。ネットワークを確認して再試行してください。';
 
   @override
   String get errorStorage => '安全なストレージを利用できません';

@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -106,6 +107,7 @@ class LoginController extends _$LoginController {
         // The page still exposes a copy/open action.
       }
       final stopwatch = Stopwatch()..start();
+      var networkFailures = 0;
       while (!_cancelled && stopwatch.elapsed < const Duration(minutes: 5)) {
         await Future<void>.delayed(const Duration(seconds: 2));
         if (_cancelled) return false;
@@ -119,6 +121,10 @@ class LoginController extends _$LoginController {
           return true;
         } on MisskeyApiException catch (error) {
           if (error.statusCode == 404) continue;
+          if (error.statusCode == null) {
+            networkFailures++;
+            if (networkFailures < 3) continue;
+          }
           rethrow;
         }
       }
@@ -127,6 +133,7 @@ class LoginController extends _$LoginController {
       }
       return false;
     } catch (error) {
+      debugPrint('Nyachi MiAuth failed: ${error.runtimeType}');
       if (!_cancelled) {
         state = LoginState(error: mapFailure(error));
       }
@@ -156,6 +163,7 @@ class LoginController extends _$LoginController {
       state = const LoginState();
       return true;
     } catch (error) {
+      debugPrint('Nyachi token login failed: ${error.runtimeType}');
       state = LoginState(error: mapFailure(error));
       return false;
     } finally {
