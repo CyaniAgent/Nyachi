@@ -200,5 +200,14 @@
   },
   "noteDetail": "Note",
   "removeAccount": "Remove account",
-  "signIn": "Sign in"
+  "signIn": "Sign in",
+  "refresh": "Refresh",
+  "accentColor": "Accent color",
+  "instanceColor": "Instance color",
+  "colorIndigo": "Indigo",
+  "colorPink": "Pink",
+  "colorGreen": "Green",
+  "colorBlue": "Blue",
+  "colorOrange": "Orange",
+  "detailBreakpoint": "Details panel breakpoint"
 }

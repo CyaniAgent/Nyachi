@@ -15,11 +15,16 @@ import '../../features/settings/presentation/settings_page.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_timeline_page.dart';
 import '../../features/timeline/presentation/home_page.dart';
+import 'navigator_keys.dart';
 
 part 'routes.g.dart';
 
 @TypedGoRoute<LoginRoute>(path: '/login')
 class LoginRoute extends GoRouteData with $LoginRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
   const LoginRoute();
 
   @override
@@ -30,6 +35,10 @@ class LoginRoute extends GoRouteData with $LoginRoute {
 
 @TypedGoRoute<AddAccountRoute>(path: '/add-account')
 class AddAccountRoute extends GoRouteData with $AddAccountRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
   const AddAccountRoute();
 
   @override
@@ -40,6 +49,13 @@ class AddAccountRoute extends GoRouteData with $AddAccountRoute {
 
 @TypedGoRoute<NoteDetailRoute>(path: '/notes/:noteId')
 class NoteDetailRoute extends GoRouteData with $NoteDetailRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const NoteDetailRoute(this.noteId);
 
   final String noteId;
@@ -52,6 +68,13 @@ class NoteDetailRoute extends GoRouteData with $NoteDetailRoute {
 
 @TypedGoRoute<UserProfileRoute>(path: '/users/:userId')
 class UserProfileRoute extends GoRouteData with $UserProfileRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const UserProfileRoute(this.userId);
 
   final String userId;
@@ -64,6 +87,13 @@ class UserProfileRoute extends GoRouteData with $UserProfileRoute {
 
 @TypedGoRoute<TagTimelineRoute>(path: '/tags/:tag')
 class TagTimelineRoute extends GoRouteData with $TagTimelineRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const TagTimelineRoute(this.tag);
 
   final String tag;
@@ -76,6 +106,13 @@ class TagTimelineRoute extends GoRouteData with $TagTimelineRoute {
 
 @TypedGoRoute<ComposeRoute>(path: '/compose')
 class ComposeRoute extends GoRouteData with $ComposeRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const ComposeRoute({this.replyId});
 
   final String? replyId;
@@ -88,6 +125,13 @@ class ComposeRoute extends GoRouteData with $ComposeRoute {
 
 @TypedGoRoute<ChatUserRoute>(path: '/chat/user/:userId')
 class ChatUserRoute extends GoRouteData with $ChatUserRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const ChatUserRoute(this.userId);
 
   final String userId;
@@ -100,6 +144,13 @@ class ChatUserRoute extends GoRouteData with $ChatUserRoute {
 
 @TypedGoRoute<ChatRoomRoute>(path: '/chat/room/:roomId')
 class ChatRoomRoute extends GoRouteData with $ChatRoomRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const ChatRoomRoute(this.roomId);
 
   final String roomId;
@@ -112,6 +163,13 @@ class ChatRoomRoute extends GoRouteData with $ChatRoomRoute {
 
 @TypedGoRoute<SettingsRoute>(path: '/settings')
 class SettingsRoute extends GoRouteData with $SettingsRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const SettingsRoute();
 
   @override
@@ -122,6 +180,13 @@ class SettingsRoute extends GoRouteData with $SettingsRoute {
 
 @TypedGoRoute<SettingsAccountsRoute>(path: '/settings/accounts')
 class SettingsAccountsRoute extends GoRouteData with $SettingsAccountsRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const SettingsAccountsRoute();
 
   @override
@@ -133,6 +198,13 @@ class SettingsAccountsRoute extends GoRouteData with $SettingsAccountsRoute {
 @TypedGoRoute<SettingsNavigationRoute>(path: '/settings/navigation')
 class SettingsNavigationRoute extends GoRouteData
     with $SettingsNavigationRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const SettingsNavigationRoute();
 
   @override
@@ -144,6 +216,13 @@ class SettingsNavigationRoute extends GoRouteData
 @TypedGoRoute<SettingsAppearanceRoute>(path: '/settings/appearance')
 class SettingsAppearanceRoute extends GoRouteData
     with $SettingsAppearanceRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const SettingsAppearanceRoute();
 
   @override
@@ -154,6 +233,13 @@ class SettingsAppearanceRoute extends GoRouteData
 
 @TypedGoRoute<SettingsAboutRoute>(path: '/settings/about')
 class SettingsAboutRoute extends GoRouteData with $SettingsAboutRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
   const SettingsAboutRoute();
 
   @override
@@ -197,14 +283,6 @@ class AppShellRouteData extends StatefulShellRouteData {
     StatefulNavigationShell navigationShell,
   ) {
     return AppShell(navigationShell: navigationShell);
-  }
-
-  static Widget $navigatorContainerBuilder(
-    BuildContext context,
-    StatefulNavigationShell navigationShell,
-    List<Widget> children,
-  ) {
-    return AppShell(navigationShell: navigationShell, children: children);
   }
 }
 

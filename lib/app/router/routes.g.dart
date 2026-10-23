@@ -79,6 +79,7 @@ mixin $AddAccountRoute on GoRouteData {
 RouteBase get $noteDetailRoute => GoRouteData.$route(
   path: '/notes/:noteId',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: NoteDetailRoute.$parentNavigatorKey,
   factory: $NoteDetailRoute._fromState,
 );
 
@@ -109,6 +110,7 @@ mixin $NoteDetailRoute on GoRouteData {
 RouteBase get $userProfileRoute => GoRouteData.$route(
   path: '/users/:userId',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: UserProfileRoute.$parentNavigatorKey,
   factory: $UserProfileRoute._fromState,
 );
 
@@ -139,6 +141,7 @@ mixin $UserProfileRoute on GoRouteData {
 RouteBase get $tagTimelineRoute => GoRouteData.$route(
   path: '/tags/:tag',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: TagTimelineRoute.$parentNavigatorKey,
   factory: $TagTimelineRoute._fromState,
 );
 
@@ -169,6 +172,7 @@ mixin $TagTimelineRoute on GoRouteData {
 RouteBase get $composeRoute => GoRouteData.$route(
   path: '/compose',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: ComposeRoute.$parentNavigatorKey,
   factory: $ComposeRoute._fromState,
 );
 
@@ -201,6 +205,7 @@ mixin $ComposeRoute on GoRouteData {
 RouteBase get $chatUserRoute => GoRouteData.$route(
   path: '/chat/user/:userId',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: ChatUserRoute.$parentNavigatorKey,
   factory: $ChatUserRoute._fromState,
 );
 
@@ -231,6 +236,7 @@ mixin $ChatUserRoute on GoRouteData {
 RouteBase get $chatRoomRoute => GoRouteData.$route(
   path: '/chat/room/:roomId',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: ChatRoomRoute.$parentNavigatorKey,
   factory: $ChatRoomRoute._fromState,
 );
 
@@ -261,6 +267,7 @@ mixin $ChatRoomRoute on GoRouteData {
 RouteBase get $settingsRoute => GoRouteData.$route(
   path: '/settings',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsRoute.$parentNavigatorKey,
   factory: $SettingsRoute._fromState,
 );
 
@@ -287,6 +294,7 @@ mixin $SettingsRoute on GoRouteData {
 RouteBase get $settingsAccountsRoute => GoRouteData.$route(
   path: '/settings/accounts',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsAccountsRoute.$parentNavigatorKey,
   factory: $SettingsAccountsRoute._fromState,
 );
 
@@ -314,6 +322,7 @@ mixin $SettingsAccountsRoute on GoRouteData {
 RouteBase get $settingsNavigationRoute => GoRouteData.$route(
   path: '/settings/navigation',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsNavigationRoute.$parentNavigatorKey,
   factory: $SettingsNavigationRoute._fromState,
 );
 
@@ -341,6 +350,7 @@ mixin $SettingsNavigationRoute on GoRouteData {
 RouteBase get $settingsAppearanceRoute => GoRouteData.$route(
   path: '/settings/appearance',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsAppearanceRoute.$parentNavigatorKey,
   factory: $SettingsAppearanceRoute._fromState,
 );
 
@@ -368,6 +378,7 @@ mixin $SettingsAppearanceRoute on GoRouteData {
 RouteBase get $settingsAboutRoute => GoRouteData.$route(
   path: '/settings/about',
   hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsAboutRoute.$parentNavigatorKey,
   factory: $SettingsAboutRoute._fromState,
 );
 
@@ -393,7 +404,6 @@ mixin $SettingsAboutRoute on GoRouteData {
 }
 
 RouteBase get $appShellRouteData => StatefulShellRouteData.$route(
-  navigatorContainerBuilder: AppShellRouteData.$navigatorContainerBuilder,
   factory: $AppShellRouteDataExtension._fromState,
   branches: [
     StatefulShellBranchData.$branch(

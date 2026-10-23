@@ -1,7 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
+
+const double appBorderRadius = 18;
+const double appColumnWidth = 380;
+const double appMaxContentWidth = 760;
+const double appNavRailWidth = 80;
+const double appSidebarWidth = 240;
+const double appDetailPanelDefaultWidth = 480;
+const double appDetailPanelMinWidth = 360;
+const double appDetailPanelMaxWidth = 900;
+const double appFeedMinWidth = 480;
+const double appDetailPanelHandleWidth = 8;
+const Duration appDetailPanelAnimationDuration = Duration(milliseconds: 300);
+const Curve appDetailPanelAnimationCurve = Curves.easeInOutCubicEmphasized;
+const int appDetailBreakpointMin = 960;
+const int appDetailBreakpointMax = 1600;
+const int appDetailBreakpointStep = 40;
+const int appDetailBreakpointDefault = 1200;
 
 Color parseThemeColor(String? value) {
   if (value == null) return Colors.indigo;
@@ -12,89 +28,111 @@ Color parseThemeColor(String? value) {
   return Color(cleaned.length == 6 ? 0xff000000 | parsed : parsed);
 }
 
-ThemeData buildAppTheme({required Brightness brightness, required Color seed}) {
-  final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
-  final radius = BorderRadius.circular(18);
+ThemeData buildAppTheme({
+  required Brightness brightness,
+  required Color seed,
+  required bool isWide,
+}) {
+  final scheme = ColorScheme.fromSeed(
+    seedColor: seed,
+    brightness: brightness,
+    dynamicSchemeVariant: DynamicSchemeVariant.rainbow,
+  );
+  final dividerColor = brightness == Brightness.dark
+      ? scheme.surfaceContainerHighest
+      : scheme.surfaceContainer;
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
     visualDensity: VisualDensity.standard,
     scaffoldBackgroundColor: scheme.surface,
+    dividerColor: dividerColor,
+    dividerTheme: DividerThemeData(color: dividerColor, space: 1, thickness: 1),
     appBarTheme: AppBarTheme(
+      toolbarHeight: isWide ? 72 : 56,
       backgroundColor: scheme.surface,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: isWide ? scheme.surface : Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: TextStyle(
-        color: scheme.onSurface,
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
+      titleSpacing: isWide ? 24 : null,
+      actionsPadding: isWide
+          ? const EdgeInsets.symmetric(horizontal: 16)
+          : null,
+    ),
+    textSelectionTheme: TextSelectionThemeData(
+      selectionColor: scheme.onSurface.withValues(alpha: 0.5),
+      selectionHandleColor: scheme.secondary,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(appBorderRadius / 2),
+      ),
+      contentPadding: const EdgeInsets.all(12),
+    ),
+    chipTheme: ChipThemeData(
+      showCheckmark: false,
+      backgroundColor: scheme.surfaceContainer,
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(appBorderRadius),
       ),
     ),
-    dividerTheme: const DividerThemeData(space: 1, thickness: 1),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: scheme.primary),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(appBorderRadius / 2),
+        ),
+      ),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      strokeCap: StrokeCap.round,
+      color: scheme.primary,
+      refreshBackgroundColor: scheme.primaryContainer,
+    ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-    pageTransitionsTheme: const PageTransitionsTheme(
-      builders: {
-        TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-      },
+      width: isWide ? appColumnWidth * 1.5 : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(appBorderRadius / 2),
+      ),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 4),
       color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: radius),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(appBorderRadius),
+      ),
     ),
     listTileTheme: const ListTileThemeData(
       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       minVerticalPadding: 10,
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: scheme.primary, width: 1.5),
-      ),
-    ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        minimumSize: const Size(0, 48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(appBorderRadius / 2),
+        ),
       ),
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: scheme.surface,
+      indicatorColor: scheme.secondaryContainer,
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(appBorderRadius),
+      ),
+      selectedIconTheme: IconThemeData(color: scheme.onSecondaryContainer),
+      unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
     ),
     navigationBarTheme: NavigationBarThemeData(
       height: 68,
       elevation: 0,
       backgroundColor: scheme.surfaceContainer,
       indicatorShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-      ),
-    ),
-    textTheme: ThemeData(colorScheme: scheme).textTheme.copyWith(
-      titleMedium: TextStyle(
-        fontWeight: FontWeight.w600,
-        color: scheme.onSurface,
-      ),
-      titleLarge: TextStyle(
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurface,
+        borderRadius: BorderRadius.circular(appBorderRadius),
       ),
     ),
   );

@@ -6,6 +6,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/auth/session_controller.dart';
 import '../../core/ui/l10n_ext.dart';
+import '../../features/shell/presentation/root_shell.dart';
+import 'navigator_keys.dart';
 import 'router_guards.dart';
 import 'routes.dart';
 
@@ -22,10 +24,26 @@ GoRouter appRouter(Ref ref) {
   ref.listen(sessionControllerProvider, (previous, next) {
     refresh.refresh();
   });
+  final authenticatedRoutes = $appRoutes
+      .where(
+        (route) =>
+            !(route is GoRoute &&
+                (route.path == '/login' || route.path == '/add-account')),
+      )
+      .toList(growable: false);
   return GoRouter(
     initialLocation: '/home',
     refreshListenable: refresh,
-    routes: $appRoutes,
+    routes: [
+      $loginRoute,
+      $addAccountRoute,
+      ShellRoute(
+        navigatorKey: appShellNavigatorKey,
+        builder: (context, state, child) =>
+            RootShell(uri: state.uri, child: child),
+        routes: authenticatedRoutes,
+      ),
+    ],
     redirect: (context, state) => authRedirect(
       ref.read(sessionControllerProvider),
       state.matchedLocation,

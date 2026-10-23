@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/open_detail.dart';
+import '../../../app/l10n/app_localizations.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../app/theme/app_theme.dart';
 import '../application/app_settings.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -18,8 +22,7 @@ class SettingsPage extends ConsumerWidget {
     final session = ref.watch(sessionControllerProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: _SettingsBody(
         children: [
           _SettingsTile(
             icon: Icons.people_outline,
@@ -28,25 +31,30 @@ class SettingsPage extends ConsumerWidget {
                 session.active?.displayName ??
                 session.active?.username ??
                 l10n.noAccounts,
-            onTap: () => context.push('/settings/accounts'),
+            onTap: () => openDetail(context, const SettingsAccountsLocation()),
           ),
+          const Divider(height: 1),
           _SettingsTile(
             icon: Icons.tune,
             title: l10n.navigation,
             subtitle: l10n.visibleTabs,
-            onTap: () => context.push('/settings/navigation'),
+            onTap: () =>
+                openDetail(context, const SettingsNavigationLocation()),
           ),
+          const Divider(height: 1),
           _SettingsTile(
             icon: Icons.palette_outlined,
             title: l10n.appearance,
             subtitle: l10n.theme,
-            onTap: () => context.push('/settings/appearance'),
+            onTap: () =>
+                openDetail(context, const SettingsAppearanceLocation()),
           ),
+          const Divider(height: 1),
           _SettingsTile(
             icon: Icons.info_outline,
             title: l10n.about,
             subtitle: l10n.appVersion,
-            onTap: () => context.push('/settings/about'),
+            onTap: () => openDetail(context, const SettingsAboutLocation()),
           ),
         ],
       ),
@@ -63,35 +71,34 @@ class AccountsSettingsPage extends ConsumerWidget {
     final session = ref.watch(sessionControllerProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.accounts)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: _SettingsBody(
         children: [
-          for (final account in session.accounts)
-            Card(
-              child: ListTile(
-                leading: _Avatar(account: account),
-                title: Text(account.displayName ?? account.username),
-                subtitle: Text('@${account.username}@${account.host}'),
-                trailing: account.id == session.active?.id
-                    ? Chip(label: Text(l10n.activeAccount))
-                    : TextButton(
-                        onPressed: () => _switch(context, ref, account),
-                        child: Text(l10n.switchLabel),
-                      ),
-                onTap: account.id == session.active?.id
-                    ? null
-                    : () => _switch(context, ref, account),
-                onLongPress: () => _remove(context, ref, account),
-              ),
+          for (final account in session.accounts) ...[
+            ListTile(
+              leading: _Avatar(account: account),
+              title: Text(account.displayName ?? account.username),
+              subtitle: Text('@${account.username}@${account.host}'),
+              trailing: account.id == session.active?.id
+                  ? Icon(
+                      Icons.check_circle,
+                      color: Theme.of(context).colorScheme.primary,
+                    )
+                  : TextButton(
+                      onPressed: () => _switch(context, ref, account),
+                      child: Text(l10n.switchLabel),
+                    ),
+              onTap: account.id == session.active?.id
+                  ? null
+                  : () => _switch(context, ref, account),
+              onLongPress: () => _remove(context, ref, account),
             ),
-          const SizedBox(height: 8),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.person_add_alt),
-              title: Text(l10n.addAccount),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/add-account'),
-            ),
+            const Divider(height: 1),
+          ],
+          ListTile(
+            leading: const Icon(Icons.person_add_alt),
+            title: Text(l10n.addAccount),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => openDetail(context, const AddAccountLocation()),
           ),
         ],
       ),
@@ -160,55 +167,56 @@ class NavigationSettingsPage extends ConsumerWidget {
     final config = settings.navConfig;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navigation)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(l10n.visibleTabs, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Card(
-            child: ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: true,
-              itemCount: config.order.length,
-              onReorderItem: (oldIndex, newIndex) {
-                final order = [...config.order];
-                final item = order.removeAt(oldIndex);
-                order.insert(newIndex, item);
-                controller.setNavConfig(config.copyWith(order: order));
-              },
-              itemBuilder: (context, index) {
-                final tab = config.order[index];
-                return ListTile(
-                  key: ValueKey(tab),
-                  leading: Icon(_tabIcon(tab)),
-                  title: Text(_tabLabel(context, tab)),
-                  trailing: Switch(
-                    value: config.visible.contains(tab),
-                    onChanged: tab == AppTab.home
-                        ? null
-                        : (value) {
-                            final visible = {...config.visible};
-                            if (value) {
-                              visible.add(tab);
-                            } else {
-                              visible.remove(tab);
-                            }
-                            controller.setNavConfig(
-                              config.copyWith(visible: visible),
-                            );
-                          },
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
+          child: ReorderableListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            header: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                l10n.visibleTabs,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            itemCount: config.order.length,
+            onReorderItem: (oldIndex, newIndex) {
+              final order = [...config.order];
+              final item = order.removeAt(oldIndex);
+              order.insert(newIndex, item);
+              controller.setNavConfig(config.copyWith(order: order));
+            },
+            itemBuilder: (context, index) {
+              final tab = config.order[index];
+              return Column(
+                key: ValueKey(tab),
+                children: [
+                  ListTile(
+                    leading: Icon(_tabIcon(tab)),
+                    title: Text(_tabLabel(context, tab)),
+                    trailing: Switch(
+                      value: config.visible.contains(tab),
+                      onChanged: tab == AppTab.home
+                          ? null
+                          : (value) {
+                              final visible = {...config.visible};
+                              if (value) {
+                                visible.add(tab);
+                              } else {
+                                visible.remove(tab);
+                              }
+                              controller.setNavConfig(
+                                config.copyWith(visible: visible),
+                              );
+                            },
+                    ),
                   ),
-                );
-              },
-            ),
+                  const Divider(height: 1),
+                ],
+              );
+            },
           ),
-          if (!config.visible.contains(AppTab.home))
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Text(l10n.homeLocked),
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -224,64 +232,106 @@ class AppearanceSettingsPage extends ConsumerWidget {
     final controller = ref.read(settingsControllerProvider.notifier);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.appearance)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: _SettingsBody(
         children: [
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.brightness_6_outlined),
-                  title: Text(l10n.theme),
-                  trailing: DropdownButton<String>(
-                    value: settings.themeMode,
-                    onChanged: (value) {
-                      if (value != null) controller.setThemeMode(value);
-                    },
-                    items: [
-                      DropdownMenuItem(
-                        value: 'system',
-                        child: Text(l10n.themeSystem),
-                      ),
-                      DropdownMenuItem(
-                        value: 'light',
-                        child: Text(l10n.themeLight),
-                      ),
-                      DropdownMenuItem(
-                        value: 'dark',
-                        child: Text(l10n.themeDark),
-                      ),
-                    ],
-                  ),
+          ListTile(
+            leading: const Icon(Icons.color_lens_outlined),
+            title: Text(l10n.accentColor),
+            trailing: DropdownButton<String>(
+              value: settings.accentColor,
+              isDense: true,
+              onChanged: (value) {
+                if (value != null) controller.setAccentColor(value);
+              },
+              items: [
+                DropdownMenuItem(
+                  value: 'instance',
+                  child: Text(l10n.instanceColor),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.translate),
-                  title: Text(l10n.language),
-                  trailing: DropdownButton<String>(
-                    value: settings.localeCode,
-                    onChanged: (value) {
-                      if (value != null) controller.setLocale(value);
-                    },
-                    items: [
-                      DropdownMenuItem(
-                        value: 'system',
-                        child: Text(l10n.languageSystem),
-                      ),
-                      DropdownMenuItem(
-                        value: 'zh',
-                        child: Text(l10n.languageChinese),
-                      ),
-                      DropdownMenuItem(
-                        value: 'en',
-                        child: Text(l10n.languageEnglish),
-                      ),
-                      DropdownMenuItem(
-                        value: 'ja',
-                        child: Text(l10n.languageJapanese),
-                      ),
-                    ],
+                for (final accent in _accentColors)
+                  DropdownMenuItem(
+                    value: accent.$1,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: parseThemeColor(accent.$1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(_accentLabel(l10n, accent.$2)),
+                      ],
+                    ),
                   ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.brightness_6_outlined),
+            title: Text(l10n.theme),
+            trailing: DropdownButton<String>(
+              value: settings.themeMode,
+              onChanged: (value) {
+                if (value != null) controller.setThemeMode(value);
+              },
+              items: [
+                DropdownMenuItem(
+                  value: 'system',
+                  child: Text(l10n.themeSystem),
+                ),
+                DropdownMenuItem(value: 'light', child: Text(l10n.themeLight)),
+                DropdownMenuItem(value: 'dark', child: Text(l10n.themeDark)),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.view_sidebar_outlined),
+            title: Text(l10n.detailBreakpoint),
+            subtitle: Text('${settings.detailBreakpoint} px'),
+          ),
+          Slider(
+            value: settings.detailBreakpoint.toDouble(),
+            min: appDetailBreakpointMin.toDouble(),
+            max: appDetailBreakpointMax.toDouble(),
+            divisions:
+                (appDetailBreakpointMax - appDetailBreakpointMin) ~/
+                appDetailBreakpointStep,
+            label: '${settings.detailBreakpoint} px',
+            onChanged: (value) {
+              controller.setDetailBreakpoint(value.round());
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.translate),
+            title: Text(l10n.language),
+            trailing: DropdownButton<String>(
+              value: settings.localeCode,
+              onChanged: (value) {
+                if (value != null) controller.setLocale(value);
+              },
+              items: [
+                DropdownMenuItem(
+                  value: 'system',
+                  child: Text(l10n.languageSystem),
+                ),
+                DropdownMenuItem(
+                  value: 'zh',
+                  child: Text(l10n.languageChinese),
+                ),
+                DropdownMenuItem(
+                  value: 'en',
+                  child: Text(l10n.languageEnglish),
+                ),
+                DropdownMenuItem(
+                  value: 'ja',
+                  child: Text(l10n.languageJapanese),
                 ),
               ],
             ),
@@ -300,18 +350,53 @@ class AboutSettingsPage extends StatelessWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.about)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: _SettingsBody(
         children: [
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.pets),
-              title: Text(l10n.appTitle),
-              subtitle: Text(l10n.appVersion),
-              trailing: const Icon(Icons.info_outline),
-            ),
+          ListTile(
+            leading: const Icon(Icons.pets),
+            title: Text(l10n.appTitle),
+            subtitle: Text(l10n.appVersion),
+            trailing: const Icon(Icons.info_outline),
           ),
         ],
+      ),
+    );
+  }
+}
+
+const _accentColors = [
+  ('#3F51B5', 'indigo'),
+  ('#E91E63', 'pink'),
+  ('#4CAF50', 'green'),
+  ('#2196F3', 'blue'),
+  ('#FF9800', 'orange'),
+];
+
+String _accentLabel(AppLocalizations l10n, String key) {
+  return switch (key) {
+    'indigo' => l10n.colorIndigo,
+    'pink' => l10n.colorPink,
+    'green' => l10n.colorGreen,
+    'blue' => l10n.colorBlue,
+    'orange' => l10n.colorOrange,
+    _ => key,
+  };
+}
+
+class _SettingsBody extends StatelessWidget {
+  const _SettingsBody({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          children: children,
+        ),
       ),
     );
   }
@@ -332,20 +417,12 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          child: Icon(
-            icon,
-            color: Theme.of(context).colorScheme.onSecondaryContainer,
-          ),
-        ),
-        title: Text(title),
-        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
     );
   }
 }

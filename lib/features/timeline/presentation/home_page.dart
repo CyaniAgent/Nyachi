@@ -4,53 +4,121 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/open_detail.dart';
+import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../notes/application/note_list_controller.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../notes/presentation/note_list.dart';
 import '../application/home_stream_service.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage>
+    with WidgetsBindingObserver {
+  static const _kinds = [
+    HomeFeedKind.home,
+    HomeFeedKind.local,
+    HomeFeedKind.hybrid,
+    HomeFeedKind.global,
+  ];
+
+  Timer? _autoRefresh;
+  var _foreground = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _autoRefresh = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _refreshCurrent(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _autoRefresh?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _foreground = true;
+      _refreshCurrent();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _foreground = false;
+    }
+  }
+
+  Future<void> _refreshCurrent() async {
+    if (!mounted || !_foreground) return;
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return;
+    final controller = DefaultTabController.maybeOf(context);
+    if (controller == null) return;
+    final source = NoteFeedSource.home(_kinds[controller.index]);
+    await ref.read(noteListControllerProvider(source).notifier).refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final labels = [l10n.home, l10n.local, l10n.hybrid, l10n.global];
     return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.appTitle),
-          actions: [
-            IconButton(
-              tooltip: l10n.compose,
-              onPressed: () => context.push('/compose'),
-              icon: const Icon(Icons.edit_outlined),
+      length: labels.length,
+      child: Builder(
+        builder: (context) {
+          final controller = DefaultTabController.of(context);
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.appTitle),
+              actions: [
+                IconButton(
+                  tooltip: l10n.refresh,
+                  onPressed: _refreshCurrent,
+                  icon: const Icon(Icons.refresh),
+                ),
+                IconButton(
+                  tooltip: l10n.compose,
+                  onPressed: () =>
+                      openDetail(context, const ComposeDetailLocation(null)),
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+              ],
             ),
-          ],
-          bottom: TabBar(
-            indicatorSize: TabBarIndicatorSize.label,
-            dividerColor: Colors.transparent,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            tabs: [
-              Tab(text: l10n.home),
-              Tab(text: l10n.local),
-              Tab(text: l10n.hybrid),
-              Tab(text: l10n.global),
-            ],
-          ),
-        ),
-        body: const TabBarView(
-          children: [
-            _TimelineTab(kind: HomeFeedKind.home),
-            _TimelineTab(kind: HomeFeedKind.local),
-            _TimelineTab(kind: HomeFeedKind.hybrid),
-            _TimelineTab(kind: HomeFeedKind.global),
-          ],
-        ),
+            body: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+                  child: CompactTabBar(labels: labels),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: controller,
+                    children: const [
+                      _TimelineTab(kind: HomeFeedKind.home),
+                      _TimelineTab(kind: HomeFeedKind.local),
+                      _TimelineTab(kind: HomeFeedKind.hybrid),
+                      _TimelineTab(kind: HomeFeedKind.global),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -130,7 +198,12 @@ class _StreamHeader extends StatelessWidget {
             children: [
               const Icon(Icons.wifi_off_outlined, size: 18),
               const SizedBox(width: 8),
-              Text(text),
+              Expanded(child: Text(text)),
+              if (status == HomeStreamStatus.offline)
+                TextButton(
+                  onPressed: target.reconnect,
+                  child: Text(context.l10n.retry),
+                ),
             ],
           ),
         );

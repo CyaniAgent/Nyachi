@@ -7,11 +7,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/open_detail.dart';
 import '../../../app/l10n/app_localizations.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
+import '../../../core/ui/compact_tab_bar.dart';
+import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
@@ -19,107 +23,193 @@ import '../../notes/presentation/note_media.dart';
 import '../application/chat_controllers.dart';
 import '../domain/chat_models.dart';
 
-class ChatPage extends ConsumerWidget {
+class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends ConsumerState<ChatPage> {
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = ref.watch(chatListControllerProvider);
     final controller = ref.read(chatListControllerProvider.notifier);
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.chat)),
+      body: _ChatLists(state: state, controller: controller, onOpen: _open),
+    );
+  }
+
+  void _open(ChatTarget target) {
+    switch (target) {
+      case ChatUserTarget(:final userId):
+        openDetail(context, ChatUserDetailLocation(userId));
+      case ChatRoomTarget(:final roomId):
+        openDetail(context, ChatRoomDetailLocation(roomId));
+    }
+  }
+}
+
+class _ChatLists extends StatelessWidget {
+  const _ChatLists({
+    required this.state,
+    required this.controller,
+    required this.onOpen,
+  });
+
+  final ChatListState state;
+  final ChatListController controller;
+  final ValueChanged<ChatTarget> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.chat),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: l10n.direct),
-              Tab(text: l10n.rooms),
-            ],
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
+            child: CompactTabBar(labels: [l10n.direct, l10n.rooms]),
           ),
-        ),
-        body: state.loading && state.direct.isEmpty && state.rooms.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
+          Expanded(
+            child: state.loading && state.direct.isEmpty && state.rooms.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    children: [
+                      _ConversationList(
+                        state: state,
+                        controller: controller,
+                        onOpen: onOpen,
+                      ),
+                      _RoomList(
+                        state: state,
+                        controller: controller,
+                        onOpen: onOpen,
+                      ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConversationList extends StatelessWidget {
+  const _ConversationList({
+    required this.state,
+    required this.controller,
+    required this.onOpen,
+  });
+
+  final ChatListState state;
+  final ChatListController controller;
+  final ValueChanged<ChatTarget> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return RefreshIndicator(
+      onRefresh: controller.refresh,
+      child: ReadableWidth(
+        child: state.direct.isEmpty
+            ? ListView(
                 children: [
-                  RefreshIndicator(
-                    onRefresh: controller.refresh,
-                    child: state.direct.isEmpty
-                        ? ListView(
-                            children: [
-                              const SizedBox(height: 120),
-                              Center(child: Text(l10n.noConversations)),
-                            ],
-                          )
-                        : ListView.separated(
-                            itemCount: state.direct.length,
-                            separatorBuilder: (_, _) =>
-                                const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final conversation = state.direct[index];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  backgroundImage: NetworkImage(
-                                    conversation.peer.avatarUrl,
-                                  ),
-                                ),
-                                title: Text(
-                                  conversation.peer.name ??
-                                      conversation.peer.username,
-                                ),
-                                subtitle: Text(
-                                  conversation.latest.text ??
-                                      (conversation.latest.file?.name ?? ''),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: Text(
-                                  relativeTime(
-                                    context,
-                                    conversation.latest.createdAt,
-                                  ),
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                onTap: () => context.push(
-                                  '/chat/user/${conversation.peer.id}',
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                  RefreshIndicator(
-                    onRefresh: controller.refresh,
-                    child: state.rooms.isEmpty
-                        ? ListView(
-                            children: [
-                              const SizedBox(height: 120),
-                              Center(child: Text(l10n.noRooms)),
-                            ],
-                          )
-                        : ListView.separated(
-                            itemCount: state.rooms.length,
-                            separatorBuilder: (_, _) =>
-                                const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final room = state.rooms[index];
-                              return ListTile(
-                                leading: const CircleAvatar(
-                                  child: Icon(Icons.groups_outlined),
-                                ),
-                                title: Text(room.name),
-                                subtitle: Text(
-                                  '${room.description}\n${l10n.roomOwner}: ${room.owner.name ?? room.owner.username}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                onTap: () =>
-                                    context.push('/chat/room/${room.id}'),
-                              );
-                            },
-                          ),
-                  ),
+                  const SizedBox(height: 120),
+                  Center(child: Text(l10n.noConversations)),
                 ],
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                itemCount: state.direct.length,
+                itemBuilder: (context, index) {
+                  final conversation = state.direct[index];
+                  final target = ChatTarget.user(conversation.peer.id);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: ListTile(
+                      minVerticalPadding: 16,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      leading: CircleAvatar(
+                        radius: 24,
+                        backgroundImage: NetworkImage(
+                          conversation.peer.avatarUrl,
+                        ),
+                      ),
+                      title: Text(
+                        conversation.peer.name ?? conversation.peer.username,
+                      ),
+                      subtitle: Text(
+                        conversation.latest.text ??
+                            (conversation.latest.file?.name ?? ''),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Text(
+                        relativeTime(context, conversation.latest.createdAt),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      onTap: () => onOpen(target),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+class _RoomList extends StatelessWidget {
+  const _RoomList({
+    required this.state,
+    required this.controller,
+    required this.onOpen,
+  });
+
+  final ChatListState state;
+  final ChatListController controller;
+  final ValueChanged<ChatTarget> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return RefreshIndicator(
+      onRefresh: controller.refresh,
+      child: ReadableWidth(
+        child: state.rooms.isEmpty
+            ? ListView(
+                children: [
+                  const SizedBox(height: 120),
+                  Center(child: Text(l10n.noRooms)),
+                ],
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                itemCount: state.rooms.length,
+                itemBuilder: (context, index) {
+                  final room = state.rooms[index];
+                  final target = ChatTarget.room(room.id);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: ListTile(
+                      minVerticalPadding: 16,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.groups_outlined),
+                      ),
+                      title: Text(room.name),
+                      subtitle: Text(
+                        '${room.description}\n${l10n.roomOwner}: ${room.owner.name ?? room.owner.username}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () => onOpen(target),
+                    ),
+                  );
+                },
               ),
       ),
     );
@@ -173,108 +263,111 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
     }
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Column(
-        children: [
-          if (state.error != null)
-            MaterialBanner(
-              content: Text(state.error!.message(l10n)),
-              actions: [
-                FailureAction(
-                  failure: state.error!,
-                  onRetry: controller.refresh,
-                ),
-              ],
-            ),
-          Expanded(
-            child: state.loading && state.items.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.all(12),
-                    itemCount: state.items.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        if (state.loadingOlder) {
-                          return const Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-                        if (state.hasMore) {
-                          return Center(
-                            child: TextButton(
-                              onPressed: controller.loadOlder,
-                              child: Text(l10n.loadOlder),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      }
-                      final item = state.items[index - 1];
-                      return _MessageBubble(
-                        item: item,
-                        isMine: item.fromUserId == active?.userId,
-                        onVideo: () => _showVideo(item),
-                      );
-                    },
-                  ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  if (_attachment != null)
-                    Chip(
-                      avatar: const Icon(Icons.attach_file),
-                      label: Text(_attachmentName ?? l10n.attachment),
-                      onDeleted: () => setState(() {
-                        _attachment = null;
-                        _attachmentName = null;
-                      }),
-                    ),
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: l10n.attach,
-                        onPressed: state.sending ? null : _pick,
-                        icon: const Icon(Icons.attach_file),
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: _text,
-                          decoration: InputDecoration(
-                            hintText: l10n.messageHint,
-                            border: const OutlineInputBorder(),
-                          ),
-                          minLines: 1,
-                          maxLines: 4,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filled(
-                        tooltip: l10n.send,
-                        onPressed: state.sending
-                            ? null
-                            : () => _send(controller, l10n),
-                        icon: state.sending
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.send),
-                      ),
-                    ],
+      body: ReadableWidth(
+        maxWidth: appMaxContentWidth,
+        child: Column(
+          children: [
+            if (state.error != null)
+              MaterialBanner(
+                content: Text(state.error!.message(l10n)),
+                actions: [
+                  FailureAction(
+                    failure: state.error!,
+                    onRetry: controller.refresh,
                   ),
                 ],
               ),
+            Expanded(
+              child: state.loading && state.items.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.all(12),
+                      itemCount: state.items.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          if (state.loadingOlder) {
+                            return const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          if (state.hasMore) {
+                            return Center(
+                              child: TextButton(
+                                onPressed: controller.loadOlder,
+                                child: Text(l10n.loadOlder),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }
+                        final item = state.items[index - 1];
+                        return _MessageBubble(
+                          item: item,
+                          isMine: item.fromUserId == active?.userId,
+                          onVideo: () => _showVideo(item),
+                        );
+                      },
+                    ),
             ),
-          ),
-        ],
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    if (_attachment != null)
+                      Chip(
+                        avatar: const Icon(Icons.attach_file),
+                        label: Text(_attachmentName ?? l10n.attachment),
+                        onDeleted: () => setState(() {
+                          _attachment = null;
+                          _attachmentName = null;
+                        }),
+                      ),
+                    Row(
+                      children: [
+                        IconButton(
+                          tooltip: l10n.attach,
+                          onPressed: state.sending ? null : _pick,
+                          icon: const Icon(Icons.attach_file),
+                        ),
+                        Expanded(
+                          child: TextField(
+                            controller: _text,
+                            decoration: InputDecoration(
+                              hintText: l10n.messageHint,
+                              border: const OutlineInputBorder(),
+                            ),
+                            minLines: 1,
+                            maxLines: 4,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filled(
+                          tooltip: l10n.send,
+                          onPressed: state.sending
+                              ? null
+                              : () => _send(controller, l10n),
+                          icon: state.sending
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.send),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

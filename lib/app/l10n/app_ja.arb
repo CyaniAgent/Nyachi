@@ -200,5 +200,14 @@
   },
   "noteDetail": "投稿",
   "removeAccount": "アカウントを削除",
-  "signIn": "サインイン"
+  "signIn": "サインイン",
+  "refresh": "更新",
+  "accentColor": "アクセントカラー",
+  "instanceColor": "インスタンスの色",
+  "colorIndigo": "インディゴ",
+  "colorPink": "ピンク",
+  "colorGreen": "グリーン",
+  "colorBlue": "ブルー",
+  "colorOrange": "オレンジ",
+  "detailBreakpoint": "詳細パネルのブレークポイント"
 }

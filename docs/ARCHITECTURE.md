@@ -62,6 +62,16 @@ Routes are declared with `go_router_builder` in `lib/app/router/routes.dart`.
 The shell has five fixed branch indices (`home`, `notifications`, `explore`,
 `chat`, `profile`) while display order and visibility come from settings.
 
+On wide screens, shell detail pages open in a resizable right-hand panel while
+the current tab stays visible. The panel stack is mirrored in a `detail` query
+parameter on the tab-root URL (top location only); panel navigation uses
+`router.replace`, so it does not add browser-history entries. The breakpoint is
+stored as `layout.detailBreakpoint` and the panel width as
+`layout.detailPanelWidth`. Direct detail paths remain full-page, and dropping
+below the breakpoint converts the current panel top into a full-page route.
+Feature widgets open detail pages through `openDetail` with a `DetailLocation`,
+never by calling `context.push` for shell detail routes.
+
 ## Failure handling
 
 `mapFailure` converts SDK, HTTP, and timeout failures into `AppFailure` kinds.

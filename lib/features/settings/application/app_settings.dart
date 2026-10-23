@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../app/theme/app_theme.dart';
 import '../../../core/storage/storage_providers.dart';
 
 part 'app_settings.freezed.dart';
@@ -38,22 +39,30 @@ class AppSettings {
   const AppSettings({
     required this.themeMode,
     required this.localeCode,
+    required this.accentColor,
     required this.navConfig,
+    required this.detailBreakpoint,
   });
 
   final String themeMode;
   final String localeCode;
+  final String accentColor;
   final NavConfig navConfig;
+  final int detailBreakpoint;
 
   AppSettings copyWith({
     String? themeMode,
     String? localeCode,
+    String? accentColor,
     NavConfig? navConfig,
+    int? detailBreakpoint,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
       localeCode: localeCode ?? this.localeCode,
+      accentColor: accentColor ?? this.accentColor,
       navConfig: navConfig ?? this.navConfig,
+      detailBreakpoint: detailBreakpoint ?? this.detailBreakpoint,
     );
   }
 }
@@ -62,8 +71,10 @@ class AppSettings {
 class SettingsController extends _$SettingsController {
   static const themeKey = 'settings.themeMode';
   static const localeKey = 'settings.locale';
+  static const accentKey = 'settings.accentColor';
   static const orderKey = 'settings.tabOrder';
   static const hiddenKey = 'settings.hiddenTabs';
+  static const detailBreakpointKey = 'layout.detailBreakpoint';
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
 
@@ -89,7 +100,12 @@ class SettingsController extends _$SettingsController {
     return AppSettings(
       themeMode: prefs.getString(themeKey) ?? 'system',
       localeCode: prefs.getString(localeKey) ?? 'system',
+      accentColor: prefs.getString(accentKey) ?? 'instance',
       navConfig: nav,
+      detailBreakpoint:
+          (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
+              .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
+              .toInt(),
     );
   }
 
@@ -101,6 +117,23 @@ class SettingsController extends _$SettingsController {
   Future<void> setLocale(String code) async {
     state = state.copyWith(localeCode: code);
     await _prefs.setString(localeKey, code);
+  }
+
+  Future<void> setAccentColor(String color) async {
+    state = state.copyWith(accentColor: color);
+    await _prefs.setString(accentKey, color);
+  }
+
+  Future<void> setDetailBreakpoint(int value) async {
+    final clamped = value
+        .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
+        .toInt();
+    final aligned =
+        appDetailBreakpointMin +
+        ((clamped - appDetailBreakpointMin) ~/ appDetailBreakpointStep) *
+            appDetailBreakpointStep;
+    state = state.copyWith(detailBreakpoint: aligned);
+    await _prefs.setInt(detailBreakpointKey, aligned);
   }
 
   Future<void> setNavConfig(NavConfig config) async {

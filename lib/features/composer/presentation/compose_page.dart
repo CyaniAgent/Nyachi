@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/network/instance_repository.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../application/composer_controller.dart';
@@ -97,109 +99,116 @@ class _ComposePageState extends ConsumerState<ComposePage> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (state.restored)
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.restore),
-                title: Text(l10n.draftRestored),
-              ),
-            ),
-          if (state.error != null)
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.error_outline),
-                title: Text(state.error!.message(l10n)),
-                trailing: FailureAction(
-                  failure: state.error!,
-                  onRetry: () => controller.post(),
+      body: ReadableWidth(
+        maxWidth: appMaxContentWidth,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (state.restored)
+              Material(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(12),
+                child: ListTile(
+                  leading: const Icon(Icons.restore),
+                  title: Text(l10n.draftRestored),
                 ),
               ),
-            ),
-          Row(
-            children: [
-              Expanded(child: Text(l10n.contentWarning)),
-              Switch(
-                value: _hasCw,
-                onChanged: (value) {
-                  setState(() {
-                    _hasCw = value;
-                    if (!value) {
-                      _cw.clear();
-                      controller.setCw(null);
-                    }
-                  });
-                },
+            if (state.error != null)
+              Material(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(12),
+                child: ListTile(
+                  leading: const Icon(Icons.error_outline),
+                  title: Text(state.error!.message(l10n)),
+                  trailing: FailureAction(
+                    failure: state.error!,
+                    onRetry: () => controller.post(),
+                  ),
+                ),
               ),
-            ],
-          ),
-          if (_hasCw)
-            TextField(
-              controller: _cw,
-              decoration: InputDecoration(
-                hintText: l10n.contentWarningHint,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: controller.setCw,
-            ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _text,
-            minLines: 6,
-            maxLines: null,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            onChanged: controller.setText,
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              l10n.characterCount(state.text.runes.length),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<NotesCreateRequestVisibility>(
-                  key: ValueKey(state.visibility),
-                  initialValue: state.visibility,
-                  decoration: InputDecoration(labelText: l10n.visibility),
-                  items: [
-                    DropdownMenuItem(
-                      value: NotesCreateRequestVisibility.public,
-                      child: Text(l10n.visibilityPublic),
-                    ),
-                    DropdownMenuItem(
-                      value: NotesCreateRequestVisibility.home,
-                      child: Text(l10n.visibilityHome),
-                    ),
-                    DropdownMenuItem(
-                      value: NotesCreateRequestVisibility.followers,
-                      child: Text(l10n.visibilityFollowers),
-                    ),
-                  ],
+            Row(
+              children: [
+                Expanded(child: Text(l10n.contentWarning)),
+                Switch(
+                  value: _hasCw,
                   onChanged: (value) {
-                    if (value != null) controller.setVisibility(value);
+                    setState(() {
+                      _hasCw = value;
+                      if (!value) {
+                        _cw.clear();
+                        controller.setCw(null);
+                      }
+                    });
                   },
                 ),
+              ],
+            ),
+            if (_hasCw)
+              TextField(
+                controller: _cw,
+                decoration: InputDecoration(
+                  hintText: l10n.contentWarningHint,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: controller.setCw,
               ),
-              const SizedBox(width: 16),
-              Row(
-                children: [
-                  Text(l10n.localOnly),
-                  Switch(
-                    value: state.localOnly,
-                    onChanged: controller.setLocalOnly,
+            const SizedBox(height: 12),
+            TextField(
+              controller: _text,
+              minLines: 6,
+              maxLines: null,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              onChanged: controller.setText,
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                l10n.characterCount(state.text.runes.length),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<NotesCreateRequestVisibility>(
+                    key: ValueKey(state.visibility),
+                    initialValue: state.visibility,
+                    decoration: InputDecoration(labelText: l10n.visibility),
+                    items: [
+                      DropdownMenuItem(
+                        value: NotesCreateRequestVisibility.public,
+                        child: Text(l10n.visibilityPublic),
+                      ),
+                      DropdownMenuItem(
+                        value: NotesCreateRequestVisibility.home,
+                        child: Text(l10n.visibilityHome),
+                      ),
+                      DropdownMenuItem(
+                        value: NotesCreateRequestVisibility.followers,
+                        child: Text(l10n.visibilityFollowers),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) controller.setVisibility(value);
+                    },
                   ),
-                ],
-              ),
-            ],
-          ),
-        ],
+                ),
+                const SizedBox(width: 16),
+                Row(
+                  children: [
+                    Text(l10n.localOnly),
+                    Switch(
+                      value: state.localOnly,
+                      onChanged: controller.setLocalOnly,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

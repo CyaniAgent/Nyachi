@@ -2,9 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/open_detail.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/ui/compact_tab_bar.dart';
+import '../../../core/ui/content_width.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
@@ -34,55 +38,56 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.explore),
-          bottom: _query.isEmpty
-              ? null
-              : TabBar(
-                  tabs: [
-                    Tab(text: l10n.notesTab),
-                    Tab(text: l10n.usersTab),
-                  ],
-                ),
-        ),
+        appBar: AppBar(title: Text(l10n.explore)),
         body: Column(
           children: [
+            if (_query.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+                child: CompactTabBar(labels: [l10n.notesTab, l10n.usersTab]),
+              ),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _text,
-                      decoration: InputDecoration(
-                        hintText: l10n.searchHint,
-                        prefixIcon: const Icon(Icons.search),
-                        border: const OutlineInputBorder(),
+              child: ReadableWidth(
+                maxWidth: appMaxContentWidth,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _text,
+                        decoration: InputDecoration(
+                          hintText: l10n.searchHint,
+                          prefixIcon: const Icon(Icons.search),
+                          border: const OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: _submit,
                       ),
-                      textInputAction: TextInputAction.search,
-                      onSubmitted: _submit,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: () => _submit(_text.text),
-                    child: Text(l10n.searchSubmit),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () => _submit(_text.text),
+                      child: Text(l10n.searchSubmit),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
-              child: _query.isEmpty
-                  ? _Trends()
-                  : TabBarView(
-                      children: [
-                        NoteList(
-                          source: NoteFeedSource.search(_query),
-                          emptyText: l10n.noSearchResults,
-                        ),
-                        _UserResults(query: _query),
-                      ],
-                    ),
+              child: ReadableWidth(
+                maxWidth: appMaxContentWidth,
+                child: _query.isEmpty
+                    ? _Trends()
+                    : TabBarView(
+                        children: [
+                          NoteList(
+                            source: NoteFeedSource.search(_query),
+                            emptyText: l10n.noSearchResults,
+                          ),
+                          _UserResults(query: _query),
+                        ],
+                      ),
+              ),
             ),
           ],
         ),
@@ -121,8 +126,7 @@ class _Trends extends ConsumerWidget {
               leading: const Icon(Icons.tag),
               title: Text('#${trend.tag}'),
               trailing: Text(compactCount(context, trend.usersCount)),
-              onTap: () =>
-                  context.push('/tags/${Uri.encodeComponent(trend.tag)}'),
+              onTap: () => openDetail(context, TagDetailLocation(trend.tag)),
             );
           },
         );
@@ -188,7 +192,7 @@ class _UserTile extends StatelessWidget {
       subtitle: Text(
         '@${user.username}${user.host == null ? '' : '@${user.host}'}',
       ),
-      onTap: () => context.push('/users/${user.id}'),
+      onTap: () => openDetail(context, UserDetailLocation(user.id)),
     );
   }
 }

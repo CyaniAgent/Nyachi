@@ -59,7 +59,7 @@ final class NoteListControllerProvider
 }
 
 String _$noteListControllerHash() =>
-    r'36b598405db3e4ee04e29a0da4a45d6e71d045f1';
+    r'43243d1b53e41824c9a51fbaeafbd996c71ebd01';
 
 final class NoteListControllerFamily extends $Family
     with

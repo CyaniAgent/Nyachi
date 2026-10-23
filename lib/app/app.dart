@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/instance_repository.dart';
+import '../core/ui/app_scroll_behavior.dart';
 import '../core/ui/l10n_ext.dart';
 import '../features/settings/application/app_settings.dart';
 import 'bootstrap.dart';
@@ -19,11 +20,23 @@ class NyachiApp extends ConsumerWidget {
     final bootstrap = ref.watch(bootstrapProvider);
     final settings = ref.watch(settingsControllerProvider);
     final instance = ref.watch(instanceInfoProvider).value;
-    final seed = parseThemeColor(instance?.themeColor);
+    final seed = settings.accentColor == 'instance'
+        ? parseThemeColor(instance?.themeColor)
+        : parseThemeColor(settings.accentColor);
     final themeMode = parseThemeMode(settings.themeMode);
     final locale = _locale(settings.localeCode);
-    final theme = buildAppTheme(brightness: Brightness.light, seed: seed);
-    final darkTheme = buildAppTheme(brightness: Brightness.dark, seed: seed);
+    final view = View.of(context);
+    final isWide = view.physicalSize.width / view.devicePixelRatio >= 840;
+    final theme = buildAppTheme(
+      brightness: Brightness.light,
+      seed: seed,
+      isWide: isWide,
+    );
+    final darkTheme = buildAppTheme(
+      brightness: Brightness.dark,
+      seed: seed,
+      isWide: isWide,
+    );
 
     if (bootstrap.isLoading) {
       return MaterialApp(
@@ -32,6 +45,7 @@ class NyachiApp extends ConsumerWidget {
         theme: theme,
         darkTheme: darkTheme,
         themeMode: themeMode,
+        scrollBehavior: const AppScrollBehavior(),
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -45,6 +59,7 @@ class NyachiApp extends ConsumerWidget {
         theme: theme,
         darkTheme: darkTheme,
         themeMode: themeMode,
+        scrollBehavior: const AppScrollBehavior(),
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -57,6 +72,7 @@ class NyachiApp extends ConsumerWidget {
       theme: theme,
       darkTheme: darkTheme,
       themeMode: themeMode,
+      scrollBehavior: const AppScrollBehavior(),
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

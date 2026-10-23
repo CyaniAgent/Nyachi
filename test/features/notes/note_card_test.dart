@@ -86,7 +86,7 @@ void main() {
     expect(find.text('document.pdf'), findsOneWidget);
   });
 
-  testWidgets('opens note detail', (tester) async {
+  testWidgets('note body does not navigate; menu opens detail', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
     final note = makeNote('n1', text: 'hello');
@@ -101,6 +101,12 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('hello'));
+    await tester.pumpAndSettle();
+    expect(find.text('detail'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Note').last);
     await tester.pumpAndSettle();
     expect(find.text('detail'), findsOneWidget);
   });

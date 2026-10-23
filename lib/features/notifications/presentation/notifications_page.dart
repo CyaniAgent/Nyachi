@@ -2,10 +2,12 @@
 
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/open_detail.dart';
 import '../../../app/l10n/app_localizations.dart';
+import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
@@ -43,7 +45,7 @@ class NotificationsPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: controller.refresh,
-        child: _body(context, ref, state, controller),
+        child: ReadableWidth(child: _body(context, ref, state, controller)),
       ),
     );
   }
@@ -145,7 +147,9 @@ class _NotificationTile extends StatelessWidget {
           Text(relativeTime(context, _createdAt(notification))),
         ],
       ),
-      onTap: note == null ? null : () => context.push('/notes/${note.id}'),
+      onTap: note == null
+          ? null
+          : () => openDetail(context, NoteDetailLocation(note.id)),
     );
   }
 

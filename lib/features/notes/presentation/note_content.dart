@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/ui/l10n_ext.dart';
 
 class NoteContent extends StatelessWidget {
@@ -33,9 +34,8 @@ class NoteContent extends StatelessWidget {
           baseline: TextBaseline.alphabetic,
           child: GestureDetector(
             onTap: token.startsWith('#')
-                ? () => context.push(
-                    '/tags/${Uri.encodeComponent(token.substring(1))}',
-                  )
+                ? () =>
+                      openDetail(context, TagDetailLocation(token.substring(1)))
                 : () => _open(context, token),
             child: Text(token, style: linkStyle, softWrap: true),
           ),

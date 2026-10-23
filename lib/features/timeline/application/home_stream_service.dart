@@ -64,9 +64,9 @@ class HomeStreamService with WidgetsBindingObserver {
       }
     });
     try {
-      final stream = await client.subscribe(
-        const TimelineChannel(TimelineKind.home),
-      );
+      final stream = await client
+          .subscribe(const TimelineChannel(TimelineKind.home))
+          .timeout(const Duration(seconds: 15));
       if (_disposed || _client != client) return;
       _notesSubscription = stream.listen(
         (event) {
@@ -84,6 +84,13 @@ class HomeStreamService with WidgetsBindingObserver {
     } catch (_) {
       _scheduleReconnect();
     }
+  }
+
+  void reconnect() {
+    if (_disposed || _closing) return;
+    _attempt = 0;
+    _reconnectTimer?.cancel();
+    unawaited(_connect());
   }
 
   void _scheduleReconnect() {

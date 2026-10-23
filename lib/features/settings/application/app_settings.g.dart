@@ -42,7 +42,7 @@ final class SettingsControllerProvider
 }
 
 String _$settingsControllerHash() =>
-    r'ba7beca25699e7633d232038996e91191bed0a9a';
+    r'15a193ad562d2c3a34b40cf95cb2e9e81583cc4f';
 
 abstract class _$SettingsController extends $Notifier<AppSettings> {
   AppSettings build();

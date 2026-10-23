@@ -535,4 +535,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get signIn => '登录';
+
+  @override
+  String get refresh => '刷新';
+
+  @override
+  String get accentColor => '主题色';
+
+  @override
+  String get instanceColor => '跟随实例';
+
+  @override
+  String get colorIndigo => '靛蓝';
+
+  @override
+  String get colorPink => '粉色';
+
+  @override
+  String get colorGreen => '绿色';
+
+  @override
+  String get colorBlue => '蓝色';
+
+  @override
+  String get colorOrange => '橙色';
+
+  @override
+  String get detailBreakpoint => '详情面板断点';
 }

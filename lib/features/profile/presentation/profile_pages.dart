@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:ui' as ui;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
+import '../../notes/presentation/note_content.dart';
 import '../../notes/presentation/note_list.dart';
 import '../application/profile_providers.dart';
 
@@ -24,20 +28,17 @@ class ProfilePage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.profile),
         actions: [
-          IconButton(
-            tooltip: l10n.accountSwitch,
-            onPressed: () => context.push('/settings/accounts'),
-            icon: const Icon(Icons.switch_account_outlined),
-          ),
-          IconButton(
-            tooltip: l10n.settings,
-            onPressed: () => context.push('/settings'),
-            icon: const Icon(Icons.settings_outlined),
-          ),
+          if (MediaQuery.sizeOf(context).width < 840)
+            IconButton(
+              tooltip: l10n.settings,
+              onPressed: () =>
+                  openDetail(context, const SettingsDetailLocation()),
+              icon: const Icon(Icons.settings_outlined),
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/compose'),
+        onPressed: () => openDetail(context, const ComposeDetailLocation(null)),
         child: const Icon(Icons.edit_outlined),
       ),
       body: current.when(
@@ -122,59 +123,83 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final banner = user.bannerUrl;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (banner != null)
-          CachedNetworkImage(
-            imageUrl: banner,
-            height: 140,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorWidget: (_, _, _) => const SizedBox(height: 40),
+        SizedBox(
+          height: 190,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (banner != null && banner.isNotEmpty)
+                CachedNetworkImage(
+                  imageUrl: banner,
+                  fit: BoxFit.cover,
+                  errorWidget: (_, _, _) =>
+                      _BannerFallback(avatarUrl: user.avatarUrl),
+                  placeholder: (_, _) =>
+                      _BannerFallback(avatarUrl: user.avatarUrl),
+                )
+              else
+                _BannerFallback(avatarUrl: user.avatarUrl),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      scheme.surface.withValues(alpha: 0.15),
+                      scheme.surface.withValues(alpha: 0.9),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 12,
+                child: Row(
+                  children: [
+                    _ProfileAvatar(url: user.avatarUrl),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            user.name ?? user.username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          Text(
+                            '@${user.username}${user.host == null ? '' : '@${user.host}'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+        ),
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundImage: NetworkImage(user.avatarUrl),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.name ?? user.username,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        Text(
-                          '@${user.username}${user.host == null ? '' : '@${user.host}'}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isMe)
-                    IconButton(
-                      tooltip: l10n.settings,
-                      onPressed: () => context.push('/settings'),
-                      icon: const Icon(Icons.settings_outlined),
-                    ),
-                ],
-              ),
               if (user.description?.isNotEmpty == true) ...[
+                NoteContent(text: _normalizeDescription(user.description!)),
                 const SizedBox(height: 12),
-                Text(user.description!),
               ],
-              const SizedBox(height: 12),
               Wrap(
                 spacing: 16,
                 children: [
@@ -186,7 +211,8 @@ class _ProfileHeader extends StatelessWidget {
               if (!isMe && user.canChat) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: () => context.push('/chat/user/${user.id}'),
+                  onPressed: () =>
+                      openDetail(context, ChatUserDetailLocation(user.id)),
                   icon: const Icon(Icons.chat_bubble_outline),
                   label: Text(l10n.message),
                 ),
@@ -196,6 +222,87 @@ class _ProfileHeader extends StatelessWidget {
         ),
         const Divider(height: 1),
       ],
+    );
+  }
+}
+
+String _normalizeDescription(String text) {
+  final links = text.replaceAllMapped(
+    RegExp(r'\[([^\]]+)\]\(([^)]+)\)'),
+    (match) => '${match[1]}: ${match[2]}',
+  );
+  return links
+      .replaceAll('**', '')
+      .replaceAll('__', '')
+      .split('\n')
+      .map((line) {
+        final trimmed = line.trimLeft();
+        return trimmed.startsWith('>') ? trimmed.substring(1).trimLeft() : line;
+      })
+      .join('\n');
+}
+
+class _BannerFallback extends StatelessWidget {
+  const _BannerFallback({this.avatarUrl});
+
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [scheme.primaryContainer, scheme.tertiaryContainer],
+            ),
+          ),
+        ),
+        if (avatarUrl != null && avatarUrl!.isNotEmpty)
+          ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: CachedNetworkImage(
+              imageUrl: avatarUrl!,
+              fit: BoxFit.cover,
+              color: scheme.surface.withValues(alpha: 0.35),
+              colorBlendMode: BlendMode.srcOver,
+              errorWidget: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 76,
+      height: 76,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: scheme.surface, width: 3),
+      ),
+      child: ClipOval(
+        child: CachedNetworkImage(
+          imageUrl: url,
+          fit: BoxFit.cover,
+          errorWidget: (_, _, _) => ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: Icon(Icons.person_outline, color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ),
     );
   }
 }

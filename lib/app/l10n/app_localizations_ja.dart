@@ -535,4 +535,31 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get signIn => 'サインイン';
+
+  @override
+  String get refresh => '更新';
+
+  @override
+  String get accentColor => 'アクセントカラー';
+
+  @override
+  String get instanceColor => 'インスタンスの色';
+
+  @override
+  String get colorIndigo => 'インディゴ';
+
+  @override
+  String get colorPink => 'ピンク';
+
+  @override
+  String get colorGreen => 'グリーン';
+
+  @override
+  String get colorBlue => 'ブルー';
+
+  @override
+  String get colorOrange => 'オレンジ';
+
+  @override
+  String get detailBreakpoint => '詳細パネルのブレークポイント';
 }

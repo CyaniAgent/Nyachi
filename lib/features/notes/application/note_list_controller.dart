@@ -33,6 +33,25 @@ class NoteListController extends _$NoteListController {
   var _disposed = false;
   var _epoch = 0;
 
+  static const _networkTimeout = Duration(seconds: 15);
+
+  Future<NotePage> _fetchPage(NoteFeedSource source, {String? untilId}) async {
+    Object? lastError;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await _repository
+            .fetchPage(source, untilId: untilId)
+            .timeout(_networkTimeout);
+      } catch (error) {
+        lastError = error;
+        if (attempt == 0) {
+          await Future<void>.delayed(const Duration(seconds: 1));
+        }
+      }
+    }
+    throw lastError!;
+  }
+
   @override
   NoteListState build(NoteFeedSource source) {
     _source = source;
@@ -69,7 +88,7 @@ class NoteListController extends _$NoteListController {
       error: null,
     );
     try {
-      final page = await _repository.fetchPage(_source);
+      final page = await _fetchPage(_source);
       if (_disposed || epoch != _epoch) return;
       final deduped = _dedupe(page.items);
       state = state.copyWith(
@@ -103,10 +122,7 @@ class NoteListController extends _$NoteListController {
     final epoch = _epoch;
     state = state.copyWith(loadingMore: true, error: null);
     try {
-      final page = await _repository.fetchPage(
-        _source,
-        untilId: state.items.last.id,
-      );
+      final page = await _fetchPage(_source, untilId: state.items.last.id);
       if (_disposed || epoch != _epoch) return;
       final merged = _dedupe([...state.items, ...page.items]);
       state = state.copyWith(

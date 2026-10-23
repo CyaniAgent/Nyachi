@@ -1137,6 +1137,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in'**
   String get signIn;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @accentColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color'**
+  String get accentColor;
+
+  /// No description provided for @instanceColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance color'**
+  String get instanceColor;
+
+  /// No description provided for @colorIndigo.
+  ///
+  /// In en, this message translates to:
+  /// **'Indigo'**
+  String get colorIndigo;
+
+  /// No description provided for @colorPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get colorPink;
+
+  /// No description provided for @colorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get colorGreen;
+
+  /// No description provided for @colorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get colorBlue;
+
+  /// No description provided for @colorOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get colorOrange;
+
+  /// No description provided for @detailBreakpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Details panel breakpoint'**
+  String get detailBreakpoint;
 }
 
 class _AppLocalizationsDelegate

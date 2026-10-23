@@ -200,5 +200,14 @@
   },
   "noteDetail": "帖子",
   "removeAccount": "移除账号",
-  "signIn": "登录"
+  "signIn": "登录",
+  "refresh": "刷新",
+  "accentColor": "主题色",
+  "instanceColor": "跟随实例",
+  "colorIndigo": "靛蓝",
+  "colorPink": "粉色",
+  "colorGreen": "绿色",
+  "colorBlue": "蓝色",
+  "colorOrange": "橙色",
+  "detailBreakpoint": "详情面板断点"
 }

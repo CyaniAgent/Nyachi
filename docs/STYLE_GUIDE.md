@@ -28,6 +28,9 @@
   reveal or a selected tab.
 - Use Material 3 components and `Theme.of(context)` colors; do not hardcode
   colors except media scrims.
+- Shell detail links call `openDetail(context, DetailLocation(...))`; do not
+  hardcode detail `context.push` calls. The helper chooses the wide panel or a
+  full-page route from the breakpoint and the caller's feed/panel origin.
 - Media uses `CachedNetworkImage` and `media_kit`. Dispose every player.
 
 ## Localization

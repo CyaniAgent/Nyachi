@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:math' as math;
+
+import '../../../app/theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,7 +33,15 @@ class NoteList extends ConsumerWidget {
     final controller = ref.read(noteListControllerProvider(source).notifier);
     return RefreshIndicator(
       onRefresh: controller.refresh,
-      child: _content(context, state, controller, l10n),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = math.max(
+            12.0,
+            (constraints.maxWidth - appMaxContentWidth) / 2,
+          );
+          return _content(context, state, controller, l10n, horizontal);
+        },
+      ),
     );
   }
 
@@ -38,6 +50,7 @@ class NoteList extends ConsumerWidget {
     NoteListState state,
     NoteListController controller,
     AppLocalizations l10n,
+    double horizontal,
   ) {
     if ((state.initialLoading || state.refreshing) && state.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -50,9 +63,12 @@ class NoteList extends ConsumerWidget {
     final footer = state.items.isNotEmpty && state.hasMore ? 1 : 0;
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(horizontal, 4, horizontal, 24),
       itemCount:
           state.items.length + bannerCount + footer + (showEmpty ? 1 : 0),
-      separatorBuilder: (_, _) => const SizedBox(height: 4),
+      separatorBuilder: (context, index) => header != null && index == 0
+          ? const SizedBox.shrink()
+          : const Divider(height: 1),
       itemBuilder: (context, index) {
         var cursor = 0;
         if (header != null) {

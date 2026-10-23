@@ -538,4 +538,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signIn => 'Sign in';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get accentColor => 'Accent color';
+
+  @override
+  String get instanceColor => 'Instance color';
+
+  @override
+  String get colorIndigo => 'Indigo';
+
+  @override
+  String get colorPink => 'Pink';
+
+  @override
+  String get colorGreen => 'Green';
+
+  @override
+  String get colorBlue => 'Blue';
+
+  @override
+  String get colorOrange => 'Orange';
+
+  @override
+  String get detailBreakpoint => 'Details panel breakpoint';
 }
