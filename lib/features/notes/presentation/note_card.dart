@@ -126,6 +126,7 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                   Wrap(
                     spacing: 4,
                     runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       for (final entry in note.reactions.entries.take(4))
                         ActionChip(
@@ -136,6 +137,15 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                               ? null
                               : () => _toggleReaction(note, entry.key),
                         ),
+                      ActionChip(
+                        label: const Icon(
+                          Icons.add_reaction_outlined,
+                          size: 18,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        tooltip: context.l10n.react,
+                        onPressed: _busy ? null : () => _pickReaction(note),
+                      ),
                     ],
                   ),
                 ],
@@ -146,8 +156,7 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                       icon: Icons.chat_bubble_outline,
                       value: note.repliesCount,
                       label: context.l10n.reply,
-                      onTap: () =>
-                          openDetail(context, ComposeDetailLocation(note.id)),
+                      onTap: () => _openDetail(note.id),
                     ),
                     _NoteAction(
                       icon: Icons.repeat,
@@ -155,12 +164,13 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                       label: context.l10n.renote,
                       onTap: _busy ? null : () => _renote(note),
                     ),
-                    _NoteAction(
-                      icon: Icons.add_reaction_outlined,
-                      value: note.reactionCount,
-                      label: context.l10n.react,
-                      onTap: _busy ? null : () => _pickReaction(note),
-                    ),
+                    if (note.reactions.isEmpty)
+                      _NoteAction(
+                        icon: Icons.add_reaction_outlined,
+                        value: note.reactionCount,
+                        label: context.l10n.react,
+                        onTap: _busy ? null : () => _pickReaction(note),
+                      ),
                     const Spacer(),
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.more_horiz),

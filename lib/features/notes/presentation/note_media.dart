@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -268,49 +269,123 @@ class _VideoEmbedState extends State<VideoEmbed> {
   }
 }
 
+/// Opens the image viewer inside a floating window over a dimmed backdrop
+/// instead of pushing a full page.
 void showImageViewer(
   BuildContext context,
   List<DriveFile> images, {
   int initial = 0,
 }) {
   if (images.isEmpty) return;
-  Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => _ImageViewer(images: images, initial: initial),
-    ),
+  showDialog<void>(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (_) => _ImageViewer(images: images, initial: initial),
   );
 }
 
-class _ImageViewer extends StatelessWidget {
+class _ImageViewer extends StatefulWidget {
   const _ImageViewer({required this.images, required this.initial});
 
   final List<DriveFile> images;
   final int initial;
 
   @override
+  State<_ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<_ImageViewer> {
+  late final PageController _page = PageController(initialPage: widget.initial);
+  // Tap-to-close must bypass the gesture arena: InteractiveViewer's pan
+  // recognizers can claim a jittery click, so close on raw pointer events
+  // with only small movement, unless the press landed on the image itself.
+  final _pressStart = <int, Offset>{};
+  final _onImage = <int>{};
+
+  void _rootPointerDown(PointerEvent event) {
+    _pressStart[event.pointer] = event.localPosition;
+  }
+
+  void _rootPointerMove(PointerEvent event) {
+    final start = _pressStart[event.pointer];
+    if (start != null &&
+        (event.localPosition - start).distance > kTouchSlop) {
+      _pressStart.remove(event.pointer);
+    }
+  }
+
+  void _rootPointerUp(PointerEvent event) {
+    final start = _pressStart.remove(event.pointer);
+    if (start == null) return;
+    if (_onImage.remove(event.pointer)) return;
+    Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    _page.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-          ),
-        ],
-      ),
-      body: PageView.builder(
-        controller: PageController(initialPage: initial),
-        itemCount: images.length,
-        itemBuilder: (context, index) => InteractiveViewer(
-          child: Center(
-            child: CachedNetworkImage(
-              imageUrl: images[index].url,
-              fit: BoxFit.contain,
-              errorWidget: (_, _, _) =>
-                  const Icon(Icons.broken_image_outlined, color: Colors.white),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 56, vertical: 40),
+      child: Listener(
+        onPointerDown: _rootPointerDown,
+        onPointerMove: _rootPointerMove,
+        onPointerUp: _rootPointerUp,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720, maxHeight: 560),
+            child: Stack(
+              children: [
+                PageView.builder(
+                  controller: _page,
+                  itemCount: widget.images.length,
+                  itemBuilder: (context, index) => InteractiveViewer(
+                    maxScale: 4,
+                    child: Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Listener(
+                          onPointerDown: (event) =>
+                              _onImage.add(event.pointer),
+                          child: CachedNetworkImage(
+                            imageUrl: widget.images[index].url,
+                            fit: BoxFit.contain,
+                            errorWidget: (_, _, _) =>
+                                const Icon(Icons.broken_image_outlined),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Listener(
+                    // The button closes via its own onTap; mark the press as
+                    // consumed so the root tap-to-close listener does not pop
+                    // a second route beneath the dialog.
+                    onPointerDown: (event) => _onImage.add(event.pointer),
+                    child: Material(
+                      color: Colors.black38,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).closeButtonTooltip,
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

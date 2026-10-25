@@ -35,11 +35,20 @@ class NoteList extends ConsumerWidget {
       onRefresh: controller.refresh,
       child: LayoutBuilder(
         builder: (context, constraints) {
+          // Left-align the readable column instead of centering it: a fixed
+          // leading inset, with the trailing inset absorbing the remainder.
           final horizontal = math.max(
             12.0,
-            (constraints.maxWidth - appMaxContentWidth) / 2,
+            constraints.maxWidth - appMaxContentWidth - 12.0,
           );
-          return _content(context, state, controller, l10n, horizontal);
+          return _content(
+            context,
+            state,
+            controller,
+            l10n,
+            12.0,
+            horizontal,
+          );
         },
       ),
     );
@@ -50,7 +59,8 @@ class NoteList extends ConsumerWidget {
     NoteListState state,
     NoteListController controller,
     AppLocalizations l10n,
-    double horizontal,
+    double leading,
+    double trailing,
   ) {
     if ((state.initialLoading || state.refreshing) && state.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -63,7 +73,7 @@ class NoteList extends ConsumerWidget {
     final footer = state.items.isNotEmpty && state.hasMore ? 1 : 0;
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(horizontal, 4, horizontal, 24),
+      padding: EdgeInsets.fromLTRB(leading, 4, trailing, 24),
       itemCount:
           state.items.length + bannerCount + footer + (showEmpty ? 1 : 0),
       separatorBuilder: (context, index) => header != null && index == 0

@@ -154,6 +154,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings => '設定';
 
   @override
+  String get online => 'オンライン';
+
+  @override
+  String get me => '自分';
+
+  @override
+  String get noReplies => '返信はまだありません';
+
+  @override
   String get emptyTimeline => '投稿はまだありません';
 
   @override

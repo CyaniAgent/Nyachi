@@ -154,6 +154,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings => '设置';
 
   @override
+  String get online => '在线';
+
+  @override
+  String get me => '我的';
+
+  @override
+  String get noReplies => '暂无回复';
+
+  @override
   String get emptyTimeline => '暂无帖子';
 
   @override

@@ -111,7 +111,7 @@ final class NoteDetailControllerProvider
 }
 
 String _$noteDetailControllerHash() =>
-    r'2174987a169724da1ebb92dfe5bba84ab02223ab';
+    r'b3bcd159243fa5eb8459f1a411005c1a67c6b6fb';
 
 final class NoteDetailControllerFamily extends $Family
     with

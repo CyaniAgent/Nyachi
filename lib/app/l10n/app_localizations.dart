@@ -388,6 +388,24 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get online;
+
+  /// No description provided for @me.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get me;
+
+  /// No description provided for @noReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'No replies yet'**
+  String get noReplies;
+
   /// No description provided for @emptyTimeline.
   ///
   /// In en, this message translates to:
