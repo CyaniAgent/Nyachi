@@ -94,19 +94,20 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
+    // Compose no longer enters the detail panel; it opens a dialog instead.
     expect(
       router.routerDelegate.currentConfiguration.uri.toString(),
-      '/home?detail=%2Fcompose',
+      '/home',
     );
-    expect(find.text('New note'), findsOneWidget);
+    expect(find.byIcon(Icons.send), findsOneWidget);
     expect(find.text('open'), findsOneWidget);
     expect(find.byKey(const Key('app-navigation-rail')), findsOneWidget);
 
-    await tester.tap(find.byType(BackButton));
+    await tester.tapAt(const Offset(10, 400));
     await tester.pumpAndSettle();
 
     expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
-    expect(find.text('New note'), findsNothing);
+    expect(find.byIcon(Icons.send), findsNothing);
     expect(find.text('open'), findsOneWidget);
 
     await tester.tap(find.text('open'));
@@ -114,20 +115,13 @@ void main() {
     tester.view.physicalSize = const Size(1000, 800);
     await tester.pumpAndSettle();
 
-    expect(
-      router.routerDelegate.currentConfiguration.uri.toString(),
-      '/compose',
-    );
-    expect(find.text('full compose'), findsOneWidget);
-    expect(find.text('open'), findsNothing);
+    // Narrow layouts open the composer as a bottom sheet, not a full page.
+    expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
+    expect(find.byIcon(Icons.send), findsOneWidget);
 
     tester.view.physicalSize = const Size(1300, 800);
     await tester.pumpAndSettle();
-    expect(
-      router.routerDelegate.currentConfiguration.uri.toString(),
-      '/compose',
-    );
-    expect(find.text('full compose'), findsOneWidget);
+    expect(find.byIcon(Icons.send), findsOneWidget);
   });
 
   testWidgets('opens a detail panel from the initial URL', (tester) async {

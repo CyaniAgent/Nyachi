@@ -228,15 +228,23 @@ class ChatThreadPage extends ConsumerStatefulWidget {
 class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
   final _text = TextEditingController();
   final _scroll = ScrollController();
+  final _focus = FocusNode();
   Uint8List? _attachment;
   String? _attachmentName;
   var _lastCount = 0;
   var _wasLoadingOlder = false;
 
   @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     _text.dispose();
     _scroll.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -326,41 +334,106 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
                           _attachmentName = null;
                         }),
                       ),
-                    Row(
-                      children: [
-                        IconButton(
-                          tooltip: l10n.attach,
-                          onPressed: state.sending ? null : _pick,
-                          icon: const Icon(Icons.attach_file),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _text,
-                            decoration: InputDecoration(
-                              hintText: l10n.messageHint,
-                              border: const OutlineInputBorder(),
-                            ),
-                            minLines: 1,
-                            maxLines: 4,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            tooltip: l10n.attach,
+                            onPressed: state.sending ? null : _pick,
+                            icon: const Icon(Icons.attach_file),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.filled(
-                          tooltip: l10n.send,
-                          onPressed: state.sending
-                              ? null
-                              : () => _send(controller, l10n),
-                          icon: state.sending
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.send),
-                        ),
-                      ],
+                          Expanded(
+                            child: TextField(
+                              controller: _text,
+                              focusNode: _focus,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 14,
+                                ),
+                                hint: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 150),
+                                  switchInCurve: Curves.easeOut,
+                                  switchOutCurve: Curves.easeIn,
+                                  layoutBuilder:
+                                      (
+                                        Widget? currentChild,
+                                        List<Widget> previousChildren,
+                                      ) {
+                                        return Stack(
+                                          alignment: Alignment.centerLeft,
+                                          children: [
+                                            ...previousChildren,
+                                            ?currentChild,
+                                          ],
+                                        );
+                                      },
+                                  transitionBuilder: (child, animation) {
+                                    final incoming =
+                                        child.key == const ValueKey('hint');
+                                    final position = incoming
+                                        ? Tween<Offset>(
+                                            begin: const Offset(0, 1),
+                                            end: Offset.zero,
+                                          ).animate(animation)
+                                        : Tween<Offset>(
+                                            begin: const Offset(0, -1),
+                                            end: Offset.zero,
+                                          ).animate(animation);
+                                    return ClipRect(
+                                      child: SlideTransition(
+                                        position: position,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: _focus.hasFocus
+                                      ? const SizedBox.shrink(
+                                          key: ValueKey('focused'),
+                                        )
+                                      : Text(
+                                          l10n.messageHint,
+                                          key: const ValueKey('hint'),
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              minLines: 1,
+                              maxLines: 4,
+                            ),
+                          ),
+                          IconButton.filled(
+                            tooltip: l10n.send,
+                            onPressed: state.sending
+                                ? null
+                                : () => _send(controller, l10n),
+                            icon: state.sending
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.send),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

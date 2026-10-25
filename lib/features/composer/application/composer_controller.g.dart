@@ -106,3 +106,81 @@ abstract class _$ComposerController extends $Notifier<ComposerState> {
     return element.handleCreate(ref, () => build(_$args));
   }
 }
+
+/// Loads the note being replied to, for the composer's reply-target preview.
+
+@ProviderFor(composerReplyNote)
+final composerReplyNoteProvider = ComposerReplyNoteFamily._();
+
+/// Loads the note being replied to, for the composer's reply-target preview.
+
+final class ComposerReplyNoteProvider
+    extends $FunctionalProvider<AsyncValue<Note?>, Note?, FutureOr<Note?>>
+    with $FutureModifier<Note?>, $FutureProvider<Note?> {
+  /// Loads the note being replied to, for the composer's reply-target preview.
+  ComposerReplyNoteProvider._({
+    required ComposerReplyNoteFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'composerReplyNoteProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$composerReplyNoteHash();
+
+  @override
+  String toString() {
+    return r'composerReplyNoteProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Note?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Note?> create(Ref ref) {
+    final argument = this.argument as String;
+    return composerReplyNote(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ComposerReplyNoteProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$composerReplyNoteHash() => r'afc3f3cd1ebcce4c744e50774c7e342896bdf3c2';
+
+/// Loads the note being replied to, for the composer's reply-target preview.
+
+final class ComposerReplyNoteFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Note?>, String> {
+  ComposerReplyNoteFamily._()
+    : super(
+        retry: null,
+        name: r'composerReplyNoteProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Loads the note being replied to, for the composer's reply-target preview.
+
+  ComposerReplyNoteProvider call(String noteId) =>
+      ComposerReplyNoteProvider._(argument: noteId, from: this);
+
+  @override
+  String toString() => r'composerReplyNoteProvider';
+}

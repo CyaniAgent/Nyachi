@@ -15,6 +15,7 @@ import '../../../core/storage/storage_models.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../../notes/application/note_detail_controller.dart';
 import '../../notes/application/note_list_controller.dart';
+import '../../notes/data/note_repository.dart';
 
 part 'composer_controller.freezed.dart';
 part 'composer_controller.g.dart';
@@ -239,5 +240,17 @@ class ComposerController extends _$ComposerController {
       if (option.name == value) return option;
     }
     return NotesCreateRequestVisibility.public;
+  }
+}
+
+/// Loads the note being replied to, for the composer's reply-target preview.
+@riverpod
+Future<Note?> composerReplyNote(Ref ref, String noteId) async {
+  final override = ref.watch(noteOverridesProvider)[noteId];
+  if (override != null) return override;
+  try {
+    return await ref.watch(noteRepositoryProvider).fetch(noteId);
+  } catch (_) {
+    return null;
   }
 }

@@ -156,6 +156,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get online => 'Online';
+
+  @override
+  String get me => 'Me';
+
+  @override
+  String get noReplies => 'No replies yet';
+
+  @override
   String get emptyTimeline => 'No notes yet';
 
   @override

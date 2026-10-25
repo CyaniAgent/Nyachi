@@ -15,6 +15,12 @@ part 'note_repository.g.dart';
 abstract interface class NoteRepository {
   Future<Note> fetch(String noteId);
 
+  Future<CursorPage<Note>> childrenPage(
+    String noteId, {
+    int limit = 10,
+    String? untilId,
+  });
+
   Future<Note> react(String noteId, String reaction);
 
   Future<Note> unreact(String noteId);
@@ -57,6 +63,17 @@ class MisskeyNoteRepository implements NoteRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<CursorPage<Note>> childrenPage(
+    String noteId, {
+    int limit = 10,
+    String? untilId,
+  }) => client.notes.childrenPage(
+    noteId: noteId,
+    limit: limit,
+    untilId: untilId,
+  );
 
   @override
   Future<Note> react(String noteId, String reaction) async {

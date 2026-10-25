@@ -34,6 +34,12 @@ abstract class NoteDetailState with _$NoteDetailState {
     @Default(false) bool mutating,
     AppFailure? error,
     @Default(false) bool usingCache,
+    @Default(<Note>[]) List<Note> replies,
+    @Default(true) bool repliesLoading,
+    @Default(false) bool repliesLoadingMore,
+    @Default(false) bool repliesHasMore,
+    String? repliesCursor,
+    AppFailure? repliesError,
   }) = _NoteDetailState;
 }
 
@@ -53,6 +59,7 @@ class NoteDetailController extends _$NoteDetailController {
       return NoteDetailState(note: override, loading: false);
     }
     unawaited(Future<void>.microtask(_load));
+    unawaited(Future<void>.microtask(_loadReplies));
     return const NoteDetailState();
   }
 
@@ -65,6 +72,58 @@ class NoteDetailController extends _$NoteDetailController {
       if (_disposed) return;
       state = state.copyWith(loading: false, error: mapFailure(error));
     }
+  }
+
+  Future<void> _loadReplies() async {
+    state = state.copyWith(repliesLoading: true, repliesError: null);
+    try {
+      final page = await ref.read(noteRepositoryProvider).childrenPage(
+        _noteId,
+      );
+      if (_disposed) return;
+      state = state.copyWith(
+        replies: _chronological(page.items),
+        repliesLoading: false,
+        repliesHasMore: page.hasMore,
+        repliesCursor: page.nextCursor,
+      );
+    } catch (error) {
+      if (_disposed) return;
+      state = state.copyWith(
+        repliesLoading: false,
+        repliesError: mapFailure(error),
+      );
+    }
+  }
+
+  Future<void> loadMoreReplies() async {
+    final cursor = state.repliesCursor;
+    if (!state.repliesHasMore || cursor == null || state.repliesLoadingMore) {
+      return;
+    }
+    state = state.copyWith(repliesLoadingMore: true);
+    try {
+      final page = await ref.read(noteRepositoryProvider).childrenPage(
+        _noteId,
+        untilId: cursor,
+      );
+      if (_disposed) return;
+      state = state.copyWith(
+        replies: [...state.replies, ..._chronological(page.items)],
+        repliesLoadingMore: false,
+        repliesHasMore: page.hasMore,
+        repliesCursor: page.nextCursor,
+      );
+    } catch (error) {
+      if (_disposed) return;
+      state = state.copyWith(repliesLoadingMore: false);
+    }
+  }
+
+  List<Note> _chronological(List<Note> notes) {
+    final sorted = [...notes];
+    sorted.sort((a, b) => a.id.compareTo(b.id));
+    return sorted;
   }
 
   Future<void> toggleReaction(String reaction) async {

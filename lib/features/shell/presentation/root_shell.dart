@@ -11,6 +11,7 @@ import '../../../app/detail_panel/detail_panel_scope.dart';
 import '../../../app/router/navigator_keys.dart';
 import '../../../app/router/router_guards.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../settings/application/app_settings.dart';
 import '../application/shell_navigation.dart';
@@ -137,8 +138,13 @@ class _RootShellState extends ConsumerState<RootShell> {
         return DetailPanelScope(
           coordinator: coordinator,
           child: ShellChrome(
-            selectedIndex: _selectedVisibleIndex(config, current),
+            selectedIndex: _selectedVisibleIndex(
+              config,
+              current,
+              width >= 840,
+            ),
             onDestinationSelected: (tab) => _select(shell, tab),
+            onProfile: () => _select(shell, AppTab.profile),
             onSettings: () {
               if (isTabRootPath(widget.uri.path) && width >= breakpoint) {
                 coordinator.openFromFeed(const SettingsDetailLocation());
@@ -153,12 +159,10 @@ class _RootShellState extends ConsumerState<RootShell> {
     );
   }
 
-  int _selectedVisibleIndex(NavConfig config, AppTab current) {
-    final visible = config.order
-        .where(config.visible.contains)
-        .toList(growable: false);
+  int? _selectedVisibleIndex(NavConfig config, AppTab current, bool railMode) {
+    final visible = shellVisibleTabs(config, railMode);
     final index = visible.indexOf(current);
-    return index < 0 ? 0 : index;
+    return index < 0 ? null : index;
   }
 
   void _select(StatefulNavigationShell? shell, AppTab tab) {
@@ -180,6 +184,19 @@ class _RootShellState extends ConsumerState<RootShell> {
   };
 }
 
+/// Tabs rendered in the shell chrome for the given mode.
+///
+/// The profile tab is hidden from the desktop rail (the user panel in the
+/// corner navigates there instead); on the bottom bar it stays, rendered as
+/// the user's avatar.
+List<AppTab> shellVisibleTabs(NavConfig config, bool railMode) {
+  final visible = config.order
+      .where(config.visible.contains)
+      .toList(growable: false);
+  if (!railMode) return visible;
+  return visible.where((tab) => tab != AppTab.profile).toList(growable: false);
+}
+
 /// Sidebar/bottom-navigation chrome shared by [RootShell] and widget tests.
 class ShellChrome extends ConsumerWidget {
   const ShellChrome({
@@ -187,40 +204,60 @@ class ShellChrome extends ConsumerWidget {
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.onSettings,
+    required this.onProfile,
     super.key,
   });
 
   final Widget child;
-  final int selectedIndex;
+  final int? selectedIndex;
   final ValueChanged<AppTab> onDestinationSelected;
   final VoidCallback onSettings;
+  final VoidCallback onProfile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(settingsControllerProvider).navConfig;
-    final visible = config.order
-        .where(config.visible.contains)
-        .toList(growable: false);
+    final account = ref.watch(activeAccountProvider);
+    final width = MediaQuery.sizeOf(context).width;
+    final railMode = width >= 840;
+    final visible = shellVisibleTabs(config, railMode);
     final destinations = visible
         .map(
-          (tab) => _Destination(icon: _icon(tab), label: _label(context, tab)),
+          (tab) => _Destination(
+            icon: _icon(tab),
+            label: _label(context, tab),
+            avatarUrl: tab == AppTab.profile && !railMode
+                ? account?.avatarUrl
+                : null,
+          ),
         )
         .toList(growable: false);
-    final width = MediaQuery.sizeOf(context).width;
 
-    if (width < 840) {
+    if (!railMode) {
       return Scaffold(
         body: child,
         bottomNavigationBar: NavigationBar(
-          selectedIndex: selectedIndex.clamp(0, visible.length - 1),
+          selectedIndex:
+              (selectedIndex ?? 0).clamp(0, destinations.length - 1),
           onDestinationSelected: (index) {
             onDestinationSelected(visible[index]);
           },
           destinations: [
             for (final destination in destinations)
               NavigationDestination(
-                icon: Icon(destination.icon),
-                label: destination.label,
+                icon: destination.avatarUrl == null
+                    ? Icon(destination.icon)
+                    : _UserAvatar(
+                        avatarUrl: destination.avatarUrl,
+                        size: 28,
+                        showStatus: true,
+                        ringColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainer,
+                      ),
+                label: destination.avatarUrl == null
+                    ? destination.label
+                    : context.l10n.me,
               ),
           ],
         ),
@@ -237,14 +274,17 @@ class ShellChrome extends ConsumerWidget {
             selectedIndex: selectedIndex,
             onDestinationSelected: onDestinationSelected,
             onSettings: onSettings,
+            onProfile: onProfile,
           ),
-          const VerticalDivider(width: 1),
+          VerticalDivider(
+            width: 1,
+            color: Theme.of(context).dividerColor.withAlpha(128),
+          ),
           Expanded(child: child),
         ],
       ),
     );
   }
-
   IconData _icon(AppTab tab) => switch (tab) {
     AppTab.home => Icons.home_outlined,
     AppTab.notifications => Icons.notifications_outlined,
@@ -270,14 +310,16 @@ class _AppNavigationRail extends StatelessWidget {
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.onSettings,
+    required this.onProfile,
   });
 
   final bool extended;
   final List<_Destination> destinations;
   final List<AppTab> visible;
-  final int selectedIndex;
+  final int? selectedIndex;
   final ValueChanged<AppTab> onDestinationSelected;
   final VoidCallback onSettings;
+  final VoidCallback onProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +331,7 @@ class _AppNavigationRail extends StatelessWidget {
           Expanded(
             child: NavigationRail(
               key: ValueKey<bool>(extended),
-              selectedIndex: selectedIndex.clamp(0, destinations.length - 1),
+              selectedIndex: selectedIndex?.clamp(0, destinations.length - 1),
               onDestinationSelected: (index) {
                 onDestinationSelected(visible[index]);
               },
@@ -310,14 +352,14 @@ class _AppNavigationRail extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12, top: 4),
-            child: IconButton(
-              tooltip: context.l10n.settings,
-              onPressed: onSettings,
-              icon: const Icon(Icons.settings_outlined),
-            ),
+          Divider(
+            height: 1,
+            color: Theme.of(context).dividerColor.withAlpha(128),
+          ),
+          _SidebarUserPanel(
+            extended: extended,
+            onSettings: onSettings,
+            onProfile: onProfile,
           ),
         ],
       ),
@@ -325,9 +367,242 @@ class _AppNavigationRail extends StatelessWidget {
   }
 }
 
+class _SidebarUserPanel extends ConsumerStatefulWidget {
+  const _SidebarUserPanel({
+    required this.extended,
+    required this.onSettings,
+    required this.onProfile,
+  });
+
+  final bool extended;
+  final VoidCallback onSettings;
+  final VoidCallback onProfile;
+
+  @override
+  ConsumerState<_SidebarUserPanel> createState() => _SidebarUserPanelState();
+}
+
+class _SidebarUserPanelState extends ConsumerState<_SidebarUserPanel> {
+  var _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final account = ref.watch(activeAccountProvider);
+    if (account == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12, top: 4),
+        child: IconButton(
+          tooltip: context.l10n.settings,
+          onPressed: widget.onSettings,
+          icon: const Icon(Icons.settings_outlined),
+        ),
+      );
+    }
+    final displayName = account.displayName ?? account.username;
+    if (!widget.extended) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8, top: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: context.l10n.profile,
+              onPressed: widget.onProfile,
+              icon: _UserAvatar(
+                avatarUrl: account.avatarUrl,
+                size: 36,
+                showStatus: true,
+              ),
+            ),
+            IconButton(
+              tooltip: context.l10n.settings,
+              onPressed: widget.onSettings,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 32),
+              icon: const Icon(Icons.settings_outlined, size: 20),
+            ),
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _hovering = true),
+              onExit: (_) => setState(() => _hovering = false),
+              child: InkWell(
+                onTap: widget.onProfile,
+                child: Row(
+                  children: [
+                    _UserAvatar(
+                      avatarUrl: account.avatarUrl,
+                      size: 36,
+                      showStatus: true,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          AnimatedSwitcher(
+                            layoutBuilder:
+                                (
+                                  Widget? currentChild,
+                                  List<Widget> previousChildren,
+                                ) {
+                                  return Stack(
+                                    alignment: Alignment.centerLeft,
+                                    children: [
+                                      ...previousChildren,
+                                      ?currentChild,
+                                    ],
+                                  );
+                                },
+                            duration: const Duration(milliseconds: 180),
+                            switchInCurve: Curves.easeOut,
+                            switchOutCurve: Curves.easeIn,
+                            transitionBuilder: (child, animation) {
+                              final incoming = child.key == ValueKey(_hovering);
+                              final position = incoming
+                                  ? Tween<Offset>(
+                                      begin: const Offset(0, 1),
+                                      end: Offset.zero,
+                                    ).animate(animation)
+                                  : Tween<Offset>(
+                                      begin: const Offset(0, -1),
+                                      end: Offset.zero,
+                                    ).animate(animation);
+                              return ClipRect(
+                                child: SlideTransition(
+                                  position: position,
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Text(
+                              _hovering
+                                  ? '@${account.username}'
+                                  : context.l10n.online,
+                              key: ValueKey(_hovering),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          _PanelIconButton(
+            tooltip: context.l10n.settings,
+            icon: Icons.settings_outlined,
+            onPressed: widget.onSettings,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelIconButton extends StatelessWidget {
+  const _PanelIconButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      icon: Icon(icon, size: 18),
+    );
+  }
+}
+
+class _UserAvatar extends StatelessWidget {
+  const _UserAvatar({
+    required this.avatarUrl,
+    required this.size,
+    this.showStatus = false,
+    this.ringColor,
+  });
+
+  final String? avatarUrl;
+  final double size;
+  final bool showStatus;
+  final Color? ringColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = avatarUrl == null
+        ? null
+        : DecorationImage(image: NetworkImage(avatarUrl!), fit: BoxFit.cover);
+    final avatar = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        shape: BoxShape.circle,
+        image: image,
+      ),
+      alignment: Alignment.center,
+      child: image == null
+          ? Icon(Icons.person_outline, size: size * 0.6)
+          : null,
+    );
+    if (!showStatus) return avatar;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        avatar,
+        Positioned(
+          right: -2,
+          bottom: -2,
+          child: Container(
+            width: size * 0.36,
+            height: size * 0.36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF23A559),
+              border: Border.all(
+                color: ringColor ?? Theme.of(context).scaffoldBackgroundColor,
+                width: size * 0.09,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _Destination {
-  const _Destination({required this.icon, required this.label});
+  const _Destination({required this.icon, required this.label, this.avatarUrl});
 
   final IconData icon;
   final String label;
+  final String? avatarUrl;
 }

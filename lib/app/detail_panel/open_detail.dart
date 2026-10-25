@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/composer/presentation/compose_sheet.dart';
 import '../../features/settings/application/app_settings.dart';
 import 'detail_location.dart';
 import 'detail_panel_coordinator.dart';
@@ -22,6 +25,16 @@ void openDetail(BuildContext context, DetailLocation location) {
     listen: false,
   ).read(settingsControllerProvider).detailBreakpoint;
   final path = router.routerDelegate.currentConfiguration.uri.path;
+  final compose = location is ComposeDetailLocation ? location : null;
+  if (compose != null) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width < breakpoint) {
+      unawaited(showComposeSheet(context, replyId: compose.replyId));
+    } else {
+      unawaited(showComposeDialog(context, replyId: compose.replyId));
+    }
+    return;
+  }
   if (MediaQuery.sizeOf(context).width < breakpoint || !isTabRootPath(path)) {
     router.push(location.location);
     return;

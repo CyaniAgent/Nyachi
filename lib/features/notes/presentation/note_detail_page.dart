@@ -174,8 +174,200 @@ class _NoteDetailPageState extends ConsumerState<NoteDetailPage> {
                       relativeTime(context, note.createdAt),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    const Divider(height: 24),
+                    _RepliesSection(
+                      state: state,
+                      controller: controller,
+                      onRetry: () => ref.invalidate(
+                        noteDetailControllerProvider(widget.noteId),
+                      ),
+                    ),
                   ],
                 ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RepliesSection extends StatelessWidget {
+  const _RepliesSection({
+    required this.state,
+    required this.controller,
+    required this.onRetry,
+  });
+
+  final NoteDetailState state;
+  final NoteDetailController controller;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    if (state.repliesLoading && state.replies.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    if (state.repliesError != null && state.replies.isEmpty) {
+      return Center(
+        child: Column(
+          children: [
+            Text(state.repliesError!.message(l10n)),
+            FailureAction(failure: state.repliesError!, onRetry: onRetry),
+          ],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (state.replies.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.noReplies),
+            ),
+          )
+        else
+          for (final reply in state.replies)
+            _ReplyTile(note: reply),
+        if (state.repliesHasMore)
+          Center(
+            child: TextButton(
+              onPressed: state.repliesLoadingMore
+                  ? null
+                  : controller.loadMoreReplies,
+              child: Text(l10n.loadOlder),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ReplyTile extends StatelessWidget {
+  const _ReplyTile({required this.note});
+
+  final Note note;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return InkWell(
+      onTap: () => openDetail(context, NoteDetailLocation(note.id)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () => openDetail(context, UserDetailLocation(note.user.id)),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(note.user.avatarUrl),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          note.user.name ?? note.user.username,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '@${note.user.username}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        relativeTime(context, note.createdAt),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                  if (note.cw?.isNotEmpty == true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        note.cw!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    )
+                  else if (note.text?.isNotEmpty == true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: NoteContent(
+                        text: note.text!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        compactCount(context, note.repliesCount),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.repeat,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        compactCount(context, note.renoteCount),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.add_reaction_outlined,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        compactCount(context, note.reactionCount),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      if (note.repliesCount > 0) ...[
+                        const SizedBox(width: 12),
+                        Text(
+                          '${compactCount(context, note.repliesCount)} ${l10n.reply}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

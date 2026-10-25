@@ -10,6 +10,7 @@ import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../application/composer_controller.dart';
+import 'compose_sheet.dart';
 
 class ComposePage extends ConsumerStatefulWidget {
   const ComposePage({this.replyId, super.key});
@@ -104,6 +105,8 @@ class _ComposePageState extends ConsumerState<ComposePage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (widget.replyId != null)
+              ReplyPreviewCard(noteId: widget.replyId!),
             if (state.restored)
               Material(
                 color: Theme.of(context).colorScheme.secondaryContainer,
