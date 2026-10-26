@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,13 +10,13 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../app/l10n/app_localizations.dart';
-import '../../../app/theme/app_theme.dart';
+import '../../../core/l10n/app_localizations.dart';
+import '../../../core/ui/content_width.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/compact_tab_bar.dart';
-import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/presentation/note_media.dart';
 import '../application/chat_controllers.dart';
@@ -135,7 +134,7 @@ class _ConversationList extends StatelessWidget {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                       leading: CircleAvatar(
                         radius: 24,
-                        backgroundImage: NetworkImage(
+                        backgroundImage: nyachiImageProvider(
                           conversation.peer.avatarUrl,
                         ),
                       ),
@@ -340,9 +339,9 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHigh,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(28),
                       ),
                       child: Row(
@@ -406,9 +405,9 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
                                           l10n.messageHint,
                                           key: const ValueKey('hint'),
                                           style: TextStyle(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
                                           ),
                                         ),
                                 ),
@@ -559,8 +558,8 @@ class _ChatFile extends StatelessWidget {
         onTap: () => showImageViewer(context, [file]),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: CachedNetworkImage(
-            imageUrl: file.thumbnailUrl ?? file.url,
+          child: NyachiImage(
+            url: file.thumbnailUrl ?? file.url,
             width: 220,
             height: 160,
             fit: BoxFit.cover,
@@ -574,8 +573,8 @@ class _ChatFile extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            CachedNetworkImage(
-              imageUrl: file.thumbnailUrl ?? file.url,
+            NyachiImage(
+              url: file.thumbnailUrl ?? file.url,
               width: 220,
               height: 160,
               fit: BoxFit.cover,

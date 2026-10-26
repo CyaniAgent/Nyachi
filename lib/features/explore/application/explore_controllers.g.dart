@@ -48,7 +48,7 @@ final class TrendsProvider
   }
 }
 
-String _$trendsHash() => r'41cf88f4dc439433bf6c8577c224d4de651fec9a';
+String _$trendsHash() => r'859dfa2ef1404b45b385e3ad7a6ec3aa6d05f94f';
 
 @ProviderFor(UserSearchController)
 final userSearchControllerProvider = UserSearchControllerFamily._();

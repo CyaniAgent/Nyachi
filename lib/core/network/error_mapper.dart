@@ -5,8 +5,6 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
-import '../../app/l10n/app_localizations.dart';
-
 enum AppFailureKind { auth, rateLimit, server, network, storage, unknown }
 
 class AppFailure {
@@ -14,15 +12,6 @@ class AppFailure {
 
   final AppFailureKind kind;
   final Object? cause;
-
-  String message(AppLocalizations l10n) => switch (kind) {
-    AppFailureKind.auth => l10n.errorAuth,
-    AppFailureKind.rateLimit => l10n.errorRateLimit,
-    AppFailureKind.server => l10n.errorServer,
-    AppFailureKind.network => l10n.errorNetwork,
-    AppFailureKind.storage => l10n.errorStorage,
-    AppFailureKind.unknown => l10n.errorGeneric,
-  };
 }
 
 AppFailure mapFailure(Object error) {

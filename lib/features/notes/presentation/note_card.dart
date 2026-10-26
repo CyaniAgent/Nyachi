@@ -9,8 +9,9 @@ import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
 import '../../../core/network/error_mapper.dart';
+import '../../../core/ui/avatar.dart';
 import '../application/note_detail_controller.dart';
-import '../data/note_repository.dart';
+import '../application/note_providers.dart';
 import 'reaction_picker.dart';
 import 'note_content.dart';
 import 'note_media.dart';
@@ -42,155 +43,165 @@ class _NoteCardState extends ConsumerState<NoteCard> {
     final isRenote = widget.note.renote != null;
     final showContent = note.cw == null || _showCw;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 12, 4, 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () => openDetail(context, UserDetailLocation(note.user.id)),
-            child: _NoteAvatar(url: note.user.avatarUrl),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isRenote)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      '${widget.note.user.name ?? widget.note.user.username} ${context.l10n.renoted}',
-                      style: Theme.of(context).textTheme.labelSmall,
+    return Semantics(
+      button: true,
+      label:
+          '${note.user.name?.isNotEmpty == true ? note.user.name! : note.user.username} '
+          '${relativeTime(context, note.createdAt)}',
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () =>
+                  openDetail(context, UserDetailLocation(note.user.id)),
+              child: NyachiAvatar(url: note.user.avatarUrl, size: 48),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isRenote)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '${widget.note.user.name ?? widget.note.user.username} ${context.l10n.renoted}',
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
                     ),
-                  ),
-                Row(
-                  children: [
-                    Flexible(
-                      child: GestureDetector(
-                        onTap: () => openDetail(
-                          context,
-                          UserDetailLocation(note.user.id),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: GestureDetector(
+                          onTap: () => openDetail(
+                            context,
+                            UserDetailLocation(note.user.id),
+                          ),
+                          child: Text(
+                            note.user.name?.isNotEmpty == true
+                                ? note.user.name!
+                                : note.user.username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
                         ),
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
                         child: Text(
-                          note.user.name?.isNotEmpty == true
-                              ? note.user.name!
-                              : note.user.username,
+                          '@${note.user.username}${note.user.host == null ? '' : '@${note.user.host}'}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall,
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        '@${note.user.username}${note.user.host == null ? '' : '@${note.user.host}'}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => _openDetail(note.id),
-                      child: Text(
-                        ' · ${relativeTime(context, note.createdAt)}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-                if (note.cw != null) ...[
-                  const SizedBox(height: 4),
-                  Text(note.cw!, style: Theme.of(context).textTheme.bodyMedium),
-                  TextButton(
-                    onPressed: () => setState(() => _showCw = !_showCw),
-                    child: Text(
-                      showContent
-                          ? context.l10n.close
-                          : context.l10n.showContent,
-                    ),
-                  ),
-                ],
-                if (showContent) ...[
-                  if (note.text?.isNotEmpty == true)
-                    NoteContent(text: note.text!),
-                  if (note.files?.isNotEmpty == true)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: NoteMedia(files: note.files!, noteId: note.id),
-                    ),
-                ],
-                if (note.reactions.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      for (final entry in note.reactions.entries.take(4))
-                        ActionChip(
-                          label: Text(
-                            '${_reactionLabel(entry.key)} ${compactCount(context, entry.value)}',
-                          ),
-                          onPressed: _busy
-                              ? null
-                              : () => _toggleReaction(note, entry.key),
+                      InkWell(
+                        onTap: () => _openDetail(note.id),
+                        child: Text(
+                          ' · ${relativeTime(context, note.createdAt)}',
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
-                      ActionChip(
-                        label: const Icon(
-                          Icons.add_reaction_outlined,
-                          size: 18,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                        tooltip: context.l10n.react,
-                        onPressed: _busy ? null : () => _pickReaction(note),
                       ),
                     ],
                   ),
-                ],
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _NoteAction(
-                      icon: Icons.chat_bubble_outline,
-                      value: note.repliesCount,
-                      label: context.l10n.reply,
-                      onTap: () => _openDetail(note.id),
+                  if (note.cw != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      note.cw!,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    _NoteAction(
-                      icon: Icons.repeat,
-                      value: note.renoteCount,
-                      label: context.l10n.renote,
-                      onTap: _busy ? null : () => _renote(note),
-                    ),
-                    if (note.reactions.isEmpty)
-                      _NoteAction(
-                        icon: Icons.add_reaction_outlined,
-                        value: note.reactionCount,
-                        label: context.l10n.react,
-                        onTap: _busy ? null : () => _pickReaction(note),
+                    TextButton(
+                      onPressed: () => setState(() => _showCw = !_showCw),
+                      child: Text(
+                        showContent
+                            ? context.l10n.close
+                            : context.l10n.showContent,
                       ),
-                    const Spacer(),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_horiz),
-                      tooltip: context.l10n.noteDetail,
-                      onSelected: (value) {
-                        if (value == 'detail') _openDetail(note.id);
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'detail',
-                          child: Text(context.l10n.noteDetail),
+                    ),
+                  ],
+                  if (showContent) ...[
+                    if (note.text?.isNotEmpty == true)
+                      NoteContent(text: note.text!),
+                    if (note.files?.isNotEmpty == true)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: NoteMedia(files: note.files!, noteId: note.id),
+                      ),
+                  ],
+                  if (note.reactions.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        for (final entry in note.reactions.entries.take(4))
+                          ActionChip(
+                            label: Text(
+                              '${_reactionLabel(entry.key)} ${compactCount(context, entry.value)}',
+                            ),
+                            onPressed: _busy
+                                ? null
+                                : () => _toggleReaction(note, entry.key),
+                          ),
+                        ActionChip(
+                          label: const Icon(
+                            Icons.add_reaction_outlined,
+                            size: 18,
+                          ),
+                          visualDensity: VisualDensity.compact,
+                          tooltip: context.l10n.react,
+                          onPressed: _busy ? null : () => _pickReaction(note),
                         ),
                       ],
                     ),
                   ],
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _NoteAction(
+                        icon: Icons.chat_bubble_outline,
+                        value: note.repliesCount,
+                        label: context.l10n.reply,
+                        onTap: () => _openDetail(note.id),
+                      ),
+                      _NoteAction(
+                        icon: Icons.repeat,
+                        value: note.renoteCount,
+                        label: context.l10n.renote,
+                        onTap: _busy ? null : () => _renote(note),
+                      ),
+                      if (note.reactions.isEmpty)
+                        _NoteAction(
+                          icon: Icons.add_reaction_outlined,
+                          value: note.reactionCount,
+                          label: context.l10n.react,
+                          onTap: _busy ? null : () => _pickReaction(note),
+                        ),
+                      const Spacer(),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_horiz),
+                        tooltip: context.l10n.noteDetail,
+                        onSelected: (value) {
+                          if (value == 'detail') _openDetail(note.id);
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'detail',
+                            child: Text(context.l10n.noteDetail),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -246,30 +257,6 @@ class _NoteCardState extends ConsumerState<NoteCard> {
       return reaction.substring(1, reaction.length - 1);
     }
     return reaction;
-  }
-}
-
-class _NoteAvatar extends StatelessWidget {
-  const _NoteAvatar({required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipOval(
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => ColoredBox(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: const Icon(Icons.person_outline, size: 24),
-          ),
-        ),
-      ),
-    );
   }
 }
 

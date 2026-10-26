@@ -10,6 +10,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
+import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/storage_providers.dart';
 
 part 'explore_controllers.freezed.dart';
@@ -30,7 +31,9 @@ Future<List<HashtagsTrendResponseItem>> trends(Ref ref) async {
       jsonEncode(items.map((item) => item.toJson()).toList()),
     );
     return items;
-  } catch (_) {
+  } catch (e) {
+    if (e is MisskeyAuthenticationException) rethrow;
+    logSilentFallback('explore_controllers.trends', e);
     final cached = await cache.read(active.id, key);
     if (cached == null) return const [];
     try {
@@ -44,7 +47,9 @@ Future<List<HashtagsTrendResponseItem>> trends(Ref ref) async {
             ),
           )
           .toList(growable: false);
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('explore_controllers.trends.cache', e);
       return const [];
     }
   }

@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyachi/app/detail_panel/detail_location.dart';
 import 'package:nyachi/app/detail_panel/open_detail.dart';
-import 'package:nyachi/app/l10n/app_localizations.dart';
+import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
@@ -95,10 +95,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Compose no longer enters the detail panel; it opens a dialog instead.
-    expect(
-      router.routerDelegate.currentConfiguration.uri.toString(),
-      '/home',
-    );
+    expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
     expect(find.byIcon(Icons.send), findsOneWidget);
     expect(find.text('open'), findsOneWidget);
     expect(find.byKey(const Key('app-navigation-rail')), findsOneWidget);

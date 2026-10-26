@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/network_image.dart';
 import '../application/emoji_catalog.dart';
 
 const defaultReactions = ['👍', '❤️', '😂', '🎉', '😮', '😢'];
@@ -122,11 +123,9 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
                           message: emoji.name,
                           child: Padding(
                             padding: const EdgeInsets.all(4),
-                            child: Image.network(
-                              emoji.url,
+                            child: NyachiImage(
+                              url: emoji.url,
                               fit: BoxFit.contain,
-                              errorBuilder: (_, _, _) =>
-                                  const Icon(Icons.broken_image_outlined),
                             ),
                           ),
                         ),

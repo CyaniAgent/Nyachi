@@ -6,7 +6,8 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../app/l10n/app_localizations.dart';
+import '../../../core/l10n/app_localizations.dart';
+import '../../../core/ui/avatar.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
@@ -129,9 +130,11 @@ class _NotificationTile extends StatelessWidget {
     final actor = _actor(notification);
     final note = _note(notification);
     return ListTile(
-      leading: actor == null
-          ? const CircleAvatar(child: Icon(Icons.notifications_outlined))
-          : CircleAvatar(backgroundImage: NetworkImage(actor.avatarUrl)),
+      leading: NyachiAvatar(
+        url: actor?.avatarUrl,
+        size: 40,
+        fallback: const Icon(Icons.notifications_outlined),
+      ),
       title: Text(
         actor?.name?.isNotEmpty == true
             ? '@${actor!.username} ${_label(l10n, notification)}'

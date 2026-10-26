@@ -13,7 +13,7 @@ analyzer:
     - linux/**
     - '**/*.g.dart'
     - '**/*.freezed.dart'
-    - lib/app/l10n/app_localizations*.dart
+    - lib/core/l10n/app_localizations*.dart
     - web/**
 
 linter:

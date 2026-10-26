@@ -13,6 +13,7 @@ import '../../../core/network/error_mapper.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_models.dart';
+import '../domain/chat_repository.dart';
 
 part 'chat_controllers.freezed.dart';
 part 'chat_controllers.g.dart';

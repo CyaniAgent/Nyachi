@@ -77,6 +77,16 @@ class AppDatabase extends _$AppDatabase {
     onCreate: (migrator) async {
       await migrator.createAll();
     },
+    onUpgrade: (migrator, from, to) async {
+      // Pre-1.0 destructive fallback: rebuild local tables (cache + accounts)
+      // on any schema bump instead of crashing on open (drift default throws).
+      // Replace with per-version migrations once schema v2 ships.
+      await customStatement('PRAGMA foreign_keys = OFF');
+      for (final table in allTables) {
+        await migrator.deleteTable(table.actualTableName);
+      }
+      await migrator.createAll();
+    },
   );
 }
 

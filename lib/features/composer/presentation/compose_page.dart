@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/network/instance_repository.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';

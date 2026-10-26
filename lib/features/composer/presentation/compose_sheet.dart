@@ -7,6 +7,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/network_image.dart';
 import '../application/composer_controller.dart';
 
 /// Opens the composer in a modal bottom sheet (mobile/narrow layouts).
@@ -105,12 +106,7 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
         state.text.runes.length <= max;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        widget.showHandle ? 8 : 16,
-        16,
-        12,
-      ),
+      padding: EdgeInsets.fromLTRB(16, widget.showHandle ? 8 : 16, 16, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -164,8 +160,7 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
                 ),
               ),
             ),
-          if (widget.replyId != null)
-            ReplyPreviewCard(noteId: widget.replyId!),
+          if (widget.replyId != null) ReplyPreviewCard(noteId: widget.replyId!),
           if (_hasCw)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -301,16 +296,12 @@ class _VisibilityMenu extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              switch (visibility) {
-                NotesCreateRequestVisibility.public => Icons.public_outlined,
-                NotesCreateRequestVisibility.home => Icons.home_outlined,
-                NotesCreateRequestVisibility.followers =>
-                  Icons.lock_outline,
-                _ => Icons.public_outlined,
-              },
-              size: 20,
-            ),
+            Icon(switch (visibility) {
+              NotesCreateRequestVisibility.public => Icons.public_outlined,
+              NotesCreateRequestVisibility.home => Icons.home_outlined,
+              NotesCreateRequestVisibility.followers => Icons.lock_outline,
+              _ => Icons.public_outlined,
+            }, size: 20),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
@@ -365,7 +356,7 @@ class ReplyPreviewCard extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundImage: NetworkImage(user.avatarUrl),
+                backgroundImage: nyachiImageProvider(user.avatarUrl),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -377,18 +368,18 @@ class ReplyPreviewCard extends ConsumerWidget {
                       user.name ?? user.username,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     if (note.cw != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
                           context.l10n.contentWarning,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                         ),
                       ),
                     if (body.isNotEmpty)

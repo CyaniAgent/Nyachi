@@ -6,10 +6,10 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../app/theme/app_theme.dart';
-import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/content_width.dart';
+import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../notes/presentation/note_list.dart';
@@ -187,7 +187,9 @@ class _UserTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: CircleAvatar(backgroundImage: NetworkImage(user.avatarUrl)),
+      leading: CircleAvatar(
+        backgroundImage: nyachiImageProvider(user.avatarUrl),
+      ),
       title: Text(user.name ?? user.username),
       subtitle: Text(
         '@${user.username}${user.host == null ? '' : '@${user.host}'}',

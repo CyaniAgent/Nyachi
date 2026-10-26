@@ -10,6 +10,7 @@ import '../auth/session_controller.dart';
 import '../storage/app_database.dart';
 import '../storage/storage_providers.dart';
 import 'client_provider.dart';
+import 'silent_fallback.dart';
 
 part 'instance_repository.g.dart';
 
@@ -50,7 +51,9 @@ class InstanceRepository {
         updatedAt: DateTime.now(),
       );
       return _fromMeta(meta);
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('instance_repository.load', e);
       final cached = await cache.read(accountId, _cacheKey);
       if (cached == null) return null;
       if (DateTime.now().difference(cached.updatedAt) > _ttl) {
@@ -66,7 +69,9 @@ class InstanceRepository {
       final json = jsonDecode(payload);
       if (json is! Map<String, dynamic>) return null;
       return _fromMeta(MetaLite.fromJson(json));
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('instance_repository.fromJson', e);
       return null;
     }
   }

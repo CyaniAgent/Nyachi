@@ -1,7 +1,16 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
 }
 
 android {
@@ -29,11 +38,40 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                // Configuration-time placeholder so debug builds keep working;
+                // the execution-time check below fails release builds without key.properties.
+                signingConfigs.getByName("debug")
+            }
+        }
+    }
+}
+
+// Fail fast when a release build runs without signing configured. This must stay
+// in the execution phase: throwing at configuration time would also break debug builds.
+tasks.matching {
+    it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease")
+}.configureEach {
+    doFirst {
+        check(keystorePropertiesFile.exists()) {
+            "Release signing not configured: create android/key.properties " +
+                "(storePassword/keyPassword/keyAlias/storeFile) and a release keystore. " +
+                "See https://docs.flutter.dev/deployment/android"
         }
     }
 }

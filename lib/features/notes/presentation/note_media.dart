@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
@@ -11,6 +10,7 @@ import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/network_image.dart';
 
 class NoteMedia extends StatefulWidget {
   const NoteMedia({
@@ -165,15 +165,7 @@ class _NoteMediaState extends State<NoteMedia> {
         color: scheme.surfaceContainer,
       ),
       clipBehavior: Clip.antiAlias,
-      child: CachedNetworkImage(
-        imageUrl: url,
-        fit: fit,
-        placeholder: (_, _) => const Center(child: CircularProgressIndicator()),
-        errorWidget: (_, _, _) => ColoredBox(
-          color: scheme.surfaceContainer,
-          child: const Center(child: Icon(Icons.broken_image_outlined)),
-        ),
-      ),
+      child: NyachiImage(url: url, fit: fit),
     );
   }
 
@@ -308,8 +300,7 @@ class _ImageViewerState extends State<_ImageViewer> {
 
   void _rootPointerMove(PointerEvent event) {
     final start = _pressStart[event.pointer];
-    if (start != null &&
-        (event.localPosition - start).distance > kTouchSlop) {
+    if (start != null && (event.localPosition - start).distance > kTouchSlop) {
       _pressStart.remove(event.pointer);
     }
   }
@@ -350,13 +341,10 @@ class _ImageViewerState extends State<_ImageViewer> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Listener(
-                          onPointerDown: (event) =>
-                              _onImage.add(event.pointer),
-                          child: CachedNetworkImage(
-                            imageUrl: widget.images[index].url,
+                          onPointerDown: (event) => _onImage.add(event.pointer),
+                          child: NyachiImage(
+                            url: widget.images[index].url,
                             fit: BoxFit.contain,
-                            errorWidget: (_, _, _) =>
-                                const Icon(Icons.broken_image_outlined),
                           ),
                         ),
                       ),
@@ -376,9 +364,8 @@ class _ImageViewerState extends State<_ImageViewer> {
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
                       child: IconButton(
-                        tooltip: MaterialLocalizations.of(
-                          context,
-                        ).closeButtonTooltip,
+                        tooltip: MaterialLocalizations.of(context)
+                            .closeButtonTooltip,
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close, color: Colors.white),
                       ),

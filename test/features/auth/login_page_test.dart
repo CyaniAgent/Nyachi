@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nyachi/app/l10n/app_localizations.dart';
+import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/features/auth/presentation/login_page.dart';
 
 void main() {

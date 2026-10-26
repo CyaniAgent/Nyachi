@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Release builds need the network permission; the debug/profile manifests already declare it. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
+        android:allowBackup="false"
         android:label="Nyachi"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

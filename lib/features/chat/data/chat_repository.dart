@@ -4,26 +4,10 @@ import 'dart:convert';
 
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/app_database.dart';
 import '../domain/chat_models.dart';
-
-abstract interface class ChatRepository {
-  Future<List<ChatMessage>> history();
-
-  Future<List<ChatRoom>> rooms();
-
-  Future<ChatThreadResult> thread(ChatTarget target, {String? untilId});
-
-  Future<List<ChatMessageItem>> threadCache(ChatTarget target);
-
-  Future<UserDetailed?> userHeader(String userId);
-
-  Future<ChatRoom?> roomHeader(String roomId);
-
-  Future<void> send(ChatTarget target, {String? text, String? fileId});
-
-  Future<DriveFile> upload(List<int> bytes, String fileName);
-}
+import '../domain/chat_repository.dart';
 
 class MisskeyChatRepository implements ChatRepository {
   MisskeyChatRepository({
@@ -54,7 +38,9 @@ class MisskeyChatRepository implements ChatRepository {
         jsonEncode(items.map((message) => message.toJson()).toList()),
       );
       return items;
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('chat_repository.history', e);
       final cached = await cache.read(accountId, _historyKey);
       if (cached == null) return const [];
       try {
@@ -66,7 +52,9 @@ class MisskeyChatRepository implements ChatRepository {
               (item) => ChatMessage.fromJson(Map<String, dynamic>.from(item)),
             )
             .toList(growable: false);
-      } catch (_) {
+      } catch (e) {
+        if (e is MisskeyAuthenticationException) rethrow;
+        logSilentFallback('chat_repository.history.cache', e);
         return const [];
       }
     }
@@ -92,7 +80,9 @@ class MisskeyChatRepository implements ChatRepository {
         jsonEncode(items.map((room) => room.toJson()).toList()),
       );
       return items;
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('chat_repository.rooms', e);
       final cached = await cache.read(accountId, _roomsKey);
       if (cached == null) return const [];
       try {
@@ -102,7 +92,9 @@ class MisskeyChatRepository implements ChatRepository {
             .whereType<Map>()
             .map((item) => ChatRoom.fromJson(Map<String, dynamic>.from(item)))
             .toList(growable: false);
-      } catch (_) {
+      } catch (e) {
+        if (e is MisskeyAuthenticationException) rethrow;
+        logSilentFallback('chat_repository.rooms.cache', e);
         return const [];
       }
     }
@@ -197,7 +189,9 @@ class MisskeyChatRepository implements ChatRepository {
             (item) => ChatMessageItem.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList(growable: false);
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('chat_repository.threadCache', e);
       return const [];
     }
   }
@@ -209,7 +203,9 @@ class MisskeyChatRepository implements ChatRepository {
       final user = await client.users.showByUserId(userId: userId);
       await cache.write(accountId, key, jsonEncode(user.toJson()));
       return user;
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('chat_repository.userHeader', e);
       final cached = await cache.read(accountId, key);
       if (cached == null) return null;
       try {
@@ -218,7 +214,9 @@ class MisskeyChatRepository implements ChatRepository {
         if (json is Map) {
           return UserDetailed.fromJson(Map<String, dynamic>.from(json));
         }
-      } catch (_) {
+      } catch (e) {
+        if (e is MisskeyAuthenticationException) rethrow;
+        logSilentFallback('chat_repository.userHeader.cache', e);
         return null;
       }
       return null;
@@ -232,7 +230,9 @@ class MisskeyChatRepository implements ChatRepository {
       final room = await client.chat.roomsShow(roomId: roomId);
       await cache.write(accountId, key, jsonEncode(room.toJson()));
       return room;
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('chat_repository.roomHeader', e);
       final cached = await cache.read(accountId, key);
       if (cached == null) return null;
       try {
@@ -241,7 +241,9 @@ class MisskeyChatRepository implements ChatRepository {
         if (json is Map) {
           return ChatRoom.fromJson(Map<String, dynamic>.from(json));
         }
-      } catch (_) {
+      } catch (e) {
+        if (e is MisskeyAuthenticationException) rethrow;
+        logSilentFallback('chat_repository.roomHeader.cache', e);
         return null;
       }
       return null;

@@ -6,9 +6,9 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
+import '../../../core/ui/network_image.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
 import '../application/note_detail_controller.dart';
@@ -233,8 +233,7 @@ class _RepliesSection extends StatelessWidget {
             ),
           )
         else
-          for (final reply in state.replies)
-            _ReplyTile(note: reply),
+          for (final reply in state.replies) _ReplyTile(note: reply),
         if (state.repliesHasMore)
           Center(
             child: TextButton(
@@ -265,10 +264,11 @@ class _ReplyTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
-              onTap: () => openDetail(context, UserDetailLocation(note.user.id)),
+              onTap: () =>
+                  openDetail(context, UserDetailLocation(note.user.id)),
               child: CircleAvatar(
                 radius: 16,
-                backgroundImage: NetworkImage(note.user.avatarUrl),
+                backgroundImage: nyachiImageProvider(note.user.avatarUrl),
               ),
             ),
             const SizedBox(width: 10),
@@ -357,9 +357,10 @@ class _ReplyTile extends StatelessWidget {
                         const SizedBox(width: 12),
                         Text(
                           '${compactCount(context, note.repliesCount)} ${l10n.reply}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ],
                     ],
@@ -387,7 +388,7 @@ class _Author extends StatelessWidget {
           onTap: () => openDetail(context, UserDetailLocation(note.user.id)),
           child: CircleAvatar(
             radius: 24,
-            backgroundImage: NetworkImage(note.user.avatarUrl),
+            backgroundImage: nyachiImageProvider(note.user.avatarUrl),
           ),
         ),
         const SizedBox(width: 12),

@@ -10,6 +10,8 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/auth/session_controller.dart';
+import '../../../core/ui/avatar.dart';
+import '../../../core/ui/breakpoints.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
@@ -28,7 +30,7 @@ class ProfilePage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.profile),
         actions: [
-          if (MediaQuery.sizeOf(context).width < 840)
+          if (MediaQuery.sizeOf(context).width < kCompactBreakpoint)
             IconButton(
               tooltip: l10n.settings,
               onPressed: () =>
@@ -163,7 +165,11 @@ class _ProfileHeader extends StatelessWidget {
                 bottom: 12,
                 child: Row(
                   children: [
-                    _ProfileAvatar(url: user.avatarUrl),
+                    NyachiAvatar(
+                      url: user.avatarUrl,
+                      size: 76,
+                      borderColor: scheme.surface,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -274,35 +280,6 @@ class _BannerFallback extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 76,
-      height: 76,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: scheme.surface, width: 3),
-      ),
-      child: ClipOval(
-        child: CachedNetworkImage(
-          imageUrl: url,
-          fit: BoxFit.cover,
-          errorWidget: (_, _, _) => ColoredBox(
-            color: scheme.surfaceContainerHighest,
-            child: Icon(Icons.person_outline, color: scheme.onSurfaceVariant),
-          ),
-        ),
-      ),
     );
   }
 }

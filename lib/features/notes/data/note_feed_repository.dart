@@ -7,24 +7,11 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/client_provider.dart';
+import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/storage_providers.dart';
+import '../domain/note_feed_repository.dart';
 import '../domain/note_feed_source.dart';
-
-class NotePage {
-  const NotePage({required this.items, required this.hasMore});
-
-  final List<Note> items;
-  final bool hasMore;
-}
-
-abstract interface class NoteFeedRepository {
-  Future<NotePage> fetchPage(NoteFeedSource source, {String? untilId});
-
-  Future<List<Note>> readCache(NoteFeedSource source);
-
-  Future<void> writeCache(NoteFeedSource source, List<Note> notes);
-}
 
 final noteFeedRepositoryProvider =
     Provider.family<NoteFeedRepository, NoteFeedSource>((ref, source) {
@@ -113,7 +100,9 @@ class MisskeyNoteFeedRepository implements NoteFeedRepository {
         }
       }
       return notes.take(cacheLimit).toList(growable: false);
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('note_feed_repository.readCache', e);
       return const [];
     }
   }

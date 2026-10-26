@@ -12,6 +12,8 @@ import '../../../app/router/navigator_keys.dart';
 import '../../../app/router/router_guards.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
+import '../../../core/ui/avatar.dart';
+import '../../../core/ui/breakpoints.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../settings/application/app_settings.dart';
 import '../application/shell_navigation.dart';
@@ -141,7 +143,7 @@ class _RootShellState extends ConsumerState<RootShell> {
             selectedIndex: _selectedVisibleIndex(
               config,
               current,
-              width >= 840,
+              width >= kCompactBreakpoint,
             ),
             onDestinationSelected: (tab) => _select(shell, tab),
             onProfile: () => _select(shell, AppTab.profile),
@@ -219,7 +221,7 @@ class ShellChrome extends ConsumerWidget {
     final config = ref.watch(settingsControllerProvider).navConfig;
     final account = ref.watch(activeAccountProvider);
     final width = MediaQuery.sizeOf(context).width;
-    final railMode = width >= 840;
+    final railMode = width >= kCompactBreakpoint;
     final visible = shellVisibleTabs(config, railMode);
     final destinations = visible
         .map(
@@ -237,8 +239,7 @@ class ShellChrome extends ConsumerWidget {
       return Scaffold(
         body: child,
         bottomNavigationBar: NavigationBar(
-          selectedIndex:
-              (selectedIndex ?? 0).clamp(0, destinations.length - 1),
+          selectedIndex: (selectedIndex ?? 0).clamp(0, destinations.length - 1),
           onDestinationSelected: (index) {
             onDestinationSelected(visible[index]);
           },
@@ -247,13 +248,13 @@ class ShellChrome extends ConsumerWidget {
               NavigationDestination(
                 icon: destination.avatarUrl == null
                     ? Icon(destination.icon)
-                    : _UserAvatar(
-                        avatarUrl: destination.avatarUrl,
+                    : NyachiAvatar(
+                        url: destination.avatarUrl,
                         size: 28,
                         showStatus: true,
-                        ringColor: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainer,
+                        statusRingColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainer,
                       ),
                 label: destination.avatarUrl == null
                     ? destination.label
@@ -285,6 +286,7 @@ class ShellChrome extends ConsumerWidget {
       ),
     );
   }
+
   IconData _icon(AppTab tab) => switch (tab) {
     AppTab.home => Icons.home_outlined,
     AppTab.notifications => Icons.notifications_outlined,
@@ -408,8 +410,8 @@ class _SidebarUserPanelState extends ConsumerState<_SidebarUserPanel> {
             IconButton(
               tooltip: context.l10n.profile,
               onPressed: widget.onProfile,
-              icon: _UserAvatar(
-                avatarUrl: account.avatarUrl,
+              icon: NyachiAvatar(
+                url: account.avatarUrl,
                 size: 36,
                 showStatus: true,
               ),
@@ -437,8 +439,8 @@ class _SidebarUserPanelState extends ConsumerState<_SidebarUserPanel> {
                 onTap: widget.onProfile,
                 child: Row(
                   children: [
-                    _UserAvatar(
-                      avatarUrl: account.avatarUrl,
+                    NyachiAvatar(
+                      url: account.avatarUrl,
                       size: 36,
                       showStatus: true,
                     ),
@@ -538,63 +540,6 @@ class _PanelIconButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
       icon: Icon(icon, size: 18),
-    );
-  }
-}
-
-class _UserAvatar extends StatelessWidget {
-  const _UserAvatar({
-    required this.avatarUrl,
-    required this.size,
-    this.showStatus = false,
-    this.ringColor,
-  });
-
-  final String? avatarUrl;
-  final double size;
-  final bool showStatus;
-  final Color? ringColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final image = avatarUrl == null
-        ? null
-        : DecorationImage(image: NetworkImage(avatarUrl!), fit: BoxFit.cover);
-    final avatar = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        shape: BoxShape.circle,
-        image: image,
-      ),
-      alignment: Alignment.center,
-      child: image == null
-          ? Icon(Icons.person_outline, size: size * 0.6)
-          : null,
-    );
-    if (!showStatus) return avatar;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        avatar,
-        Positioned(
-          right: -2,
-          bottom: -2,
-          child: Container(
-            width: size * 0.36,
-            height: size * 0.36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF23A559),
-              border: Border.all(
-                color: ringColor ?? Theme.of(context).scaffoldBackgroundColor,
-                width: size * 0.09,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

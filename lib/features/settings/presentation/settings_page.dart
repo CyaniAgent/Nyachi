@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../app/l10n/app_localizations.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/storage/storage_models.dart';
+import '../../../core/ui/avatar.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../core/ui/content_width.dart';
 import '../application/app_settings.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -75,7 +77,10 @@ class AccountsSettingsPage extends ConsumerWidget {
         children: [
           for (final account in session.accounts) ...[
             ListTile(
-              leading: _Avatar(account: account),
+              leading: NyachiAvatar(
+                url: account.avatarUrl,
+                fallback: Text(account.username.characters.first),
+              ),
               title: Text(account.displayName ?? account.username),
               subtitle: Text('@${account.username}@${account.host}'),
               trailing: account.id == session.active?.id
@@ -423,21 +428,6 @@ class _SettingsTile extends StatelessWidget {
       subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.account});
-
-  final LocalAccount account;
-
-  @override
-  Widget build(BuildContext context) {
-    final url = account.avatarUrl;
-    return CircleAvatar(
-      backgroundImage: url == null ? null : NetworkImage(url),
-      child: url == null ? Text(account.username.characters.first) : null,
     );
   }
 }

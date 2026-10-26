@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,28 +11,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
+import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/storage_providers.dart';
+import '../domain/notification_repository.dart';
 
 part 'notification_list_controller.freezed.dart';
 part 'notification_list_controller.g.dart';
-
-class NotificationPage {
-  const NotificationPage({required this.items, required this.hasMore});
-
-  final List<Notification> items;
-  final bool hasMore;
-}
-
-abstract interface class NotificationRepository {
-  Future<NotificationPage> fetchPage({String? untilId});
-
-  Future<List<Notification>> readCache();
-
-  Future<void> writeCache(List<Notification> notifications);
-
-  Future<void> markAllAsRead();
-}
 
 class MisskeyNotificationRepository implements NotificationRepository {
   MisskeyNotificationRepository({
@@ -72,7 +58,9 @@ class MisskeyNotificationRepository implements NotificationRepository {
         }
       }
       return result;
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('notification_list_controller.readCache', e);
       return const [];
     }
   }
@@ -89,6 +77,16 @@ class MisskeyNotificationRepository implements NotificationRepository {
   @override
   Future<void> markAllAsRead() => client.notifications.markAllAsRead();
 }
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  final active = ref.watch(sessionControllerProvider).active;
+  if (active == null) throw StateError('No active account.');
+  return MisskeyNotificationRepository(
+    client: ref.watch(misskeyClientProvider),
+    cache: ref.watch(cacheDaoProvider),
+    accountId: active.id,
+  );
+});
 
 @freezed
 abstract class NotificationListState with _$NotificationListState {
@@ -115,11 +113,7 @@ class NotificationListController extends _$NotificationListController {
     ref.onDispose(() => _disposed = true);
     final active = ref.watch(sessionControllerProvider).active;
     if (active == null) throw StateError('No active account.');
-    _repository = MisskeyNotificationRepository(
-      client: ref.watch(misskeyClientProvider),
-      cache: ref.watch(cacheDaoProvider),
-      accountId: active.id,
-    );
+    _repository = ref.watch(notificationRepositoryProvider);
     unawaited(Future<void>.microtask(_hydrate));
     return const NotificationListState();
   }

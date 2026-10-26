@@ -15,7 +15,7 @@ import '../../../core/storage/storage_models.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../../notes/application/note_detail_controller.dart';
 import '../../notes/application/note_list_controller.dart';
-import '../../notes/data/note_repository.dart';
+import '../../notes/application/note_providers.dart';
 
 part 'composer_controller.freezed.dart';
 part 'composer_controller.g.dart';

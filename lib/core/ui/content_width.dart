@@ -2,7 +2,8 @@
 
 import 'package:flutter/widgets.dart';
 
-import '../../app/theme/app_theme.dart';
+/// Maximum width of the readable content column.
+const double appMaxContentWidth = 760;
 
 /// Constrains content to a readable column, left-aligned in the available
 /// space instead of centered.

@@ -8,6 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/network/error_mapper.dart';
 import '../data/note_feed_repository.dart';
+import '../domain/note_feed_repository.dart';
 import '../domain/note_feed_source.dart';
 
 part 'note_list_controller.freezed.dart';

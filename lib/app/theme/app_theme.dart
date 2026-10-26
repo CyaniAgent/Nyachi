@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 const double appBorderRadius = 18;
 const double appColumnWidth = 380;
-const double appMaxContentWidth = 760;
 const double appNavRailWidth = 80;
 const double appSidebarWidth = 240;
 const double appDetailPanelDefaultWidth = 480;

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
-import 'package:nyachi/app/l10n/app_localizations.dart';
+import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/notes/presentation/note_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';

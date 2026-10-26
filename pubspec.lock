@@ -306,7 +306,7 @@ packages:
     source: hosted
     version: "0.3.1"
   fake_async:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: fake_async
       sha256: "5368f224a74523e8d2e7399ea1638b37aecfca824a3cc4dfdf77bf1fa905ac44"
@@ -789,6 +789,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.8.1"
+  mocktail:
+    dependency: "direct dev"
+    description:
+      name: mocktail
+      sha256: "5e1bf53cc7baa8062a33b84424deb61513858ea05c601b8509e683815b5914aa"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.5"
   native_toolchain_c:
     dependency: transitive
     description:

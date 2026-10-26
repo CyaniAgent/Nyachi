@@ -11,7 +11,7 @@ presentation -> application -> domain
                     |             ^
                     v             |
                   data -----------+
-shared: core (auth, storage, network, ui), app (router, theme, l10n)
+shared: core (auth, storage, network, ui, l10n), app (router, theme, detail panel)
 ```
 
 - `domain` contains immutable models and repository contracts.
@@ -20,6 +20,17 @@ shared: core (auth, storage, network, ui), app (router, theme, l10n)
 - `presentation` contains widgets and navigation calls.
 - Features must not import another feature's `data` or `presentation` internals.
   Cross-feature reuse goes through a public domain/application provider.
+
+### Shared note rendering (documented exception)
+
+`NoteCard`, `NoteContent`, and `NoteMedia` are the feed rendering layer shared
+by the timeline, explore, profile, chat, and tag features. They stay in
+`features/notes/presentation/` because they open detail views through
+`openDetail`/`DetailLocation`, which is part of the app-level composition layer
+(`lib/app/detail_panel/`). Sinking them into `core/` would make `core` depend on
+`app`, inverting the dependency direction. Cross-feature imports of these
+widgets are therefore allowed; contracts (repository interfaces) still live in
+each feature's `domain/`.
 
 ## Authentication and session
 

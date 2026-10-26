@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/client_provider.dart';
+import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/storage_providers.dart';
 
@@ -29,7 +30,9 @@ class ProfileRepository {
       final user = await client.users.showByUserId(userId: userId);
       await cache.write(accountId, key, jsonEncode(user.toJson()));
       return user;
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('profile_providers.user', e);
       return _read(key);
     }
   }
@@ -40,7 +43,9 @@ class ProfileRepository {
       final user = await client.account.me();
       await cache.write(accountId, key, jsonEncode(user.toJson()));
       return user;
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('profile_providers.me', e);
       return _read(key);
     }
   }
@@ -54,7 +59,9 @@ class ProfileRepository {
       if (json is Map) {
         return UserDetailed.fromJson(Map<String, dynamic>.from(json));
       }
-    } catch (_) {
+    } catch (e) {
+      if (e is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('profile_providers.readCache', e);
       return null;
     }
     return null;

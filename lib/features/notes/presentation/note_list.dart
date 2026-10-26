@@ -2,12 +2,12 @@
 
 import 'dart:math' as math;
 
-import '../../../app/theme/app_theme.dart';
+import '../../../core/ui/content_width.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/l10n/app_localizations.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../application/note_list_controller.dart';
@@ -41,14 +41,7 @@ class NoteList extends ConsumerWidget {
             12.0,
             constraints.maxWidth - appMaxContentWidth - 12.0,
           );
-          return _content(
-            context,
-            state,
-            controller,
-            l10n,
-            12.0,
-            horizontal,
-          );
+          return _content(context, state, controller, l10n, 12.0, horizontal);
         },
       ),
     );

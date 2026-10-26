@@ -8,7 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/error_mapper.dart';
-import '../data/note_repository.dart';
+import '../application/note_providers.dart';
 
 part 'note_detail_controller.freezed.dart';
 part 'note_detail_controller.g.dart';
@@ -77,9 +77,7 @@ class NoteDetailController extends _$NoteDetailController {
   Future<void> _loadReplies() async {
     state = state.copyWith(repliesLoading: true, repliesError: null);
     try {
-      final page = await ref.read(noteRepositoryProvider).childrenPage(
-        _noteId,
-      );
+      final page = await ref.read(noteRepositoryProvider).childrenPage(_noteId);
       if (_disposed) return;
       state = state.copyWith(
         replies: _chronological(page.items),
@@ -103,10 +101,9 @@ class NoteDetailController extends _$NoteDetailController {
     }
     state = state.copyWith(repliesLoadingMore: true);
     try {
-      final page = await ref.read(noteRepositoryProvider).childrenPage(
-        _noteId,
-        untilId: cursor,
-      );
+      final page = await ref
+          .read(noteRepositoryProvider)
+          .childrenPage(_noteId, untilId: cursor);
       if (_disposed) return;
       state = state.copyWith(
         replies: [...state.replies, ..._chronological(page.items)],

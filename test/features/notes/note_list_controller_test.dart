@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/core/network/error_mapper.dart';
 import 'package:nyachi/features/notes/application/note_list_controller.dart';
-import 'package:nyachi/features/notes/data/note_feed_repository.dart';
+import 'package:nyachi/features/notes/data/note_feed_repository.dart'
+    show noteFeedRepositoryProvider;
+import 'package:nyachi/features/notes/domain/note_feed_repository.dart';
 import 'package:nyachi/features/notes/domain/note_feed_source.dart';
 
 import '../../support/fixtures.dart';

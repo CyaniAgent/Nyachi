@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/instance_repository.dart';
 import '../core/ui/app_scroll_behavior.dart';
+import '../core/ui/breakpoints.dart';
 import '../core/ui/l10n_ext.dart';
 import '../features/settings/application/app_settings.dart';
 import 'bootstrap.dart';
-import 'l10n/app_localizations.dart';
+import '../core/l10n/app_localizations.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -26,7 +27,8 @@ class NyachiApp extends ConsumerWidget {
     final themeMode = parseThemeMode(settings.themeMode);
     final locale = _locale(settings.localeCode);
     final view = View.of(context);
-    final isWide = view.physicalSize.width / view.devicePixelRatio >= 840;
+    final isWide =
+        view.physicalSize.width / view.devicePixelRatio >= kCompactBreakpoint;
     final theme = buildAppTheme(
       brightness: Brightness.light,
       seed: seed,

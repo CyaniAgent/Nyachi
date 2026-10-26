@@ -3,30 +3,10 @@
 import 'dart:convert';
 
 import 'package:misskey_dart_api/misskey_dart_api.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../core/auth/session_controller.dart';
-import '../../../core/network/client_provider.dart';
+import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/app_database.dart';
-import '../../../core/storage/storage_providers.dart';
-
-part 'note_repository.g.dart';
-
-abstract interface class NoteRepository {
-  Future<Note> fetch(String noteId);
-
-  Future<CursorPage<Note>> childrenPage(
-    String noteId, {
-    int limit = 10,
-    String? untilId,
-  });
-
-  Future<Note> react(String noteId, String reaction);
-
-  Future<Note> unreact(String noteId);
-
-  Future<Note> renote(String noteId);
-}
+import '../domain/note_repository.dart';
 
 class MisskeyNoteRepository implements NoteRepository {
   MisskeyNoteRepository({
@@ -47,7 +27,8 @@ class MisskeyNoteRepository implements NoteRepository {
       final note = await client.notes.show(noteId: noteId);
       await _write(note);
       return note;
-    } catch (_) {
+    } catch (e) {
+      logSilentFallback('note_repository.fetch', e);
       final cached = await cache.read(accountId, _key(noteId));
       if (cached != null) {
         try {
@@ -56,7 +37,8 @@ class MisskeyNoteRepository implements NoteRepository {
           if (json is Map) {
             return Note.fromJson(Map<String, dynamic>.from(json));
           }
-        } catch (_) {
+        } catch (e) {
+          logSilentFallback('note_repository.fetch.cache', e);
           // Fall through to the original network failure.
         }
       }
@@ -69,11 +51,8 @@ class MisskeyNoteRepository implements NoteRepository {
     String noteId, {
     int limit = 10,
     String? untilId,
-  }) => client.notes.childrenPage(
-    noteId: noteId,
-    limit: limit,
-    untilId: untilId,
-  );
+  }) =>
+      client.notes.childrenPage(noteId: noteId, limit: limit, untilId: untilId);
 
   @override
   Future<Note> react(String noteId, String reaction) async {
@@ -102,15 +81,4 @@ class MisskeyNoteRepository implements NoteRepository {
   Future<void> _write(Note note) {
     return cache.write(accountId, _key(note.id), jsonEncode(note.toJson()));
   }
-}
-
-@Riverpod(keepAlive: true)
-NoteRepository noteRepository(Ref ref) {
-  final active = ref.watch(sessionControllerProvider).active;
-  if (active == null) throw StateError('No active account.');
-  return MisskeyNoteRepository(
-    client: ref.watch(misskeyClientProvider),
-    cache: ref.watch(cacheDaoProvider),
-    accountId: active.id,
-  );
 }

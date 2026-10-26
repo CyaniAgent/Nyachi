@@ -19,7 +19,7 @@ Drift database/DAOs, and typed `go_router` routes. Do not enable
 
 - `*.g.dart`: Riverpod, JSON, Drift, and route helpers.
 - `*.freezed.dart`: immutable models and unions.
-- `lib/app/l10n/app_localizations*.dart`: ARB output.
+- `lib/core/l10n/app_localizations*.dart`: ARB output (ARB sources stay in `lib/app/l10n/`).
 - `lib/core/storage/app_database.g.dart`: Drift schema and DAOs.
 - `lib/app/router/routes.g.dart`: typed route data and `$appRoutes`.
 
