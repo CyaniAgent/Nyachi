@@ -78,6 +78,7 @@ void main() {
               required visibility,
               required localOnly,
               replyId,
+              fileIds = const [],
             }) async {},
           ),
         ],
@@ -94,30 +95,23 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    // Compose no longer enters the detail panel; it opens a dialog instead.
+    // Compose never enters the detail panel: it always opens a bottom sheet.
     expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
     expect(find.byIcon(Icons.send), findsOneWidget);
     expect(find.text('open'), findsOneWidget);
     expect(find.byKey(const Key('app-navigation-rail')), findsOneWidget);
 
-    await tester.tapAt(const Offset(10, 400));
+    // Dismissing the sheet keeps the feed intact.
+    await tester.tapAt(const Offset(400, 40));
     await tester.pumpAndSettle();
-
-    expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
     expect(find.byIcon(Icons.send), findsNothing);
-    expect(find.text('open'), findsOneWidget);
 
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-    tester.view.physicalSize = const Size(1000, 800);
-    await tester.pumpAndSettle();
-
-    // Narrow layouts open the composer as a bottom sheet, not a full page.
-    expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
-    expect(find.byIcon(Icons.send), findsOneWidget);
-
+    // The same bottom sheet is used on wide layouts.
     tester.view.physicalSize = const Size(1300, 800);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
     expect(find.byIcon(Icons.send), findsOneWidget);
   });
 
@@ -169,6 +163,7 @@ void main() {
               required visibility,
               required localOnly,
               replyId,
+              fileIds = const [],
             }) async {},
           ),
         ],

@@ -8,6 +8,8 @@ import '../../features/chat/presentation/chat_pages.dart';
 import '../../features/composer/presentation/compose_page.dart';
 import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
+import '../../features/drive/presentation/drive_page.dart';
+import '../../features/settings/presentation/licenses_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/tags/presentation/tag_timeline_page.dart';
 
@@ -39,6 +41,10 @@ sealed class DetailLocation {
       'chat' when segments.length == 3 && segments[1] == 'room' =>
         ChatRoomDetailLocation(segments[2]),
       'settings' when segments.length == 1 => const SettingsDetailLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'drive' =>
+        const DriveDetailLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'licenses' =>
+        const SettingsLicensesLocation(),
       'settings' when segments.length == 2 && segments[1] == 'accounts' =>
         const SettingsAccountsLocation(),
       'settings' when segments.length == 2 && segments[1] == 'navigation' =>
@@ -189,6 +195,26 @@ class SettingsAboutLocation extends DetailLocation {
 
   @override
   Widget build(BuildContext context) => const AboutSettingsPage();
+}
+
+class DriveDetailLocation extends DetailLocation {
+  const DriveDetailLocation();
+
+  @override
+  String get location => '/settings/drive';
+
+  @override
+  Widget build(BuildContext context) => const DrivePage();
+}
+
+class SettingsLicensesLocation extends DetailLocation {
+  const SettingsLicensesLocation();
+
+  @override
+  String get location => '/settings/licenses';
+
+  @override
+  Widget build(BuildContext context) => const LicensesPage();
 }
 
 class AddAccountLocation extends DetailLocation {

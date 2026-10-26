@@ -15,10 +15,12 @@ List<RouteBase> get $appRoutes => [
   $composeRoute,
   $chatUserRoute,
   $chatRoomRoute,
+  $driveRoute,
   $settingsRoute,
   $settingsAccountsRoute,
   $settingsNavigationRoute,
   $settingsAppearanceRoute,
+  $settingsLicensesRoute,
   $settingsAboutRoute,
   $appShellRouteData,
 ];
@@ -264,6 +266,33 @@ mixin $ChatRoomRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
+RouteBase get $driveRoute => GoRouteData.$route(
+  path: '/drive',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: DriveRoute.$parentNavigatorKey,
+  factory: $DriveRoute._fromState,
+);
+
+mixin $DriveRoute on GoRouteData {
+  static DriveRoute _fromState(GoRouterState state) => const DriveRoute();
+
+  @override
+  String get location => GoRouteData.$location('/drive');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
 RouteBase get $settingsRoute => GoRouteData.$route(
   path: '/settings',
   hasOverriddenOnExit: false,
@@ -360,6 +389,34 @@ mixin $SettingsAppearanceRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/settings/appearance');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsLicensesRoute => GoRouteData.$route(
+  path: '/settings/licenses',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsLicensesRoute.$parentNavigatorKey,
+  factory: $SettingsLicensesRoute._fromState,
+);
+
+mixin $SettingsLicensesRoute on GoRouteData {
+  static SettingsLicensesRoute _fromState(GoRouterState state) =>
+      const SettingsLicensesRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/licenses');
 
   @override
   void go(BuildContext context) => context.go(location);

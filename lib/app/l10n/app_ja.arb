@@ -63,8 +63,11 @@
   "renote": "リノート",
   "reaction": "リアクション",
   "reactions": "リアクション",
+  "download": "ダウンロード",
+  "downloadSaved": "保存先",
+  "downloadFailed": "ダウンロードに失敗しました",
+  "confirm": "確認",
   "react": "リアクションする",
-  "removeReaction": "リアクションを削除",
   "renoted": "リノートしました",
   "replySent": "返信を投稿しました",
   "videoUnavailable": "動画を利用できません",
@@ -155,7 +158,6 @@
   "about": "このアプリについて",
   "appVersion": "バージョン 0.1.0+1",
   "noAccounts": "アカウントがありません",
-  "confirm": "確認",
   "externalLinkFailed": "リンクを開けませんでした",
   "copyFailed": "リンクをコピーできませんでした",
   "searchSubmit": "検索",
@@ -212,5 +214,61 @@
   "colorGreen": "グリーン",
   "colorBlue": "ブルー",
   "colorOrange": "オレンジ",
-  "detailBreakpoint": "詳細パネルのブレークポイント"
+  "detailBreakpoint": "詳細パネルのブレークポイント",
+  "removeReaction": "リアクションを取り消す",
+  "removeReactionConfirm": "リアクション {reaction} を取り消しますか？",
+  "@removeReactionConfirm": {
+    "placeholders": {
+      "reaction": {
+        "type": "String"
+      }
+    }
+  },
+  "changeReactionConfirm": "{reaction} でリアクションしますか？",
+  "@changeReactionConfirm": {
+    "placeholders": {
+      "reaction": {
+        "type": "String"
+      }
+    }
+  },
+  "contributors": "コントリビューター",
+  "contributorsBody": "Nyachi は SakuraCake とコミュニティの貢献者によって開発されています。",
+  "flutterTrademark": "Flutter は Google LLC の商標です。Nyachi は Google と提携しておらず、承認も受けていません。",
+  "viewLicenses": "オープンソースライセンス",
+  "licensesBody": "本アプリには {count} 個のパッケージが含まれています。",
+  "@licensesBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drive": "ドライブ",
+  "upload": "アップロード",
+  "noFiles": "ファイルがありません",
+  "deleteFileConfirm": "{name} を削除しますか？",
+  "@deleteFileConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "driveUsage": "ストレージ",
+  "thirdPartyNotices": "サードパーティに関する表示",
+  "bundledPackages": "同梱パッケージ",
+  "legalNotice": "法的表示",
+  "renoteConfirmTitle": "リノート",
+  "renoteConfirm": "この投稿をリノートしますか？",
+  "centerContent": "コンテンツを中央に",
+  "centerContentHint": "ワイド画面で本文を中央に表示します",
+  "openFullComposer": "エディタを全画面で開く",
+  "attachFiles": "ファイルを添付",
+  "uploading": "アップロード中…",
+  "noAttachments": "添付なし",
+  "newFolder": "フォルダを作成",
+  "folderName": "フォルダ名",
+  "create": "作成",
+  "driveSpace": "ストレージ"
 }

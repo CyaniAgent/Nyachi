@@ -203,7 +203,10 @@ class _ProfileHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (user.description?.isNotEmpty == true) ...[
-                NoteContent(text: _normalizeDescription(user.description!)),
+                NoteContent(
+                  text: _normalizeDescription(user.description!),
+                  emojis: user.emojis,
+                ),
                 const SizedBox(height: 12),
               ],
               Wrap(

@@ -9,6 +9,7 @@ import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../application/composer_controller.dart';
+import 'compose_page.dart';
 
 /// Opens the composer in a modal bottom sheet (mobile/narrow layouts).
 Future<void> showComposeSheet(BuildContext context, {String? replyId}) {
@@ -111,7 +112,7 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (widget.showHandle)
+          if (widget.showHandle) ...[
             Center(
               child: Container(
                 width: 36,
@@ -123,6 +124,24 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
                 ),
               ),
             ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () {
+                  final navigator = Navigator.of(context);
+                  final replyId = widget.replyId;
+                  navigator.pop();
+                  navigator.push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (_) => ComposePage(replyId: replyId),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.open_in_full, size: 18),
+                label: Text(l10n.openFullComposer),
+              ),
+            ),
+          ],
           if (state.restored)
             Material(
               color: Theme.of(context).colorScheme.secondaryContainer,

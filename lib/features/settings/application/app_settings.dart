@@ -42,6 +42,7 @@ class AppSettings {
     required this.accentColor,
     required this.navConfig,
     required this.detailBreakpoint,
+    this.centerContent = true,
   });
 
   final String themeMode;
@@ -50,12 +51,16 @@ class AppSettings {
   final NavConfig navConfig;
   final int detailBreakpoint;
 
+  /// Centers the readable column on wide screens instead of left-aligning it.
+  final bool centerContent;
+
   AppSettings copyWith({
     String? themeMode,
     String? localeCode,
     String? accentColor,
     NavConfig? navConfig,
     int? detailBreakpoint,
+    bool? centerContent,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -63,6 +68,7 @@ class AppSettings {
       accentColor: accentColor ?? this.accentColor,
       navConfig: navConfig ?? this.navConfig,
       detailBreakpoint: detailBreakpoint ?? this.detailBreakpoint,
+      centerContent: centerContent ?? this.centerContent,
     );
   }
 }
@@ -75,6 +81,7 @@ class SettingsController extends _$SettingsController {
   static const orderKey = 'settings.tabOrder';
   static const hiddenKey = 'settings.hiddenTabs';
   static const detailBreakpointKey = 'layout.detailBreakpoint';
+  static const centerContentKey = 'layout.centerContent';
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
 
@@ -106,6 +113,7 @@ class SettingsController extends _$SettingsController {
           (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
               .toInt(),
+      centerContent: prefs.getBool(centerContentKey) ?? true,
     );
   }
 
@@ -134,6 +142,11 @@ class SettingsController extends _$SettingsController {
             appDetailBreakpointStep;
     state = state.copyWith(detailBreakpoint: aligned);
     await _prefs.setInt(detailBreakpointKey, aligned);
+  }
+
+  Future<void> setCenterContent(bool value) async {
+    state = state.copyWith(centerContent: value);
+    await _prefs.setBool(centerContentKey, value);
   }
 
   Future<void> setNavConfig(NavConfig config) async {

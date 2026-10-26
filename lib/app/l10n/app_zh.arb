@@ -63,8 +63,11 @@
   "renote": "转发",
   "reaction": "反应",
   "reactions": "反应",
+  "download": "下载",
+  "downloadSaved": "已保存到",
+  "downloadFailed": "下载失败",
+  "confirm": "确认",
   "react": "添加反应",
-  "removeReaction": "移除反应",
   "renoted": "已转发",
   "replySent": "回复已发布",
   "videoUnavailable": "视频不可用",
@@ -155,7 +158,6 @@
   "about": "关于",
   "appVersion": "版本 0.1.0+1",
   "noAccounts": "暂无账号",
-  "confirm": "确认",
   "externalLinkFailed": "无法打开链接",
   "copyFailed": "无法复制链接",
   "searchSubmit": "搜索",
@@ -212,5 +214,61 @@
   "colorGreen": "绿色",
   "colorBlue": "蓝色",
   "colorOrange": "橙色",
-  "detailBreakpoint": "详情面板断点"
+  "detailBreakpoint": "详情面板断点",
+  "removeReaction": "取消反应",
+  "removeReactionConfirm": "要取消你的反应 {reaction} 吗？",
+  "@removeReactionConfirm": {
+    "placeholders": {
+      "reaction": {
+        "type": "String"
+      }
+    }
+  },
+  "changeReactionConfirm": "要用 {reaction} 回应吗？",
+  "@changeReactionConfirm": {
+    "placeholders": {
+      "reaction": {
+        "type": "String"
+      }
+    }
+  },
+  "contributors": "贡献者",
+  "contributorsBody": "Nyachi 由 SakuraCake 与社区贡献者共同开发。",
+  "flutterTrademark": "Flutter 是 Google LLC 的商标。Nyachi 与 Google 无隶属或背书关系。",
+  "viewLicenses": "开源许可",
+  "licensesBody": "本应用包含 {count} 个依赖包。",
+  "@licensesBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drive": "云盘",
+  "upload": "上传",
+  "noFiles": "还没有文件",
+  "deleteFileConfirm": "要删除 {name} 吗？",
+  "@deleteFileConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "driveUsage": "存储",
+  "thirdPartyNotices": "第三方声明",
+  "bundledPackages": "内置依赖包",
+  "legalNotice": "法律声明",
+  "renoteConfirmTitle": "转发",
+  "renoteConfirm": "要转发这条帖子吗？",
+  "centerContent": "内容居中",
+  "centerContentHint": "宽屏时内容列居中显示",
+  "openFullComposer": "展开完整编辑器",
+  "attachFiles": "添加附件",
+  "uploading": "上传中…",
+  "noAttachments": "无附件",
+  "newFolder": "新建文件夹",
+  "folderName": "文件夹名称",
+  "create": "创建",
+  "driveSpace": "存储空间"
 }

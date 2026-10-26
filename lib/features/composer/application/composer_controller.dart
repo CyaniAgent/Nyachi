@@ -26,6 +26,7 @@ typedef ComposerSender = Future<void> Function({
   required NotesCreateRequestVisibility visibility,
   required bool localOnly,
   String? replyId,
+  List<String> fileIds,
 });
 
 final composerSenderProvider = Provider<ComposerSender>((ref) {
@@ -35,6 +36,7 @@ final composerSenderProvider = Provider<ComposerSender>((ref) {
     required visibility,
     required localOnly,
     replyId,
+    fileIds = const [],
   }) => ref
       .read(misskeyClientProvider)
       .notes
@@ -44,6 +46,7 @@ final composerSenderProvider = Provider<ComposerSender>((ref) {
         visibility: visibility,
         localOnly: localOnly,
         replyId: replyId,
+        fileIds: fileIds.isEmpty ? null : fileIds,
       );
 });
 
@@ -57,6 +60,7 @@ abstract class ComposerState with _$ComposerState {
     @Default(false) bool localOnly,
     @Default(false) bool restored,
     @Default(false) bool posting,
+    @Default(<String>[]) List<String> fileIds,
     AppFailure? error,
   }) = _ComposerState;
 }
@@ -155,6 +159,19 @@ class ComposerController extends _$ComposerController {
     _scheduleSave();
   }
 
+  /// Adds an already-uploaded drive file to the post.
+  void addFileId(String fileId) {
+    if (state.fileIds.contains(fileId)) return;
+    state = state.copyWith(fileIds: [...state.fileIds, fileId]);
+  }
+
+  /// Removes an attachment from the post.
+  void removeFileId(String fileId) {
+    state = state.copyWith(
+      fileIds: state.fileIds.where((id) => id != fileId).toList(),
+    );
+  }
+
   void setLocalOnly(bool value) {
     _lastLocalOnly = value;
     state = state.copyWith(localOnly: value);
@@ -217,6 +234,7 @@ class ComposerController extends _$ComposerController {
         visibility: state.visibility,
         localOnly: state.localOnly,
         replyId: _replyId,
+        fileIds: state.fileIds,
       );
       _dirty = false;
       await ref.read(draftDaoProvider).deleteDraft(active.id);

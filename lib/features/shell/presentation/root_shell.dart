@@ -148,6 +148,7 @@ class _RootShellState extends ConsumerState<RootShell> {
             onDestinationSelected: (tab) => _select(shell, tab),
             onProfile: () => _select(shell, AppTab.profile),
             onSettings: () => GoRouter.of(context).push('/settings'),
+            onDrive: () => GoRouter.of(context).push('/drive'),
             child: content,
           ),
         );
@@ -200,6 +201,7 @@ class ShellChrome extends ConsumerWidget {
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.onSettings,
+    required this.onDrive,
     required this.onProfile,
     super.key,
   });
@@ -208,6 +210,7 @@ class ShellChrome extends ConsumerWidget {
   final int? selectedIndex;
   final ValueChanged<AppTab> onDestinationSelected;
   final VoidCallback onSettings;
+  final VoidCallback onDrive;
   final VoidCallback onProfile;
 
   @override
@@ -269,6 +272,7 @@ class ShellChrome extends ConsumerWidget {
             selectedIndex: selectedIndex,
             onDestinationSelected: onDestinationSelected,
             onSettings: onSettings,
+            onDrive: onDrive,
             onProfile: onProfile,
           ),
           VerticalDivider(
@@ -306,6 +310,7 @@ class _AppNavigationRail extends StatelessWidget {
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.onSettings,
+    required this.onDrive,
     required this.onProfile,
   });
 
@@ -315,6 +320,7 @@ class _AppNavigationRail extends StatelessWidget {
   final int? selectedIndex;
   final ValueChanged<AppTab> onDestinationSelected;
   final VoidCallback onSettings;
+  final VoidCallback onDrive;
   final VoidCallback onProfile;
 
   @override
@@ -355,6 +361,7 @@ class _AppNavigationRail extends StatelessWidget {
           _SidebarUserPanel(
             extended: extended,
             onSettings: onSettings,
+            onDrive: onDrive,
             onProfile: onProfile,
           ),
         ],
@@ -367,11 +374,13 @@ class _SidebarUserPanel extends ConsumerStatefulWidget {
   const _SidebarUserPanel({
     required this.extended,
     required this.onSettings,
+    required this.onDrive,
     required this.onProfile,
   });
 
   final bool extended;
   final VoidCallback onSettings;
+  final VoidCallback onDrive;
   final VoidCallback onProfile;
 
   @override
@@ -387,10 +396,20 @@ class _SidebarUserPanelState extends ConsumerState<_SidebarUserPanel> {
     if (account == null) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12, top: 4),
-        child: IconButton(
-          tooltip: context.l10n.settings,
-          onPressed: widget.onSettings,
-          icon: const Icon(Icons.settings_outlined),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: context.l10n.drive,
+              onPressed: widget.onDrive,
+              icon: const Icon(Icons.cloud_outlined),
+            ),
+            IconButton(
+              tooltip: context.l10n.settings,
+              onPressed: widget.onSettings,
+              icon: const Icon(Icons.settings_outlined),
+            ),
+          ],
         ),
       );
     }
@@ -409,6 +428,13 @@ class _SidebarUserPanelState extends ConsumerState<_SidebarUserPanel> {
                 size: 36,
                 showStatus: true,
               ),
+            ),
+            IconButton(
+              tooltip: context.l10n.drive,
+              onPressed: widget.onDrive,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 32),
+              icon: const Icon(Icons.cloud_outlined, size: 20),
             ),
             IconButton(
               tooltip: context.l10n.settings,
@@ -502,6 +528,11 @@ class _SidebarUserPanelState extends ConsumerState<_SidebarUserPanel> {
                 ),
               ),
             ),
+          ),
+          _PanelIconButton(
+            tooltip: context.l10n.drive,
+            icon: Icons.cloud_outlined,
+            onPressed: widget.onDrive,
           ),
           _PanelIconButton(
             tooltip: context.l10n.settings,

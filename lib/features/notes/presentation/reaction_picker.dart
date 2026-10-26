@@ -7,6 +7,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../application/emoji_catalog.dart';
+import 'emoji_text.dart';
 
 const defaultReactions = ['👍', '❤️', '😂', '🎉', '😮', '😢'];
 
@@ -57,7 +58,7 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
                   children: [
                     for (final reaction in existing)
                       ActionChip(
-                        label: Text(_reactionLabel(reaction)),
+                        label: EmojiText(emoji: reaction, size: 16),
                         onPressed: () => Navigator.pop(context, reaction),
                       ),
                   ],
@@ -139,12 +140,5 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
         ),
       ),
     );
-  }
-
-  String _reactionLabel(String reaction) {
-    if (reaction.startsWith(':') && reaction.endsWith(':')) {
-      return reaction.substring(1, reaction.length - 1);
-    }
-    return reaction;
   }
 }

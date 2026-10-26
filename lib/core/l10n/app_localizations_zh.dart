@@ -199,10 +199,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reactions => '反应';
 
   @override
-  String get react => '添加反应';
+  String get download => '下载';
 
   @override
-  String get removeReaction => '移除反应';
+  String get downloadSaved => '已保存到';
+
+  @override
+  String get downloadFailed => '下载失败';
+
+  @override
+  String get confirm => '确认';
+
+  @override
+  String get react => '添加反应';
 
   @override
   String get renoted => '已转发';
@@ -475,9 +484,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noAccounts => '暂无账号';
 
   @override
-  String get confirm => '确认';
-
-  @override
   String get externalLinkFailed => '无法打开链接';
 
   @override
@@ -571,4 +577,97 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get detailBreakpoint => '详情面板断点';
+
+  @override
+  String get removeReaction => '取消反应';
+
+  @override
+  String removeReactionConfirm(String reaction) {
+    return '要取消你的反应 $reaction 吗？';
+  }
+
+  @override
+  String changeReactionConfirm(String reaction) {
+    return '要用 $reaction 回应吗？';
+  }
+
+  @override
+  String get contributors => '贡献者';
+
+  @override
+  String get contributorsBody => 'Nyachi 由 SakuraCake 与社区贡献者共同开发。';
+
+  @override
+  String get flutterTrademark =>
+      'Flutter 是 Google LLC 的商标。Nyachi 与 Google 无隶属或背书关系。';
+
+  @override
+  String get viewLicenses => '开源许可';
+
+  @override
+  String licensesBody(int count) {
+    return '本应用包含 $count 个依赖包。';
+  }
+
+  @override
+  String get drive => '云盘';
+
+  @override
+  String get upload => '上传';
+
+  @override
+  String get noFiles => '还没有文件';
+
+  @override
+  String deleteFileConfirm(String name) {
+    return '要删除 $name 吗？';
+  }
+
+  @override
+  String get driveUsage => '存储';
+
+  @override
+  String get thirdPartyNotices => '第三方声明';
+
+  @override
+  String get bundledPackages => '内置依赖包';
+
+  @override
+  String get legalNotice => '法律声明';
+
+  @override
+  String get renoteConfirmTitle => '转发';
+
+  @override
+  String get renoteConfirm => '要转发这条帖子吗？';
+
+  @override
+  String get centerContent => '内容居中';
+
+  @override
+  String get centerContentHint => '宽屏时内容列居中显示';
+
+  @override
+  String get openFullComposer => '展开完整编辑器';
+
+  @override
+  String get attachFiles => '添加附件';
+
+  @override
+  String get uploading => '上传中…';
+
+  @override
+  String get noAttachments => '无附件';
+
+  @override
+  String get newFolder => '新建文件夹';
+
+  @override
+  String get folderName => '文件夹名称';
+
+  @override
+  String get create => '创建';
+
+  @override
+  String get driveSpace => '存储空间';
 }

@@ -199,10 +199,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get reactions => 'リアクション';
 
   @override
-  String get react => 'リアクションする';
+  String get download => 'ダウンロード';
 
   @override
-  String get removeReaction => 'リアクションを削除';
+  String get downloadSaved => '保存先';
+
+  @override
+  String get downloadFailed => 'ダウンロードに失敗しました';
+
+  @override
+  String get confirm => '確認';
+
+  @override
+  String get react => 'リアクションする';
 
   @override
   String get renoted => 'リノートしました';
@@ -475,9 +484,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noAccounts => 'アカウントがありません';
 
   @override
-  String get confirm => '確認';
-
-  @override
   String get externalLinkFailed => 'リンクを開けませんでした';
 
   @override
@@ -571,4 +577,97 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get detailBreakpoint => '詳細パネルのブレークポイント';
+
+  @override
+  String get removeReaction => 'リアクションを取り消す';
+
+  @override
+  String removeReactionConfirm(String reaction) {
+    return 'リアクション $reaction を取り消しますか？';
+  }
+
+  @override
+  String changeReactionConfirm(String reaction) {
+    return '$reaction でリアクションしますか？';
+  }
+
+  @override
+  String get contributors => 'コントリビューター';
+
+  @override
+  String get contributorsBody => 'Nyachi は SakuraCake とコミュニティの貢献者によって開発されています。';
+
+  @override
+  String get flutterTrademark =>
+      'Flutter は Google LLC の商標です。Nyachi は Google と提携しておらず、承認も受けていません。';
+
+  @override
+  String get viewLicenses => 'オープンソースライセンス';
+
+  @override
+  String licensesBody(int count) {
+    return '本アプリには $count 個のパッケージが含まれています。';
+  }
+
+  @override
+  String get drive => 'ドライブ';
+
+  @override
+  String get upload => 'アップロード';
+
+  @override
+  String get noFiles => 'ファイルがありません';
+
+  @override
+  String deleteFileConfirm(String name) {
+    return '$name を削除しますか？';
+  }
+
+  @override
+  String get driveUsage => 'ストレージ';
+
+  @override
+  String get thirdPartyNotices => 'サードパーティに関する表示';
+
+  @override
+  String get bundledPackages => '同梱パッケージ';
+
+  @override
+  String get legalNotice => '法的表示';
+
+  @override
+  String get renoteConfirmTitle => 'リノート';
+
+  @override
+  String get renoteConfirm => 'この投稿をリノートしますか？';
+
+  @override
+  String get centerContent => 'コンテンツを中央に';
+
+  @override
+  String get centerContentHint => 'ワイド画面で本文を中央に表示します';
+
+  @override
+  String get openFullComposer => 'エディタを全画面で開く';
+
+  @override
+  String get attachFiles => 'ファイルを添付';
+
+  @override
+  String get uploading => 'アップロード中…';
+
+  @override
+  String get noAttachments => '添付なし';
+
+  @override
+  String get newFolder => 'フォルダを作成';
+
+  @override
+  String get folderName => 'フォルダ名';
+
+  @override
+  String get create => '作成';
+
+  @override
+  String get driveSpace => 'ストレージ';
 }

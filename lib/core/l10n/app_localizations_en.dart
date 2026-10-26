@@ -201,10 +201,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reactions => 'Reactions';
 
   @override
-  String get react => 'React';
+  String get download => 'Download';
 
   @override
-  String get removeReaction => 'Remove reaction';
+  String get downloadSaved => 'Saved to';
+
+  @override
+  String get downloadFailed => 'Download failed';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get react => 'React';
 
   @override
   String get renoted => 'Renoted';
@@ -478,9 +487,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAccounts => 'No accounts';
 
   @override
-  String get confirm => 'Confirm';
-
-  @override
   String get externalLinkFailed => 'Could not open the link';
 
   @override
@@ -574,4 +580,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get detailBreakpoint => 'Details panel breakpoint';
+
+  @override
+  String get removeReaction => 'Remove reaction';
+
+  @override
+  String removeReactionConfirm(String reaction) {
+    return 'Remove your response $reaction?';
+  }
+
+  @override
+  String changeReactionConfirm(String reaction) {
+    return 'React with $reaction?';
+  }
+
+  @override
+  String get contributors => 'Contributors';
+
+  @override
+  String get contributorsBody =>
+      'Nyachi is developed by SakuraCake and community contributors.';
+
+  @override
+  String get flutterTrademark =>
+      'Flutter is a trademark of Google LLC. Nyachi is not affiliated with or endorsed by Google.';
+
+  @override
+  String get viewLicenses => 'Open-source licenses';
+
+  @override
+  String licensesBody(int count) {
+    return '$count packages bundled with this app.';
+  }
+
+  @override
+  String get drive => 'Drive';
+
+  @override
+  String get upload => 'Upload';
+
+  @override
+  String get noFiles => 'No files yet';
+
+  @override
+  String deleteFileConfirm(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get driveUsage => 'Storage';
+
+  @override
+  String get thirdPartyNotices => 'Third-party notices';
+
+  @override
+  String get bundledPackages => 'Bundled packages';
+
+  @override
+  String get legalNotice => 'Legal';
+
+  @override
+  String get renoteConfirmTitle => 'Renote';
+
+  @override
+  String get renoteConfirm => 'Renote this post?';
+
+  @override
+  String get centerContent => 'Center content';
+
+  @override
+  String get centerContentHint =>
+      'Keep the reading column centered on wide screens';
+
+  @override
+  String get openFullComposer => 'Open full composer';
+
+  @override
+  String get attachFiles => 'Attach files';
+
+  @override
+  String get uploading => 'Uploading…';
+
+  @override
+  String get noAttachments => 'No attachments';
+
+  @override
+  String get newFolder => 'New folder';
+
+  @override
+  String get folderName => 'Folder name';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get driveSpace => 'Drive space';
 }

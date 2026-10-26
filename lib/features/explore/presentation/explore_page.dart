@@ -6,6 +6,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
+import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/l10n_ext.dart';
@@ -49,6 +50,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
             Padding(
               padding: const EdgeInsets.all(12),
               child: ReadableWidth(
+                centered: ref.watch(settingsControllerProvider).centerContent,
                 maxWidth: appMaxContentWidth,
                 child: Row(
                   children: [
@@ -75,6 +77,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
             ),
             Expanded(
               child: ReadableWidth(
+                centered: ref.watch(settingsControllerProvider).centerContent,
                 maxWidth: appMaxContentWidth,
                 child: _query.isEmpty
                     ? _Trends()

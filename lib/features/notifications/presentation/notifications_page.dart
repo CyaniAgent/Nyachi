@@ -8,6 +8,7 @@ import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/avatar.dart';
+import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
@@ -46,7 +47,10 @@ class NotificationsPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: controller.refresh,
-        child: ReadableWidth(child: _body(context, ref, state, controller)),
+        child: ReadableWidth(
+          centered: ref.watch(settingsControllerProvider).centerContent,
+          child: _body(context, ref, state, controller),
+        ),
       ),
     );
   }

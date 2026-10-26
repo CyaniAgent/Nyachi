@@ -31,6 +31,7 @@ void main() {
             selectedIndex: 0,
             onDestinationSelected: (_) {},
             onSettings: () {},
+            onDrive: () {},
             onProfile: () {},
             child: const SizedBox.expand(),
           ),

@@ -63,8 +63,11 @@
   "renote": "Renote",
   "reaction": "Reaction",
   "reactions": "Reactions",
+  "download": "Download",
+  "downloadSaved": "Saved to",
+  "downloadFailed": "Download failed",
+  "confirm": "Confirm",
   "react": "React",
-  "removeReaction": "Remove reaction",
   "renoted": "Renoted",
   "replySent": "Reply posted",
   "videoUnavailable": "Video unavailable",
@@ -155,7 +158,6 @@
   "about": "About",
   "appVersion": "Version 0.1.0+1",
   "noAccounts": "No accounts",
-  "confirm": "Confirm",
   "externalLinkFailed": "Could not open the link",
   "copyFailed": "Could not copy the link",
   "searchSubmit": "Search",
@@ -212,5 +214,61 @@
   "colorGreen": "Green",
   "colorBlue": "Blue",
   "colorOrange": "Orange",
-  "detailBreakpoint": "Details panel breakpoint"
+  "detailBreakpoint": "Details panel breakpoint",
+  "removeReaction": "Remove reaction",
+  "removeReactionConfirm": "Remove your response {reaction}?",
+  "@removeReactionConfirm": {
+    "placeholders": {
+      "reaction": {
+        "type": "String"
+      }
+    }
+  },
+  "changeReactionConfirm": "React with {reaction}?",
+  "@changeReactionConfirm": {
+    "placeholders": {
+      "reaction": {
+        "type": "String"
+      }
+    }
+  },
+  "contributors": "Contributors",
+  "contributorsBody": "Nyachi is developed by SakuraCake and community contributors.",
+  "flutterTrademark": "Flutter is a trademark of Google LLC. Nyachi is not affiliated with or endorsed by Google.",
+  "viewLicenses": "Open-source licenses",
+  "licensesBody": "{count} packages bundled with this app.",
+  "@licensesBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drive": "Drive",
+  "upload": "Upload",
+  "noFiles": "No files yet",
+  "deleteFileConfirm": "Delete {name}?",
+  "@deleteFileConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "driveUsage": "Storage",
+  "thirdPartyNotices": "Third-party notices",
+  "bundledPackages": "Bundled packages",
+  "legalNotice": "Legal",
+  "renoteConfirmTitle": "Renote",
+  "renoteConfirm": "Renote this post?",
+  "centerContent": "Center content",
+  "centerContentHint": "Keep the reading column centered on wide screens",
+  "openFullComposer": "Open full composer",
+  "attachFiles": "Attach files",
+  "uploading": "Uploading…",
+  "noAttachments": "No attachments",
+  "newFolder": "New folder",
+  "folderName": "Folder name",
+  "create": "Create",
+  "driveSpace": "Drive space"
 }

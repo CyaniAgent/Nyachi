@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'dart:math' as math;
-
 import '../../../core/ui/content_width.dart';
+import '../../settings/application/app_settings.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,13 +34,18 @@ class NoteList extends ConsumerWidget {
       onRefresh: controller.refresh,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Left-align the readable column instead of centering it: a fixed
-          // leading inset, with the trailing inset absorbing the remainder.
-          final horizontal = math.max(
-            12.0,
-            constraints.maxWidth - appMaxContentWidth - 12.0,
-          );
-          return _content(context, state, controller, l10n, 12.0, horizontal);
+          // Honour the user's centring preference: when centred, both insets
+          // split the slack evenly; when not, the trailing inset absorbs it and
+          // the column stays left-aligned.
+          final slack = constraints.maxWidth - appMaxContentWidth - 24.0;
+          final centered = ref.watch(settingsControllerProvider).centerContent;
+          final inset = slack <= 0
+              ? 12.0
+              : (centered ? 12.0 + slack / 2 : 12.0);
+          final trailing = slack <= 0
+              ? 12.0
+              : (centered ? 12.0 + slack / 2 : 12.0 + slack);
+          return _content(context, state, controller, l10n, inset, trailing);
         },
       ),
     );

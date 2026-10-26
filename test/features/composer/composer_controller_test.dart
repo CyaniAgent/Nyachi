@@ -49,6 +49,7 @@ void main() {
                 required visibility,
                 required localOnly,
                 replyId,
+                fileIds = const [],
               }) async {},
         ),
       ],
@@ -87,6 +88,7 @@ void main() {
             required visibility,
             required localOnly,
             replyId,
+            fileIds = const [],
           }) async {
             sent = true;
             expect(text, 'posted');

@@ -18,12 +18,19 @@ const int appDetailBreakpointMax = 1600;
 const int appDetailBreakpointStep = 40;
 const int appDetailBreakpointDefault = 1200;
 
-Color parseThemeColor(String? value) {
-  if (value == null) return Colors.indigo;
+/// Neutral seed used when neither the user nor the instance provides a colour.
+const Color appFallbackSeed = Color(0xFF6750A4);
+
+/// Parses a `#rrggbb`/`#aarrggbb` colour string.
+///
+/// Returns [fallback] when [value] is null or malformed; callers that follow the
+/// instance pass the instance theme colour so the seed tracks the server.
+Color parseThemeColor(String? value, {Color fallback = appFallbackSeed}) {
+  if (value == null) return fallback;
   final cleaned = value.trim().replaceFirst('#', '');
-  if (cleaned.length != 6 && cleaned.length != 8) return Colors.indigo;
+  if (cleaned.length != 6 && cleaned.length != 8) return fallback;
   final parsed = int.tryParse(cleaned, radix: 16);
-  if (parsed == null) return Colors.indigo;
+  if (parsed == null) return fallback;
   return Color(cleaned.length == 6 ? 0xff000000 | parsed : parsed);
 }
 

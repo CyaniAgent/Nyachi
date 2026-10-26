@@ -478,17 +478,35 @@ abstract class AppLocalizations {
   /// **'Reactions'**
   String get reactions;
 
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// No description provided for @downloadSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to'**
+  String get downloadSaved;
+
+  /// No description provided for @downloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get downloadFailed;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
   /// No description provided for @react.
   ///
   /// In en, this message translates to:
   /// **'React'**
   String get react;
-
-  /// No description provided for @removeReaction.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove reaction'**
-  String get removeReaction;
 
   /// No description provided for @renoted.
   ///
@@ -1030,12 +1048,6 @@ abstract class AppLocalizations {
   /// **'No accounts'**
   String get noAccounts;
 
-  /// No description provided for @confirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm'**
-  String get confirm;
-
   /// No description provided for @externalLinkFailed.
   ///
   /// In en, this message translates to:
@@ -1209,6 +1221,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Details panel breakpoint'**
   String get detailBreakpoint;
+
+  /// No description provided for @removeReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove reaction'**
+  String get removeReaction;
+
+  /// No description provided for @removeReactionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove your response {reaction}?'**
+  String removeReactionConfirm(String reaction);
+
+  /// No description provided for @changeReactionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'React with {reaction}?'**
+  String changeReactionConfirm(String reaction);
+
+  /// No description provided for @contributors.
+  ///
+  /// In en, this message translates to:
+  /// **'Contributors'**
+  String get contributors;
+
+  /// No description provided for @contributorsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nyachi is developed by SakuraCake and community contributors.'**
+  String get contributorsBody;
+
+  /// No description provided for @flutterTrademark.
+  ///
+  /// In en, this message translates to:
+  /// **'Flutter is a trademark of Google LLC. Nyachi is not affiliated with or endorsed by Google.'**
+  String get flutterTrademark;
+
+  /// No description provided for @viewLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source licenses'**
+  String get viewLicenses;
+
+  /// No description provided for @licensesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} packages bundled with this app.'**
+  String licensesBody(int count);
+
+  /// No description provided for @drive.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive'**
+  String get drive;
+
+  /// No description provided for @upload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get upload;
+
+  /// No description provided for @noFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'No files yet'**
+  String get noFiles;
+
+  /// No description provided for @deleteFileConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteFileConfirm(String name);
+
+  /// No description provided for @driveUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get driveUsage;
+
+  /// No description provided for @thirdPartyNotices.
+  ///
+  /// In en, this message translates to:
+  /// **'Third-party notices'**
+  String get thirdPartyNotices;
+
+  /// No description provided for @bundledPackages.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundled packages'**
+  String get bundledPackages;
+
+  /// No description provided for @legalNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legalNotice;
+
+  /// No description provided for @renoteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Renote'**
+  String get renoteConfirmTitle;
+
+  /// No description provided for @renoteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Renote this post?'**
+  String get renoteConfirm;
+
+  /// No description provided for @centerContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Center content'**
+  String get centerContent;
+
+  /// No description provided for @centerContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the reading column centered on wide screens'**
+  String get centerContentHint;
+
+  /// No description provided for @openFullComposer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open full composer'**
+  String get openFullComposer;
+
+  /// No description provided for @attachFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach files'**
+  String get attachFiles;
+
+  /// No description provided for @uploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get uploading;
+
+  /// No description provided for @noAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'No attachments'**
+  String get noAttachments;
+
+  /// No description provided for @newFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New folder'**
+  String get newFolder;
+
+  /// No description provided for @folderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get folderName;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @driveSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive space'**
+  String get driveSpace;
 }
 
 class _AppLocalizationsDelegate

@@ -28,7 +28,7 @@ abstract class ChatListState with _$ChatListState {
   }) = _ChatListState;
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ChatListController extends _$ChatListController {
   late ChatRepository _repository;
   late String _me;

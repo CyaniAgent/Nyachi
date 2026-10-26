@@ -4,7 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import 'package:file_picker/file_picker.dart';
+
+import '../../../core/network/error_mapper.dart';
 import '../../../core/network/instance_repository.dart';
+import '../../drive/data/drive_repository.dart';
+import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
@@ -24,6 +29,33 @@ class _ComposePageState extends ConsumerState<ComposePage> {
   final _text = TextEditingController();
   final _cw = TextEditingController();
   var _hasCw = false;
+  var _uploading = false;
+
+  /// Picks files and uploads them to the drive, then attaches their ids.
+  Future<void> _attach() async {
+    final picked = await FilePicker.pickFiles(type: FileType.media);
+    if (picked.isEmpty || !mounted) return;
+    setState(() => _uploading = true);
+    final controller = ref.read(
+      composerControllerProvider(widget.replyId).notifier,
+    );
+    final drive = ref.read(driveRepositoryProvider);
+    try {
+      for (final file in picked) {
+        final bytes = await file.readAsBytes();
+        final uploaded = await drive.upload(bytes: bytes, fileName: file.name);
+        controller.addFileId(uploaded.id);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mapFailure(error).message(context.l10n))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -100,6 +132,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
         ],
       ),
       body: ReadableWidth(
+        centered: ref.watch(settingsControllerProvider).centerContent,
         maxWidth: appMaxContentWidth,
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -163,13 +196,41 @@ class _ComposePageState extends ConsumerState<ComposePage> {
               onChanged: controller.setText,
             ),
             const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                l10n.characterCount(state.text.runes.length),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: state.posting || _uploading ? null : _attach,
+                  icon: _uploading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.attach_file, size: 18),
+                  label: Text(_uploading ? l10n.uploading : l10n.attachFiles),
+                ),
+                const Spacer(),
+                Text(
+                  l10n.characterCount(state.text.runes.length),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
+            if (state.fileIds.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final fileId in state.fileIds)
+                    InputChip(
+                      label: Text(fileId.substring(0, 8)),
+                      avatar: const Icon(Icons.image_outlined, size: 16),
+                      onDeleted: () => controller.removeFileId(fileId),
+                    ),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [

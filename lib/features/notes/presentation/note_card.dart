@@ -10,16 +10,21 @@ import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/time_format.dart';
 import '../../../core/network/error_mapper.dart';
 import '../../../core/ui/avatar.dart';
+import '../../composer/presentation/compose_sheet.dart';
 import '../application/note_detail_controller.dart';
 import '../application/note_providers.dart';
+import 'reaction_chip.dart';
 import 'reaction_picker.dart';
 import 'note_content.dart';
 import 'note_media.dart';
 
 class NoteCard extends ConsumerStatefulWidget {
-  const NoteCard({required this.note, super.key});
+  const NoteCard({required this.note, this.detailMode = false, super.key});
 
   final Note note;
+
+  /// Detail mode shows the quoted renote inline and drops feed-only chrome.
+  final bool detailMode;
 
   @override
   ConsumerState<NoteCard> createState() => _NoteCardState();
@@ -124,12 +129,28 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                   ],
                   if (showContent) ...[
                     if (note.text?.isNotEmpty == true)
-                      NoteContent(text: note.text!),
+                      NoteContent(
+                        text: note.text!,
+                        emojis: note.emojis,
+                        style: widget.detailMode
+                            ? Theme.of(context).textTheme.bodyLarge
+                            : null,
+                      ),
                     if (note.files?.isNotEmpty == true)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: NoteMedia(files: note.files!, noteId: note.id),
+                        padding: EdgeInsets.only(
+                          top: widget.detailMode ? 12 : 8,
+                        ),
+                        child: NoteMedia(
+                          files: note.files!,
+                          noteId: note.id,
+                          interactive: widget.detailMode,
+                        ),
                       ),
+                    if (widget.detailMode && note.renote != null) ...[
+                      const SizedBox(height: 12),
+                      _EmbeddedNote(note: note.renote!),
+                    ],
                   ],
                   if (note.reactions.isNotEmpty) ...[
                     const SizedBox(height: 8),
@@ -139,23 +160,15 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         for (final entry in note.reactions.entries.take(4))
-                          ActionChip(
-                            label: Text(
-                              '${_reactionLabel(entry.key)} ${compactCount(context, entry.value)}',
-                            ),
+                          ReactionChip(
+                            reaction: entry.key,
+                            emojis: note.reactionEmojis,
+                            count: entry.value,
+                            selected: note.myReaction == entry.key,
                             onPressed: _busy
                                 ? null
                                 : () => _toggleReaction(note, entry.key),
                           ),
-                        ActionChip(
-                          label: const Icon(
-                            Icons.add_reaction_outlined,
-                            size: 18,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          tooltip: context.l10n.react,
-                          onPressed: _busy ? null : () => _pickReaction(note),
-                        ),
                       ],
                     ),
                   ],
@@ -166,7 +179,8 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                         icon: Icons.chat_bubble_outline,
                         value: note.repliesCount,
                         label: context.l10n.reply,
-                        onTap: () => _openDetail(note.id),
+                        onTap: () =>
+                            showComposeSheet(context, replyId: note.id),
                       ),
                       _NoteAction(
                         icon: Icons.repeat,
@@ -174,13 +188,12 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                         label: context.l10n.renote,
                         onTap: _busy ? null : () => _renote(note),
                       ),
-                      if (note.reactions.isEmpty)
-                        _NoteAction(
-                          icon: Icons.add_reaction_outlined,
-                          value: note.reactionCount,
-                          label: context.l10n.react,
-                          onTap: _busy ? null : () => _pickReaction(note),
-                        ),
+                      _NoteAction(
+                        icon: Icons.add_reaction_outlined,
+                        value: note.reactionCount,
+                        label: context.l10n.react,
+                        onTap: _busy ? null : () => _pickReaction(note),
+                      ),
                       const Spacer(),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_horiz),
@@ -210,12 +223,17 @@ class _NoteCardState extends ConsumerState<NoteCard> {
     openDetail(context, NoteDetailLocation(id));
   }
 
+  /// Applies a reaction change immediately.
+  ///
+  /// Re-tapping the current reaction removes it; picking a different one
+  /// replaces it.
   Future<void> _toggleReaction(Note note, String reaction) async {
     if (_busy) return;
+    final removing = note.myReaction == reaction;
     setState(() => _busy = true);
     try {
       final repository = ref.read(noteRepositoryProvider);
-      final updated = note.myReaction == reaction
+      final updated = removing
           ? await repository.unreact(note.id)
           : await repository.react(note.id, reaction);
       if (!mounted) return;
@@ -234,6 +252,25 @@ class _NoteCardState extends ConsumerState<NoteCard> {
 
   Future<void> _renote(Note note) async {
     if (_busy) return;
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.renoteConfirmTitle),
+        content: Text(l10n.renoteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     setState(() => _busy = true);
     try {
       final updated = await ref.read(noteRepositoryProvider).renote(note.id);
@@ -250,13 +287,6 @@ class _NoteCardState extends ConsumerState<NoteCard> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(mapFailure(error).message(context.l10n))),
     );
-  }
-
-  String _reactionLabel(String reaction) {
-    if (reaction.startsWith(':') && reaction.endsWith(':')) {
-      return reaction.substring(1, reaction.length - 1);
-    }
-    return reaction;
   }
 }
 
@@ -292,6 +322,41 @@ class _NoteAction extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quoted renote rendered inside the card body, used in detail mode.
+class _EmbeddedNote extends StatelessWidget {
+  const _EmbeddedNote({required this.note});
+
+  final Note note;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: scheme.primary, width: 3)),
+        borderRadius: BorderRadius.circular(8),
+        color: scheme.surfaceContainerLow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              note.user.name ?? note.user.username,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            if (note.text?.isNotEmpty == true)
+              NoteContent(text: note.text!, emojis: note.emojis),
+            if (note.files?.isNotEmpty == true)
+              NoteMedia(files: note.files!, noteId: note.id),
+          ],
         ),
       ),
     );

@@ -10,7 +10,9 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
+import '../../../core/network/instance_repository.dart';
 import '../../../core/ui/l10n_ext.dart';
+import 'licenses_page.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/ui/content_width.dart';
 import '../application/app_settings.dart';
@@ -35,6 +37,7 @@ class SettingsPage extends ConsumerWidget {
                 l10n.noAccounts,
             onTap: () => openDetail(context, const SettingsAccountsLocation()),
           ),
+
           const Divider(height: 1),
           _SettingsTile(
             icon: Icons.tune,
@@ -144,7 +147,7 @@ class AccountsSettingsPage extends ConsumerWidget {
             onPressed: () => Navigator.pop(context, false),
             child: Text(l10n.cancel),
           ),
-          FilledButton(
+          TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.remove),
           ),
@@ -235,6 +238,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
     final l10n = context.l10n;
     final settings = ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
+    final instance = ref.watch(instanceInfoProvider).value;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.appearance)),
       body: _SettingsBody(
@@ -242,35 +246,25 @@ class AppearanceSettingsPage extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.color_lens_outlined),
             title: Text(l10n.accentColor),
-            trailing: DropdownButton<String>(
-              value: settings.accentColor,
-              isDense: true,
-              onChanged: (value) {
-                if (value != null) controller.setAccentColor(value);
-              },
-              items: [
-                DropdownMenuItem(
-                  value: 'instance',
-                  child: Text(l10n.instanceColor),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _AccentDot(
+                  label: l10n.instanceColor,
+                  color: parseThemeColor(instance?.themeColor),
+                  selected: settings.accentColor == 'instance',
+                  onTap: () => controller.setAccentColor('instance'),
                 ),
                 for (final accent in _accentColors)
-                  DropdownMenuItem(
-                    value: accent.$1,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: parseThemeColor(accent.$1),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(_accentLabel(l10n, accent.$2)),
-                      ],
-                    ),
+                  _AccentDot(
+                    label: _accentLabel(l10n, accent.$2),
+                    color: parseThemeColor(accent.$1),
+                    selected: settings.accentColor == accent.$1,
+                    onTap: () => controller.setAccentColor(accent.$1),
                   ),
               ],
             ),
@@ -279,19 +273,30 @@ class AppearanceSettingsPage extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.brightness_6_outlined),
             title: Text(l10n.theme),
-            trailing: DropdownButton<String>(
-              value: settings.themeMode,
-              onChanged: (value) {
-                if (value != null) controller.setThemeMode(value);
-              },
-              items: [
-                DropdownMenuItem(
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: SegmentedButton<String>(
+              segments: [
+                ButtonSegment(
                   value: 'system',
-                  child: Text(l10n.themeSystem),
+                  label: Text(l10n.themeSystem),
+                  icon: const Icon(Icons.brightness_auto_outlined),
                 ),
-                DropdownMenuItem(value: 'light', child: Text(l10n.themeLight)),
-                DropdownMenuItem(value: 'dark', child: Text(l10n.themeDark)),
+                ButtonSegment(
+                  value: 'light',
+                  label: Text(l10n.themeLight),
+                  icon: const Icon(Icons.light_mode_outlined),
+                ),
+                ButtonSegment(
+                  value: 'dark',
+                  label: Text(l10n.themeDark),
+                  icon: const Icon(Icons.dark_mode_outlined),
+                ),
               ],
+              selected: {settings.themeMode},
+              onSelectionChanged: (selection) =>
+                  controller.setThemeMode(selection.first),
             ),
           ),
           const Divider(height: 1),
@@ -300,44 +305,48 @@ class AppearanceSettingsPage extends ConsumerWidget {
             title: Text(l10n.detailBreakpoint),
             subtitle: Text('${settings.detailBreakpoint} px'),
           ),
-          Slider(
-            value: settings.detailBreakpoint.toDouble(),
-            min: appDetailBreakpointMin.toDouble(),
-            max: appDetailBreakpointMax.toDouble(),
-            divisions:
-                (appDetailBreakpointMax - appDetailBreakpointMin) ~/
-                appDetailBreakpointStep,
-            label: '${settings.detailBreakpoint} px',
-            onChanged: (value) {
-              controller.setDetailBreakpoint(value.round());
-            },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Slider(
+              value: settings.detailBreakpoint.toDouble(),
+              min: appDetailBreakpointMin.toDouble(),
+              max: appDetailBreakpointMax.toDouble(),
+              divisions:
+                  (appDetailBreakpointMax - appDetailBreakpointMin) ~/
+                  appDetailBreakpointStep,
+              label: '${settings.detailBreakpoint} px',
+              onChanged: (value) {
+                controller.setDetailBreakpoint(value.round());
+              },
+            ),
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            secondary: const Icon(Icons.center_focus_strong_outlined),
+            title: Text(l10n.centerContent),
+            subtitle: Text(l10n.centerContentHint),
+            value: settings.centerContent,
+            onChanged: controller.setCenterContent,
           ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.translate),
             title: Text(l10n.language),
-            trailing: DropdownButton<String>(
-              value: settings.localeCode,
-              onChanged: (value) {
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: DropdownMenu<String>(
+              initialSelection: settings.localeCode,
+              expandedInsets: EdgeInsets.zero,
+              label: Text(l10n.language),
+              onSelected: (value) {
                 if (value != null) controller.setLocale(value);
               },
-              items: [
-                DropdownMenuItem(
-                  value: 'system',
-                  child: Text(l10n.languageSystem),
-                ),
-                DropdownMenuItem(
-                  value: 'zh',
-                  child: Text(l10n.languageChinese),
-                ),
-                DropdownMenuItem(
-                  value: 'en',
-                  child: Text(l10n.languageEnglish),
-                ),
-                DropdownMenuItem(
-                  value: 'ja',
-                  child: Text(l10n.languageJapanese),
-                ),
+              dropdownMenuEntries: [
+                DropdownMenuEntry(value: 'system', label: l10n.languageSystem),
+                DropdownMenuEntry(value: 'zh', label: l10n.languageChinese),
+                DropdownMenuEntry(value: 'en', label: l10n.languageEnglish),
+                DropdownMenuEntry(value: 'ja', label: l10n.languageJapanese),
               ],
             ),
           ),
@@ -353,17 +362,119 @@ class AboutSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.about)),
       body: _SettingsBody(
         children: [
-          ListTile(
-            leading: const Icon(Icons.pets),
-            title: Text(l10n.appTitle),
-            subtitle: Text(l10n.appVersion),
-            trailing: const Icon(Icons.info_outline),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
+            child: Column(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.pets,
+                    size: 36,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(l10n.appTitle, style: theme.textTheme.headlineSmall),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.appVersion,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          const _LicensesTile(),
+          const Divider(height: 1),
+          _AboutSection(
+            icon: Icons.people_outline,
+            title: l10n.contributors,
+            body: l10n.contributorsBody,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Text(
+              l10n.flutterTrademark,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Third-party notices entry; the package count loads from the asset itself so
+/// it never drifts from the generated manifest.
+class _LicensesTile extends StatefulWidget {
+  const _LicensesTile();
+
+  @override
+  State<_LicensesTile> createState() => _LicensesTileState();
+}
+
+class _LicensesTileState extends State<_LicensesTile> {
+  late final Future<int> _count = loadBundledLicenses().then(
+    (entries) => entries.length,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FutureBuilder<int>(
+      future: _count,
+      builder: (context, snapshot) {
+        final count = snapshot.data;
+        return ListTile(
+          leading: const Icon(Icons.description_outlined),
+          title: Text(l10n.thirdPartyNotices),
+          subtitle: Text(
+            count == null ? l10n.appVersion : l10n.licensesBody(count),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => openDetail(context, const SettingsLicensesLocation()),
+        );
+      },
+    );
+  }
+}
+
+/// Non-interactive titled block used by the about page.
+class _AboutSection extends StatelessWidget {
+  const _AboutSection({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(body),
       ),
     );
   }
@@ -447,3 +558,58 @@ IconData _tabIcon(AppTab tab) => switch (tab) {
   AppTab.chat => Icons.chat_bubble_outline,
   AppTab.profile => Icons.person_outline,
 };
+
+/// Selectable accent colour swatch.
+class _AccentDot extends StatelessWidget {
+  const _AccentDot({
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected ? scheme.onSurface : scheme.outlineVariant,
+                width: selected ? 2.5 : 1,
+              ),
+            ),
+            child: selected
+                ? Icon(
+                    Icons.check,
+                    size: 18,
+                    color:
+                        ThemeData.estimateBrightnessForColor(color) ==
+                            Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  )
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}

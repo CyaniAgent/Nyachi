@@ -11,6 +11,8 @@ import '../../features/explore/presentation/explore_page.dart';
 import '../../features/notifications/presentation/notifications_page.dart';
 import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
+import '../../features/drive/presentation/drive_page.dart';
+import '../../features/settings/presentation/licenses_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_timeline_page.dart';
@@ -161,6 +163,21 @@ class ChatRoomRoute extends GoRouteData with $ChatRoomRoute {
   }
 }
 
+@TypedGoRoute<DriveRoute>(path: '/drive')
+class DriveRoute extends GoRouteData with $DriveRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const DriveRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => const DrivePage();
+}
+
 @TypedGoRoute<SettingsRoute>(path: '/settings')
 class SettingsRoute extends GoRouteData with $SettingsRoute {
   @override
@@ -228,6 +245,23 @@ class SettingsAppearanceRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const AppearanceSettingsPage();
+  }
+}
+
+@TypedGoRoute<SettingsLicensesRoute>(path: '/settings/licenses')
+class SettingsLicensesRoute extends GoRouteData with $SettingsLicensesRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsLicensesRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const LicensesPage();
   }
 }
 

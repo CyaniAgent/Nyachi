@@ -11,6 +11,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/l10n/app_localizations.dart';
+import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/compact_tab_bar.dart';
@@ -18,6 +19,7 @@ import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
+import '../../notes/presentation/image_viewer.dart';
 import '../../notes/presentation/note_media.dart';
 import '../application/chat_controllers.dart';
 import '../domain/chat_models.dart';
@@ -111,9 +113,14 @@ class _ConversationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final centered = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(settingsControllerProvider).centerContent;
     return RefreshIndicator(
       onRefresh: controller.refresh,
       child: ReadableWidth(
+        centered: centered,
         child: state.direct.isEmpty
             ? ListView(
                 children: [
@@ -175,9 +182,14 @@ class _RoomList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final centered = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(settingsControllerProvider).centerContent;
     return RefreshIndicator(
       onRefresh: controller.refresh,
       child: ReadableWidth(
+        centered: centered,
         child: state.rooms.isEmpty
             ? ListView(
                 children: [
@@ -231,20 +243,48 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
   Uint8List? _attachment;
   String? _attachmentName;
   var _lastCount = 0;
-  var _wasLoadingOlder = false;
+  var _autoLoading = false;
 
   @override
   void initState() {
     super.initState();
     _focus.addListener(() => setState(() {}));
+    _scroll.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _scroll.removeListener(_onScroll);
     _text.dispose();
     _scroll.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  /// Auto-loads older messages once the top of the transcript is reached.
+  void _onScroll() {
+    if (!_scroll.hasClients || _autoLoading) return;
+    if (_scroll.position.pixels > 200) return;
+    final state = ref.read(chatThreadControllerProvider(widget.target));
+    if (!state.hasMore || state.loadingOlder) return;
+    _autoLoading = true;
+    ref.read(chatThreadControllerProvider(widget.target).notifier).loadOlder();
+  }
+
+  /// Pins the transcript to the newest message when the user is already at the
+  /// bottom; a reader scrolled up keeps their position.
+  void _scrollToBottomIfNear() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scroll.hasClients) return;
+      final position = _scroll.position;
+      final nearBottom = position.maxScrollExtent - position.pixels < 240;
+      if (!nearBottom) return;
+      _scroll.animateTo(
+        position.maxScrollExtent,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   @override
@@ -256,21 +296,22 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
       chatThreadControllerProvider(widget.target).notifier,
     );
     final title = state.room?.name ?? state.user?.name ?? l10n.chat;
-    final wasLoadingOlder = _wasLoadingOlder;
-    _wasLoadingOlder = state.loadingOlder;
+    // New messages append at the bottom: keep the view pinned there, but only
+    // when the user is already near it so reading history is not interrupted.
     if (state.items.length != _lastCount) {
+      final grew = state.items.length > _lastCount;
       _lastCount = state.items.length;
-      if (!wasLoadingOlder) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scroll.hasClients) {
-            _scroll.jumpTo(_scroll.position.maxScrollExtent);
-          }
-        });
-      }
+      if (grew) _scrollToBottomIfNear();
     }
+    if (!state.loadingOlder) _autoLoading = false;
+    final centered = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(settingsControllerProvider).centerContent;
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: ReadableWidth(
+        centered: centered,
         maxWidth: appMaxContentWidth,
         child: Column(
           children: [
@@ -300,10 +341,16 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
                             );
                           }
                           if (state.hasMore) {
-                            return Center(
-                              child: TextButton(
-                                onPressed: controller.loadOlder,
-                                child: Text(l10n.loadOlder),
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
                               ),
                             );
                           }
@@ -558,12 +605,7 @@ class _ChatFile extends StatelessWidget {
         onTap: () => showImageViewer(context, [file]),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: NyachiImage(
-            url: file.thumbnailUrl ?? file.url,
-            width: 220,
-            height: 160,
-            fit: BoxFit.cover,
-          ),
+          child: _sized(fit: BoxFit.contain),
         ),
       );
     }
@@ -573,12 +615,7 @@ class _ChatFile extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            NyachiImage(
-              url: file.thumbnailUrl ?? file.url,
-              width: 220,
-              height: 160,
-              fit: BoxFit.cover,
-            ),
+            _sized(fit: BoxFit.contain),
             const CircleAvatar(
               backgroundColor: Colors.black54,
               child: Icon(Icons.play_arrow, color: Colors.white),
@@ -592,6 +629,31 @@ class _ChatFile extends StatelessWidget {
       leading: const Icon(Icons.insert_drive_file_outlined),
       title: Text(file.name),
       subtitle: Text(file.type),
+    );
+  }
+
+  /// Keeps the real aspect ratio instead of cropping to a fixed box.
+  Widget _sized({required BoxFit fit}) {
+    const maxWidth = 220.0;
+    const maxHeight = 260.0;
+    final width = file.properties.width?.toDouble();
+    final height = file.properties.height?.toDouble();
+    final image = NyachiImage(url: file.thumbnailUrl ?? file.url, fit: fit);
+    if (width == null || height == null || width <= 0 || height <= 0) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: maxHeight,
+        ),
+        child: image,
+      );
+    }
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+      ),
+      child: AspectRatio(aspectRatio: width / height, child: image),
     );
   }
 }

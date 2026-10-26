@@ -27,12 +27,9 @@ void openDetail(BuildContext context, DetailLocation location) {
   final path = router.routerDelegate.currentConfiguration.uri.path;
   final compose = location is ComposeDetailLocation ? location : null;
   if (compose != null) {
-    final width = MediaQuery.sizeOf(context).width;
-    if (width < breakpoint) {
-      unawaited(showComposeSheet(context, replyId: compose.replyId));
-    } else {
-      unawaited(showComposeDialog(context, replyId: compose.replyId));
-    }
+    // The composer always opens as a bottom sheet; it can expand into the full
+    // page from there.
+    unawaited(showComposeSheet(context, replyId: compose.replyId));
     return;
   }
   if (MediaQuery.sizeOf(context).width < breakpoint || !isTabRootPath(path)) {
