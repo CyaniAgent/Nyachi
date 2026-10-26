@@ -6,7 +6,14 @@ import 'package:go_router/go_router.dart';
 import 'detail_location.dart';
 import 'detail_panel_controller.dart';
 
-const _tabRoots = {'/home', '/notifications', '/explore', '/chat', '/profile'};
+const _tabRoots = {
+  '/home',
+  '/notifications',
+  '/explore',
+  '/chat',
+  '/profile',
+  '/settings',
+};
 
 bool isTabRootPath(String path) => _tabRoots.contains(path);
 

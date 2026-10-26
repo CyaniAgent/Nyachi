@@ -6,5 +6,7 @@ import 'package:flutter/widgets.dart';
 ///
 /// Detail, settings, and chat routes set this as their `$parentNavigatorKey`
 /// so they are pushed above the tab body without covering the navigation rail.
+/// Settings is treated as a tab root by the detail-panel machinery, so its
+/// sub-pages open beside the settings list instead of replacing it.
 final GlobalKey<NavigatorState> appShellNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'app-shell');

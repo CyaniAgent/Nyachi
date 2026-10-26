@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
@@ -33,8 +34,7 @@ class ProfilePage extends ConsumerWidget {
           if (MediaQuery.sizeOf(context).width < kCompactBreakpoint)
             IconButton(
               tooltip: l10n.settings,
-              onPressed: () =>
-                  openDetail(context, const SettingsDetailLocation()),
+              onPressed: () => GoRouter.of(context).push('/settings'),
               icon: const Icon(Icons.settings_outlined),
             ),
         ],

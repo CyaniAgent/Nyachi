@@ -83,6 +83,11 @@ below the breakpoint converts the current panel top into a full-page route.
 Feature widgets open detail pages through `openDetail` with a `DetailLocation`,
 never by calling `context.push` for shell detail routes.
 
+Settings is a main page inside the shell: the sidebar entry pushes
+`/settings` (shell navigator), the settings list keeps the rail visible, and
+`/settings` is treated as a tab root by the detail-panel machinery so each
+sub-page opens beside the list (double column on wide screens).
+
 ## Failure handling
 
 `mapFailure` converts SDK, HTTP, and timeout failures into `AppFailure` kinds.

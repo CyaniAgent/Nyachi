@@ -147,13 +147,7 @@ class _RootShellState extends ConsumerState<RootShell> {
             ),
             onDestinationSelected: (tab) => _select(shell, tab),
             onProfile: () => _select(shell, AppTab.profile),
-            onSettings: () {
-              if (isTabRootPath(widget.uri.path) && width >= breakpoint) {
-                coordinator.openFromFeed(const SettingsDetailLocation());
-              } else {
-                GoRouter.of(context).push('/settings');
-              }
-            },
+            onSettings: () => GoRouter.of(context).push('/settings'),
             child: content,
           ),
         );
