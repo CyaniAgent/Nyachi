@@ -7,7 +7,6 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/network/client_provider.dart';
 import 'package:nyachi/core/storage/app_database.dart';
@@ -175,7 +174,7 @@ void main() {
         }),
       );
       final container = _makeContainer(client, _FakeCacheDao());
-      container.listen(emojiCatalogProvider, (_, __) {});
+      container.listen(emojiCatalogProvider, (_, _) {});
 
       async.elapse(const Duration(milliseconds: 10));
       expect(container.read(emojiCatalogProvider).value, [_emoji('ok')]);
