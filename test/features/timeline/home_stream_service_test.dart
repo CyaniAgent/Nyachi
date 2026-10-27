@@ -104,8 +104,6 @@ void main() {
         tokenProvider: () async => 'token',
         onSessionExpired: () {
           expired++;
-          // ignore: avoid_print
-          print('PROBE expired-callback ran, counter=$expired');
         },
         clientFactory: ({required baseUri, required tokenProvider}) {
           created++;
