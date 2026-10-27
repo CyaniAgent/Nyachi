@@ -1249,7 +1249,7 @@ abstract class AppLocalizations {
   /// No description provided for @contributorsBody.
   ///
   /// In en, this message translates to:
-  /// **'Nyachi is developed by SakuraCake and community contributors.'**
+  /// **'Nyachi is developed by AyaxYuna and community contributors.'**
   String get contributorsBody;
 
   /// No description provided for @flutterTrademark.
