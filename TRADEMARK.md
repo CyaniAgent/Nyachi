@@ -1,36 +1,34 @@
 # Name and Mark Usage Policy
 
-## Project marks
+## Status of the name
 
-The "Nyachi" name, project logo, and related visual identifiers (the "Project
-Marks") are claimed by SakuraCake as project identifiers. Whether and where they
-are registered depends on actual registrations; this document is not a trademark
-registration or legal advice.
+"Nyachi" is the project name. It is **not a registered trademark**, and no
+trademark rights are claimed. The name, logo, and visual identifiers are
+project identifiers; this policy exists to keep sources distinguishable and to
+prevent confusion, not to assert trademark rights.
 
-## Code license does not grant trademark rights
+## Code license does not grant naming rights
 
 Nyachi code is licensed under AGPL-3.0-or-later. That license permits copying,
-modification, and distribution of code, but **does not grant** a trademark
-license to use the Project Marks.
+modification, and distribution of code, but does not present your build as the
+official Nyachi release.
 
 ## Permitted use
 
-- Factual, descriptive references such as "a client based on Nyachi", "a fork of
-  Nyachi", or "compatible with Nyachi".
+- Factual, descriptive references such as "a client based on Nyachi", "a fork
+  of Nyachi", or "compatible with Nyachi".
 - Articles, tutorials, and conference talks about Nyachi, provided they do not
   imply official endorsement.
 - Retaining original copyright and license notices in forks.
 
-## Prohibited use
+## Avoid
 
-- Implying that your fork, service, or product is official Nyachi or endorsed by
-  the project.
-- Using the Project Marks as your product name, app name, domain, social media
-  account, or icon in a way that is likely to confuse source.
+- Presenting your fork, service, or product as the official Nyachi release or
+  as endorsed by the project.
+- Using the Nyachi name or logo as your product name, app name, domain, social
+  media account, or icon in a way that is likely to cause confusion.
 - Implying a partnership, certification, or sponsorship in commercial
-  promotion without written permission.
-- Registering trademarks, domains, or app names identical or confusingly
-  similar to Nyachi.
+  promotion.
 
 ## Forks
 
@@ -43,19 +41,18 @@ If you distribute a modified version, we recommend:
 
 ## Commercial use
 
-Commercial products that use the Project Marks, logo, or imply an official
-relationship require prior written permission from SakuraCake. Commercial use of
-the code itself is not restricted by this policy, but must comply with
-AGPL-3.0-or-later and the CLA terms.
+The name and logo are not licensed for commercial use that implies an official
+relationship; ask first. Commercial use of the code itself is not restricted by
+this policy, but must comply with AGPL-3.0-or-later and the CLA terms.
 
 ## Third-party marks
 
 Misskey, Flarum, Flutter, GitHub, and other names and marks belong to their
-respective owners. Their use in this project does not challenge or license those
-marks.
+respective owners. Their use in this project does not challenge or license
+those marks.
 
 ## Contact
 
-For trademark permission, partnership, or infringement questions, contact the
-maintainer through a GitHub Issue titled "Trademark". For sensitive matters, use
-Security Advisories.
+For naming questions or reports of confusing use, contact the maintainer
+through a GitHub Issue titled "Trademark". For sensitive matters, use Security
+Advisories.

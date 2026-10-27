@@ -14,6 +14,16 @@ part 'emoji_catalog.g.dart';
 
 @Riverpod(keepAlive: true)
 Future<List<EmojiSimple>> emojiCatalog(Ref ref) async {
+  // The provider is keepAlive: a failed fetch must not stick as an empty
+  // catalogue for the whole session, so failures schedule a retry.
+  var disposed = false;
+  ref.onDispose(() => disposed = true);
+  void retrySoon() {
+    Future<void>.delayed(const Duration(seconds: 30), () {
+      if (!disposed) ref.invalidateSelf();
+    });
+  }
+
   final active = ref.watch(sessionControllerProvider).active;
   if (active == null) return const [];
   final client = ref.watch(misskeyClientProvider);
@@ -26,6 +36,7 @@ Future<List<EmojiSimple>> emojiCatalog(Ref ref) async {
   } catch (e) {
     if (e is MisskeyAuthenticationException) rethrow;
     logSilentFallback('emoji_catalog.emojiCatalog', e);
+    retrySoon();
     final cached = await cache.read(active.id, key);
     if (cached == null) return const [];
     try {
@@ -36,6 +47,7 @@ Future<List<EmojiSimple>> emojiCatalog(Ref ref) async {
     } catch (e) {
       if (e is MisskeyAuthenticationException) rethrow;
       logSilentFallback('emoji_catalog.emojiCatalog.cache', e);
+      retrySoon();
       return const [];
     }
     return const [];

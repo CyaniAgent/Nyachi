@@ -106,5 +106,3 @@ consumers in their habitual residence are not affected.
 - Contact the maintainer through a GitHub Issue; use Security Advisories for
   security matters.
 
-These terms are a project draft, not legal advice. Have counsel review them
-before a public release.

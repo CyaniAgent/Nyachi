@@ -91,8 +91,7 @@ vulnerability details in a public issue: [SECURITY.md](SECURITY.md).
 - [TRADEMARK.md](TRADEMARK.md): name and mark usage policy
 - [GOVERNANCE.md](GOVERNANCE.md): maintainers, branches, and releases
 
-These documents are project policy drafts, not legal advice. Have counsel
-review them before a public release.
+These documents are the project's governing policies.
 
 ## Branch model
 

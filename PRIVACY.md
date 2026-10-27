@@ -144,5 +144,3 @@ requires consent, we will obtain it separately.
 - Sensitive requests: GitHub Security Advisories.
 - Project: https://github.com/CyaniAgent/Nyachi
 
-This policy is a project draft, not legal advice. Have counsel review it before
-a public release.
