@@ -80,10 +80,7 @@ EmojiSimple _emoji(String name) =>
 EmojiListResponse _response(List<EmojiSimple> emojis) =>
     EmojiListResponse(emojis: emojis);
 
-ProviderContainer _makeContainer(
-  MisskeyClient client,
-  CacheDao cacheDao,
-) {
+ProviderContainer _makeContainer(MisskeyClient client, CacheDao cacheDao) {
   final container = ProviderContainer(
     overrides: [
       sessionControllerProvider.overrideWith(
@@ -101,11 +98,7 @@ void main() {
   test('first failed fetch falls back to the cached catalogue', () async {
     final cached = _response([_emoji('queued')]);
     final cacheDao = _FakeCacheDao();
-    await cacheDao.write(
-      'a1',
-      'emoji',
-      jsonEncode(cached.toJson()),
-    );
+    await cacheDao.write('a1', 'emoji', jsonEncode(cached.toJson()));
     var calls = 0;
     final client = _FakeClient(
       _FakeEmojiApi(() async {
@@ -131,63 +124,65 @@ void main() {
     expect(result, isEmpty);
   });
 
-  test('scheduled retry after 30 seconds recovers the remote catalogue',
-      () => fakeAsync((async) {
-        final emojis = [_emoji('remote')];
-        var calls = 0;
-        final client = _FakeClient(
-          _FakeEmojiApi(() async {
-            calls++;
-            if (calls == 1) {
-              throw Exception('network down');
-            }
-            return _response(emojis);
-          }),
-        );
-        final cacheDao = _FakeCacheDao();
-        final container = _makeContainer(client, cacheDao);
-        final updates = <List<String>>[];
-        final subscription = container.listen(
-          emojiCatalogProvider,
-          (_, next) {
-            if (next.hasValue) {
-              updates.add(next.value!.map((e) => e.name).toList());
-            }
-          },
-        );
-        addTearDown(subscription.close);
+  test(
+    'scheduled retry after 30 seconds recovers the remote catalogue',
+    () => fakeAsync((async) {
+      final emojis = [_emoji('remote')];
+      var calls = 0;
+      final client = _FakeClient(
+        _FakeEmojiApi(() async {
+          calls++;
+          if (calls == 1) {
+            throw Exception('network down');
+          }
+          return _response(emojis);
+        }),
+      );
+      final cacheDao = _FakeCacheDao();
+      final container = _makeContainer(client, cacheDao);
+      final updates = <List<String>>[];
+      final subscription = container.listen(emojiCatalogProvider, (_, next) {
+        if (next.hasValue) {
+          updates.add(next.value!.map((e) => e.name).toList());
+        }
+      });
+      addTearDown(subscription.close);
 
-        // First build fails and degrades to an empty catalogue.
-        async.flushMicrotasks();
-        expect(container.read(emojiCatalogProvider).value, isEmpty);
-        expect(calls, 1);
+      // First build fails and degrades to an empty catalogue.
+      async.flushMicrotasks();
+      expect(container.read(emojiCatalogProvider).value, isEmpty);
+      expect(calls, 1);
 
-        // The failure scheduled a retry; it must fire and recover.
-        async.elapse(const Duration(seconds: 30));
-        async.flushMicrotasks();
-        expect(calls, 2);
-        expect(container.read(emojiCatalogProvider).value, emojis);
+      // The failure scheduled a retry; it must fire and recover.
+      async.elapse(const Duration(seconds: 30));
+      async.flushMicrotasks();
+      expect(calls, 2);
+      expect(container.read(emojiCatalogProvider).value, emojis);
 
-        // The successful retry also refreshed the cache for next time.
-        expect(cacheDao._payloads['a1/emoji'], isNotNull);
-      }));
+      // The successful retry also refreshed the cache for next time.
+      expect(cacheDao._payloads['a1/emoji'], isNotNull);
+    }),
+  );
 
-  test('successful fetch does not schedule a retry', () => fakeAsync((async) {
-    var calls = 0;
-    final client = _FakeClient(
-      _FakeEmojiApi(() async {
-        calls++;
-        return _response([_emoji('ok')]);
-      }),
-    );
-    final container = _makeContainer(client, _FakeCacheDao());
-    container.listen(emojiCatalogProvider, (_, __) {});
+  test(
+    'successful fetch does not schedule a retry',
+    () => fakeAsync((async) {
+      var calls = 0;
+      final client = _FakeClient(
+        _FakeEmojiApi(() async {
+          calls++;
+          return _response([_emoji('ok')]);
+        }),
+      );
+      final container = _makeContainer(client, _FakeCacheDao());
+      container.listen(emojiCatalogProvider, (_, __) {});
 
-    async.elapse(const Duration(milliseconds: 10));
-    expect(container.read(emojiCatalogProvider).value, [ _emoji('ok') ]);
+      async.elapse(const Duration(milliseconds: 10));
+      expect(container.read(emojiCatalogProvider).value, [_emoji('ok')]);
 
-    // Well past the retry window: no extra client call may happen.
-    async.elapse(const Duration(seconds: 35));
-    expect(calls, 1);
-  }));
+      // Well past the retry window: no extra client call may happen.
+      async.elapse(const Duration(seconds: 35));
+      expect(calls, 1);
+    }),
+  );
 }
