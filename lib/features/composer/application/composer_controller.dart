@@ -112,13 +112,15 @@ class ComposerController extends _$ComposerController {
     return const ComposerState();
   }
 
-  int get maxLength =>
+  int maxLength() =>
       ref.read(instanceInfoProvider).value?.maxNoteTextLength ?? 3000;
 
-  bool get canPost =>
-      !state.posting &&
-      state.text.trim().isNotEmpty &&
-      state.text.runes.length <= maxLength;
+  bool canPost() {
+    final limit = maxLength();
+    return !state.posting &&
+        state.text.trim().isNotEmpty &&
+        state.text.runes.length <= limit;
+  }
 
   Future<void> _restoreDraft() async {
     final active = ref.read(activeAccountProvider);
@@ -222,7 +224,7 @@ class ComposerController extends _$ComposerController {
   }
 
   Future<bool> post() async {
-    if (!canPost) return false;
+    if (!canPost()) return false;
     final active = ref.read(activeAccountProvider);
     if (active == null) return false;
     await _persist(force: true);

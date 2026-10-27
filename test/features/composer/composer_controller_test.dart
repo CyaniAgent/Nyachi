@@ -112,7 +112,7 @@ void main() {
     final sub = scope.listen(provider, (_, _) {});
     final controller = scope.read(provider.notifier);
     controller.setText('x' * 3001);
-    expect(controller.canPost, isFalse);
+    expect(controller.canPost(), isFalse);
     expect(await controller.post(), isFalse);
     sub.close();
     scope.dispose();

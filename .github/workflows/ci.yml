@@ -51,7 +51,10 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter build macos --debug --no-codesign
+      # `flutter build macos` has no --no-codesign flag (that is `build ios`).
+      # Without a signing identity the tool falls back to an unsigned build,
+      # which is all this sanity job needs.
+      - run: flutter build macos --debug
 
   android-release:
     # Builds a signed release APK. Requires the signing secrets; without them

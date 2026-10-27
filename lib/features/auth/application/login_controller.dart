@@ -184,5 +184,5 @@ class LoginController extends _$LoginController {
     state = const LoginState();
   }
 
-  Uri? get authorizationUri => state.authorizationUri;
+  Uri? pendingAuthorizationUri() => state.authorizationUri;
 }
