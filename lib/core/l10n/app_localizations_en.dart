@@ -599,7 +599,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contributorsBody =>
-      'Nyachi is developed by AyaxYuna and community contributors.';
+      'Nyachi is developed by SakuraCake and community contributors.';
 
   @override
   String get flutterTrademark =>

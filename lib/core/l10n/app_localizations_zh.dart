@@ -595,7 +595,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contributors => '贡献者';
 
   @override
-  String get contributorsBody => 'Nyachi 由 AyaxYuna 与社区贡献者共同开发。';
+  String get contributorsBody => 'Nyachi 由 SakuraCake 与社区贡献者共同开发。';
 
   @override
   String get flutterTrademark =>
