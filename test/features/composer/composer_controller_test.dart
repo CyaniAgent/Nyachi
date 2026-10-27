@@ -50,6 +50,12 @@ void main() {
                 required localOnly,
                 replyId,
                 fileIds = const [],
+                pollChoices,
+                pollMultiple = false,
+                pollExpiresAt,
+                reactionAcceptance,
+                visibleUserIds = const [],
+                scheduledAt,
               }) async {},
         ),
       ],
@@ -89,6 +95,12 @@ void main() {
             required localOnly,
             replyId,
             fileIds = const [],
+            pollChoices,
+            pollMultiple = false,
+            pollExpiresAt,
+            reactionAcceptance,
+            visibleUserIds = const [],
+            scheduledAt,
           }) async {
             sent = true;
             expect(text, 'posted');

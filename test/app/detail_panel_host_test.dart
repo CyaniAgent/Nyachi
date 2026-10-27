@@ -79,6 +79,12 @@ void main() {
               required localOnly,
               replyId,
               fileIds = const [],
+              pollChoices,
+              pollMultiple = false,
+              pollExpiresAt,
+              reactionAcceptance,
+              visibleUserIds = const [],
+              scheduledAt,
             }) async {},
           ),
         ],
@@ -164,6 +170,12 @@ void main() {
               required localOnly,
               replyId,
               fileIds = const [],
+              pollChoices,
+              pollMultiple = false,
+              pollExpiresAt,
+              reactionAcceptance,
+              visibleUserIds = const [],
+              scheduledAt,
             }) async {},
           ),
         ],
@@ -182,6 +194,8 @@ void main() {
       '/home?detail=%2Fcompose',
     );
     expect(find.text('feed'), findsOneWidget);
-    expect(find.text('New note'), findsOneWidget);
+    // The composer follows the official layout: no title bar, the post
+    // button and the hint text carry the surface instead.
+    expect(find.text('Post'), findsOneWidget);
   });
 }

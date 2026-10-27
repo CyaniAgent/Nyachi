@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -27,6 +28,12 @@ typedef ComposerSender = Future<void> Function({
   required bool localOnly,
   String? replyId,
   List<String> fileIds,
+  List<String>? pollChoices,
+  bool pollMultiple,
+  DateTime? pollExpiresAt,
+  String? reactionAcceptance,
+  List<String> visibleUserIds,
+  DateTime? scheduledAt,
 });
 
 final composerSenderProvider = Provider<ComposerSender>((ref) {
@@ -37,18 +44,89 @@ final composerSenderProvider = Provider<ComposerSender>((ref) {
     required localOnly,
     replyId,
     fileIds = const [],
-  }) => ref
-      .read(misskeyClientProvider)
-      .notes
-      .create(
-        text: text,
+    pollChoices,
+    pollMultiple = false,
+    pollExpiresAt,
+    reactionAcceptance,
+    visibleUserIds = const [],
+    scheduledAt,
+  }) async {
+    final client = ref.read(misskeyClientProvider);
+    final acceptance = _acceptanceFromName(reactionAcceptance);
+    final receivedAcceptance = switch (reactionAcceptance) {
+      null => null,
+      'likeOnly' => NotesDraftsCreateRequestReactionAcceptance.likeOnly,
+      'likeOnlyForRemote' =>
+        NotesDraftsCreateRequestReactionAcceptance.likeOnlyForRemote,
+      'nonSensitiveOnly' =>
+        NotesDraftsCreateRequestReactionAcceptance.nonSensitiveOnly,
+      _ =>
+        NotesDraftsCreateRequestReactionAcceptance
+            .nonSensitiveOnlyForLocalLikeOnlyForRemote,
+    };
+    // A scheduled post is parked in the server-side scheduled queue, which
+    // only the drafts endpoints expose.
+    if (scheduledAt != null) {
+      await client.notes.draftsCreate(
+        visibility: _draftVisibility(visibility),
+        visibleUserIds: visibleUserIds.isEmpty ? null : visibleUserIds,
         cw: cw,
-        visibility: visibility,
         localOnly: localOnly,
+        reactionAcceptance: receivedAcceptance,
         replyId: replyId,
+        text: text,
         fileIds: fileIds.isEmpty ? null : fileIds,
+        poll: pollChoices == null
+            ? null
+            : NotesDraftsCreateRequestPoll(
+                choices: pollChoices,
+                multiple: pollMultiple ? true : null,
+                expiresAt: pollExpiresAt?.millisecondsSinceEpoch,
+              ),
+        scheduledAt: scheduledAt.millisecondsSinceEpoch,
+        isActuallyScheduled: true,
       );
+      return;
+    }
+    await client.notes.create(
+      text: text,
+      cw: cw,
+      visibility: visibility,
+      localOnly: localOnly,
+      replyId: replyId,
+      visibleUserIds: visibleUserIds.isEmpty ? null : visibleUserIds,
+      fileIds: fileIds.isEmpty ? null : fileIds,
+      poll: pollChoices == null
+          ? null
+          : NotesCreateRequestPoll(
+              choices: pollChoices,
+              multiple: pollMultiple ? true : null,
+              expiresAt: pollExpiresAt?.millisecondsSinceEpoch,
+            ),
+      reactionAcceptance: acceptance,
+    );
+  };
 });
+
+NotesCreateRequestReactionAcceptance? _acceptanceFromName(String? name) {
+  if (name == null) return null;
+  for (final option in NotesCreateRequestReactionAcceptance.values) {
+    if (option.name == name) return option;
+  }
+  return null;
+}
+
+NotesDraftsCreateRequestVisibility _draftVisibility(
+  NotesCreateRequestVisibility visibility,
+) => switch (visibility) {
+  NotesCreateRequestVisibility.public =>
+    NotesDraftsCreateRequestVisibility.public,
+  NotesCreateRequestVisibility.home => NotesDraftsCreateRequestVisibility.home,
+  NotesCreateRequestVisibility.followers =>
+    NotesDraftsCreateRequestVisibility.followers,
+  NotesCreateRequestVisibility.specified =>
+    NotesDraftsCreateRequestVisibility.specified,
+};
 
 @freezed
 abstract class ComposerState with _$ComposerState {
@@ -61,6 +139,14 @@ abstract class ComposerState with _$ComposerState {
     @Default(false) bool restored,
     @Default(false) bool posting,
     @Default(<String>[]) List<String> fileIds,
+    @Default(false) bool showPoll,
+    @Default(<String>['', '']) List<String> pollChoices,
+    @Default(false) bool pollMultiple,
+    DateTime? pollExpiresAt,
+    String? reactionAcceptance,
+    @Default(<String>[]) List<String> visibleUserIds,
+    DateTime? scheduledAt,
+    @Default(false) bool showPreview,
     AppFailure? error,
   }) = _ComposerState;
 }
@@ -117,10 +203,20 @@ class ComposerController extends _$ComposerController {
 
   bool canPost() {
     final limit = maxLength();
+    final pollOk = !state.showPoll || validPollChoices().length >= 2;
     return !state.posting &&
         state.text.trim().isNotEmpty &&
-        state.text.runes.length <= limit;
+        state.text.runes.length <= limit &&
+        pollOk;
   }
+
+  /// Non-empty poll choices, trimmed; empty when the poll is off.
+  List<String> validPollChoices() => state.showPoll
+      ? state.pollChoices
+            .map((choice) => choice.trim())
+            .where((choice) => choice.isNotEmpty)
+            .toList()
+      : const [];
 
   Future<void> _restoreDraft() async {
     final active = ref.read(activeAccountProvider);
@@ -129,6 +225,7 @@ class ComposerController extends _$ComposerController {
     if (_disposed || draft == null) return;
     if (draft.replyId != _replyId) return;
     final visibility = _parseVisibility(draft.visibility);
+    final pollChoices = _decodeStringList(draft.pollChoices);
     _lastText = draft.text;
     _lastCw = draft.cw;
     _lastVisibility = visibility;
@@ -139,6 +236,13 @@ class ComposerController extends _$ComposerController {
       visibility: visibility,
       localOnly: draft.localOnly,
       restored: true,
+      showPoll: pollChoices != null,
+      pollChoices: pollChoices ?? const ['', ''],
+      pollMultiple: draft.pollMultiple,
+      pollExpiresAt: draft.pollExpiresAt,
+      reactionAcceptance: draft.reactionAcceptance,
+      visibleUserIds: _decodeStringList(draft.visibleUserIds) ?? const [],
+      scheduledAt: draft.scheduledAt,
     );
   }
 
@@ -180,6 +284,113 @@ class ComposerController extends _$ComposerController {
     _scheduleSave();
   }
 
+  /// Toggles the poll editor. Turning it off clears the choices and drops any
+  /// attachments, because Misskey rejects notes carrying both.
+  void setShowPoll(bool value) {
+    state = state.copyWith(
+      showPoll: value,
+      pollChoices: value && state.pollChoices.isEmpty
+          ? const ['', '']
+          : state.pollChoices,
+      fileIds: value ? const <String>[] : state.fileIds,
+    );
+    _scheduleSave();
+  }
+
+  void setPollChoice(int index, String value) {
+    if (index < 0 || index >= state.pollChoices.length) return;
+    final choices = [...state.pollChoices];
+    choices[index] = value;
+    state = state.copyWith(pollChoices: choices);
+    _scheduleSave();
+  }
+
+  void addPollChoice() {
+    if (state.pollChoices.length >= 10) return;
+    state = state.copyWith(pollChoices: [...state.pollChoices, '']);
+    _scheduleSave();
+  }
+
+  void removePollChoice(int index) {
+    if (state.pollChoices.length <= 2) return;
+    final choices = [...state.pollChoices]..removeAt(index);
+    state = state.copyWith(pollChoices: choices);
+    _scheduleSave();
+  }
+
+  void setPollMultiple(bool value) {
+    state = state.copyWith(pollMultiple: value);
+    _scheduleSave();
+  }
+
+  void setPollExpiresAt(DateTime? value) {
+    state = state.copyWith(pollExpiresAt: value);
+    _scheduleSave();
+  }
+
+  void setReactionAcceptance(String? value) {
+    state = state.copyWith(reactionAcceptance: value);
+    _scheduleSave();
+  }
+
+  /// Adds a recipient for the `specified` (direct message) visibility.
+  void addVisibleUser(String userId) {
+    if (state.visibleUserIds.contains(userId)) return;
+    state = state.copyWith(visibleUserIds: [...state.visibleUserIds, userId]);
+    _scheduleSave();
+  }
+
+  void removeVisibleUser(String userId) {
+    state = state.copyWith(
+      visibleUserIds: state.visibleUserIds.where((id) => id != userId).toList(),
+    );
+    _scheduleSave();
+  }
+
+  void setScheduledAt(DateTime? value) {
+    state = state.copyWith(scheduledAt: value);
+    _scheduleSave();
+  }
+
+  void togglePreview() {
+    state = state.copyWith(showPreview: !state.showPreview);
+  }
+
+  /// Saves the draft immediately, for the explicit "save draft" action.
+  Future<void> saveDraftNow() async {
+    _dirty = true;
+    await _persist(force: true);
+  }
+
+  /// Clears every composer field and drops the stored draft.
+  Future<void> reset() async {
+    await deleteDraft();
+    state = state.copyWith(
+      showPoll: false,
+      pollChoices: const ['', ''],
+      pollMultiple: false,
+      pollExpiresAt: null,
+      reactionAcceptance: null,
+      visibleUserIds: const <String>[],
+      scheduledAt: null,
+      showPreview: false,
+      fileIds: const <String>[],
+    );
+  }
+
+  static String _encodeStringList(List<String> values) => jsonEncode(values);
+
+  static List<String>? _decodeStringList(String? raw) {
+    if (raw == null) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return null;
+      return decoded.whereType<String>().toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _scheduleSave() {
     _dirty = true;
     _debounce?.cancel();
@@ -201,6 +412,14 @@ class ComposerController extends _$ComposerController {
       localOnly: state.localOnly,
       replyId: _replyId,
       updatedAt: DateTime.now(),
+      pollChoices: state.showPoll ? _encodeStringList(state.pollChoices) : null,
+      pollMultiple: state.pollMultiple,
+      pollExpiresAt: state.pollExpiresAt,
+      reactionAcceptance: state.reactionAcceptance,
+      visibleUserIds: state.visibleUserIds.isEmpty
+          ? null
+          : _encodeStringList(state.visibleUserIds),
+      scheduledAt: state.scheduledAt,
     );
     await ref.read(draftDaoProvider).save(draft);
   }
@@ -230,6 +449,8 @@ class ComposerController extends _$ComposerController {
     await _persist(force: true);
     state = state.copyWith(posting: true, error: null);
     try {
+      final choices = validPollChoices();
+      final scheduled = state.scheduledAt;
       await ref.read(composerSenderProvider)(
         text: state.text,
         cw: state.cw,
@@ -237,6 +458,12 @@ class ComposerController extends _$ComposerController {
         localOnly: state.localOnly,
         replyId: _replyId,
         fileIds: state.fileIds,
+        pollChoices: choices.isEmpty ? null : choices,
+        pollMultiple: state.pollMultiple,
+        pollExpiresAt: state.pollExpiresAt,
+        reactionAcceptance: state.reactionAcceptance,
+        visibleUserIds: state.visibleUserIds,
+        scheduledAt: scheduled,
       );
       _dirty = false;
       await ref.read(draftDaoProvider).deleteDraft(active.id);

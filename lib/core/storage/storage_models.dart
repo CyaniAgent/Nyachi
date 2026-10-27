@@ -28,6 +28,16 @@ abstract class ComposerDraft with _$ComposerDraft {
     @Default(false) bool localOnly,
     String? replyId,
     required DateTime updatedAt,
+
+    /// JSON list of poll choices; null when the draft has no poll.
+    String? pollChoices,
+    @Default(false) bool pollMultiple,
+    DateTime? pollExpiresAt,
+    String? reactionAcceptance,
+
+    /// JSON list of user ids for the `specified` visibility.
+    String? visibleUserIds,
+    DateTime? scheduledAt,
   }) = _ComposerDraft;
 }
 

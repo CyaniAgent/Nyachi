@@ -287,5 +287,83 @@
         "type": "int"
       }
     }
-  }
+  },
+  "composerHint": "在想些什么呢？",
+  "attachMedia": "添加图片",
+  "poll": "投票",
+  "pollChoiceHint": "选项 {n}",
+  "addChoice": "添加选项",
+  "pollMultipleVotes": "允许多选",
+  "pollDuration": "投票期限",
+  "pollNoExpiry": "不设期限",
+  "pollMinutes": "{n} 分钟",
+  "pollHours": "{n} 小时",
+  "pollDays": "{n} 天",
+  "reactionAcceptance": "接受表情回应",
+  "acceptanceAny": "不限制",
+  "acceptanceLikeOnly": "仅限 ❤️",
+  "acceptanceNonSensitive": "仅限非敏感内容",
+  "acceptanceNonSensitiveLocalLike": "非敏感；远端仅 ❤️",
+  "saveDraftNow": "保存到草稿",
+  "draftSaved": "草稿已保存",
+  "preview": "预览",
+  "resetDraft": "重置",
+  "insertHashtag": "话题标签",
+  "insertMention": "提及",
+  "insertEmoji": "表情",
+  "schedule": "定时发布",
+  "scheduleRemove": "立即发布",
+  "schedulePick": "选择日期与时间",
+  "scheduledFor": "定时：{time}",
+  "visibilitySpecified": "私信",
+  "selectRecipients": "收件人",
+  "searchUsers": "搜索用户",
+  "pollNeedsTwoChoices": "投票至少需要两个选项",
+  "charLimit": "{used} / {limit}",
+  "@pollChoiceHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@scheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@charLimit": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "noResults": "没有结果"
 }

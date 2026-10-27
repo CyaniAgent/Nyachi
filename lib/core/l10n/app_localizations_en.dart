@@ -688,4 +688,116 @@ class AppLocalizationsEn extends AppLocalizations {
   String deleteItemsConfirm(int count) {
     return 'Delete $count items?';
   }
+
+  @override
+  String get composerHint => 'What\'s on your mind?';
+
+  @override
+  String get attachMedia => 'Add images';
+
+  @override
+  String get poll => 'Poll';
+
+  @override
+  String pollChoiceHint(int n) {
+    return 'Choice $n';
+  }
+
+  @override
+  String get addChoice => 'Add choice';
+
+  @override
+  String get pollMultipleVotes => 'Allow multiple answers';
+
+  @override
+  String get pollDuration => 'Poll duration';
+
+  @override
+  String get pollNoExpiry => 'No expiry';
+
+  @override
+  String pollMinutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String pollHours(int n) {
+    return '$n hours';
+  }
+
+  @override
+  String pollDays(int n) {
+    return '$n days';
+  }
+
+  @override
+  String get reactionAcceptance => 'Reaction acceptance';
+
+  @override
+  String get acceptanceAny => 'Any reactions';
+
+  @override
+  String get acceptanceLikeOnly => 'Likes only';
+
+  @override
+  String get acceptanceNonSensitive => 'Non-sensitive only';
+
+  @override
+  String get acceptanceNonSensitiveLocalLike =>
+      'Non-sensitive; remote likes only';
+
+  @override
+  String get saveDraftNow => 'Save draft';
+
+  @override
+  String get draftSaved => 'Draft saved';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get resetDraft => 'Reset';
+
+  @override
+  String get insertHashtag => 'Hashtag';
+
+  @override
+  String get insertMention => 'Mention';
+
+  @override
+  String get insertEmoji => 'Emoji';
+
+  @override
+  String get schedule => 'Schedule';
+
+  @override
+  String get scheduleRemove => 'Send now';
+
+  @override
+  String get schedulePick => 'Pick date and time';
+
+  @override
+  String scheduledFor(String time) {
+    return 'Scheduled for $time';
+  }
+
+  @override
+  String get visibilitySpecified => 'Direct';
+
+  @override
+  String get selectRecipients => 'Recipients';
+
+  @override
+  String get searchUsers => 'Search users';
+
+  @override
+  String get pollNeedsTwoChoices => 'A poll needs at least two choices';
+
+  @override
+  String charLimit(int used, int limit) {
+    return '$used / $limit';
+  }
+
+  @override
+  String get noResults => 'No results';
 }

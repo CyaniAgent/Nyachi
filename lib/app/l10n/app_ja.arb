@@ -287,5 +287,83 @@
         "type": "int"
       }
     }
-  }
+  },
+  "composerHint": "何か書こう？",
+  "attachMedia": "画像を添付",
+  "poll": "アンケート",
+  "pollChoiceHint": "選択肢 {n}",
+  "addChoice": "選択肢を追加",
+  "pollMultipleVotes": "複数選択可",
+  "pollDuration": "投票期限",
+  "pollNoExpiry": "期限なし",
+  "pollMinutes": "{n}分",
+  "pollHours": "{n}時間",
+  "pollDays": "{n}日",
+  "reactionAcceptance": "リアクション受け入れ",
+  "acceptanceAny": "すべて許可",
+  "acceptanceLikeOnly": "❤️のみ",
+  "acceptanceNonSensitive": "センシティブ以外",
+  "acceptanceNonSensitiveLocalLike": "センシティブ以外（リモートは❤️のみ）",
+  "saveDraftNow": "下書きに保存",
+  "draftSaved": "下書きを保存しました",
+  "preview": "プレビュー",
+  "resetDraft": "リセット",
+  "insertHashtag": "ハッシュタグ",
+  "insertMention": "メンション",
+  "insertEmoji": "絵文字",
+  "schedule": "予約投稿",
+  "scheduleRemove": "今すぐ投稿",
+  "schedulePick": "日時を選択",
+  "scheduledFor": "予約：{time}",
+  "visibilitySpecified": "ダイレクト",
+  "selectRecipients": "宛先",
+  "searchUsers": "ユーザー検索",
+  "pollNeedsTwoChoices": "アンケートには2つ以上の選択肢が必要です",
+  "charLimit": "{used} / {limit}",
+  "@pollChoiceHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@scheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@charLimit": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "noResults": "結果なし"
 }

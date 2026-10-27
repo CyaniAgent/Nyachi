@@ -683,4 +683,115 @@ class AppLocalizationsJa extends AppLocalizations {
   String deleteItemsConfirm(int count) {
     return '$count件を削除しますか？';
   }
+
+  @override
+  String get composerHint => '何か書こう？';
+
+  @override
+  String get attachMedia => '画像を添付';
+
+  @override
+  String get poll => 'アンケート';
+
+  @override
+  String pollChoiceHint(int n) {
+    return '選択肢 $n';
+  }
+
+  @override
+  String get addChoice => '選択肢を追加';
+
+  @override
+  String get pollMultipleVotes => '複数選択可';
+
+  @override
+  String get pollDuration => '投票期限';
+
+  @override
+  String get pollNoExpiry => '期限なし';
+
+  @override
+  String pollMinutes(int n) {
+    return '$n分';
+  }
+
+  @override
+  String pollHours(int n) {
+    return '$n時間';
+  }
+
+  @override
+  String pollDays(int n) {
+    return '$n日';
+  }
+
+  @override
+  String get reactionAcceptance => 'リアクション受け入れ';
+
+  @override
+  String get acceptanceAny => 'すべて許可';
+
+  @override
+  String get acceptanceLikeOnly => '❤️のみ';
+
+  @override
+  String get acceptanceNonSensitive => 'センシティブ以外';
+
+  @override
+  String get acceptanceNonSensitiveLocalLike => 'センシティブ以外（リモートは❤️のみ）';
+
+  @override
+  String get saveDraftNow => '下書きに保存';
+
+  @override
+  String get draftSaved => '下書きを保存しました';
+
+  @override
+  String get preview => 'プレビュー';
+
+  @override
+  String get resetDraft => 'リセット';
+
+  @override
+  String get insertHashtag => 'ハッシュタグ';
+
+  @override
+  String get insertMention => 'メンション';
+
+  @override
+  String get insertEmoji => '絵文字';
+
+  @override
+  String get schedule => '予約投稿';
+
+  @override
+  String get scheduleRemove => '今すぐ投稿';
+
+  @override
+  String get schedulePick => '日時を選択';
+
+  @override
+  String scheduledFor(String time) {
+    return '予約：$time';
+  }
+
+  @override
+  String get visibilitySpecified => 'ダイレクト';
+
+  @override
+  String get selectRecipients => '宛先';
+
+  @override
+  String get searchUsers => 'ユーザー検索';
+
+  @override
+  String get pollNeedsTwoChoices => 'アンケートには2つ以上の選択肢が必要です';
+
+  @override
+  String charLimit(int used, int limit) {
+    return '$used / $limit';
+  }
+
+  @override
+  String get noResults => '結果なし';
 }

@@ -683,4 +683,115 @@ class AppLocalizationsZh extends AppLocalizations {
   String deleteItemsConfirm(int count) {
     return '删除 $count 项？';
   }
+
+  @override
+  String get composerHint => '在想些什么呢？';
+
+  @override
+  String get attachMedia => '添加图片';
+
+  @override
+  String get poll => '投票';
+
+  @override
+  String pollChoiceHint(int n) {
+    return '选项 $n';
+  }
+
+  @override
+  String get addChoice => '添加选项';
+
+  @override
+  String get pollMultipleVotes => '允许多选';
+
+  @override
+  String get pollDuration => '投票期限';
+
+  @override
+  String get pollNoExpiry => '不设期限';
+
+  @override
+  String pollMinutes(int n) {
+    return '$n 分钟';
+  }
+
+  @override
+  String pollHours(int n) {
+    return '$n 小时';
+  }
+
+  @override
+  String pollDays(int n) {
+    return '$n 天';
+  }
+
+  @override
+  String get reactionAcceptance => '接受表情回应';
+
+  @override
+  String get acceptanceAny => '不限制';
+
+  @override
+  String get acceptanceLikeOnly => '仅限 ❤️';
+
+  @override
+  String get acceptanceNonSensitive => '仅限非敏感内容';
+
+  @override
+  String get acceptanceNonSensitiveLocalLike => '非敏感；远端仅 ❤️';
+
+  @override
+  String get saveDraftNow => '保存到草稿';
+
+  @override
+  String get draftSaved => '草稿已保存';
+
+  @override
+  String get preview => '预览';
+
+  @override
+  String get resetDraft => '重置';
+
+  @override
+  String get insertHashtag => '话题标签';
+
+  @override
+  String get insertMention => '提及';
+
+  @override
+  String get insertEmoji => '表情';
+
+  @override
+  String get schedule => '定时发布';
+
+  @override
+  String get scheduleRemove => '立即发布';
+
+  @override
+  String get schedulePick => '选择日期与时间';
+
+  @override
+  String scheduledFor(String time) {
+    return '定时：$time';
+  }
+
+  @override
+  String get visibilitySpecified => '私信';
+
+  @override
+  String get selectRecipients => '收件人';
+
+  @override
+  String get searchUsers => '搜索用户';
+
+  @override
+  String get pollNeedsTwoChoices => '投票至少需要两个选项';
+
+  @override
+  String charLimit(int used, int limit) {
+    return '$used / $limit';
+  }
+
+  @override
+  String get noResults => '没有结果';
 }

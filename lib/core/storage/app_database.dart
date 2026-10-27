@@ -45,6 +45,16 @@ class Drafts extends Table {
   TextColumn get replyId => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
+  /// JSON list of poll choices; null when the draft has no poll.
+  TextColumn get pollChoices => text().nullable()();
+  BoolColumn get pollMultiple => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get pollExpiresAt => dateTime().nullable()();
+  TextColumn get reactionAcceptance => text().nullable()();
+
+  /// JSON list of user ids for the `specified` (direct message) visibility.
+  TextColumn get visibleUserIds => text().nullable()();
+  DateTimeColumn get scheduledAt => dateTime().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {accountId};
 }
@@ -70,7 +80,7 @@ class AppDatabase extends _$AppDatabase {
   static Uri _assetUri(String name) => Uri.base.resolve(name);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -218,6 +228,12 @@ class DraftDao extends DatabaseAccessor<AppDatabase> with _$DraftDaoMixin {
       localOnly: row.localOnly,
       replyId: row.replyId,
       updatedAt: row.updatedAt,
+      pollChoices: row.pollChoices,
+      pollMultiple: row.pollMultiple,
+      pollExpiresAt: row.pollExpiresAt,
+      reactionAcceptance: row.reactionAcceptance,
+      visibleUserIds: row.visibleUserIds,
+      scheduledAt: row.scheduledAt,
     );
   }
 
@@ -231,6 +247,12 @@ class DraftDao extends DatabaseAccessor<AppDatabase> with _$DraftDaoMixin {
         localOnly: Value(draft.localOnly),
         replyId: Value(draft.replyId),
         updatedAt: draft.updatedAt,
+        pollChoices: Value(draft.pollChoices),
+        pollMultiple: Value(draft.pollMultiple),
+        pollExpiresAt: Value(draft.pollExpiresAt),
+        reactionAcceptance: Value(draft.reactionAcceptance),
+        visibleUserIds: Value(draft.visibleUserIds),
+        scheduledAt: Value(draft.scheduledAt),
       ),
     );
   }

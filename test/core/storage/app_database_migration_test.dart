@@ -7,13 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 
-/// Stands in for a future schema bump: schemaVersion 2 against a database
-/// file created at version 1 forces the onUpgrade path to run.
+/// Stands in for a future schema bump: one version above the shipped schema
+/// against a database file created at the current version, which forces the
+/// onUpgrade path to run.
 class _FutureSchemaDatabase extends AppDatabase {
   _FutureSchemaDatabase(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => super.schemaVersion + 1;
 }
 
 void main() {

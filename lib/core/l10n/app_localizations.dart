@@ -1407,6 +1407,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete {count} items?'**
   String deleteItemsConfirm(int count);
+
+  /// No description provided for @composerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s on your mind?'**
+  String get composerHint;
+
+  /// No description provided for @attachMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Add images'**
+  String get attachMedia;
+
+  /// No description provided for @poll.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll'**
+  String get poll;
+
+  /// No description provided for @pollChoiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice {n}'**
+  String pollChoiceHint(int n);
+
+  /// No description provided for @addChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add choice'**
+  String get addChoice;
+
+  /// No description provided for @pollMultipleVotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow multiple answers'**
+  String get pollMultipleVotes;
+
+  /// No description provided for @pollDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll duration'**
+  String get pollDuration;
+
+  /// No description provided for @pollNoExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'No expiry'**
+  String get pollNoExpiry;
+
+  /// No description provided for @pollMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String pollMinutes(int n);
+
+  /// No description provided for @pollHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} hours'**
+  String pollHours(int n);
+
+  /// No description provided for @pollDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} days'**
+  String pollDays(int n);
+
+  /// No description provided for @reactionAcceptance.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaction acceptance'**
+  String get reactionAcceptance;
+
+  /// No description provided for @acceptanceAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any reactions'**
+  String get acceptanceAny;
+
+  /// No description provided for @acceptanceLikeOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes only'**
+  String get acceptanceLikeOnly;
+
+  /// No description provided for @acceptanceNonSensitive.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-sensitive only'**
+  String get acceptanceNonSensitive;
+
+  /// No description provided for @acceptanceNonSensitiveLocalLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-sensitive; remote likes only'**
+  String get acceptanceNonSensitiveLocalLike;
+
+  /// No description provided for @saveDraftNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Save draft'**
+  String get saveDraftNow;
+
+  /// No description provided for @draftSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft saved'**
+  String get draftSaved;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @resetDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetDraft;
+
+  /// No description provided for @insertHashtag.
+  ///
+  /// In en, this message translates to:
+  /// **'Hashtag'**
+  String get insertHashtag;
+
+  /// No description provided for @insertMention.
+  ///
+  /// In en, this message translates to:
+  /// **'Mention'**
+  String get insertMention;
+
+  /// No description provided for @insertEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji'**
+  String get insertEmoji;
+
+  /// No description provided for @schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get schedule;
+
+  /// No description provided for @scheduleRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Send now'**
+  String get scheduleRemove;
+
+  /// No description provided for @schedulePick.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick date and time'**
+  String get schedulePick;
+
+  /// No description provided for @scheduledFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled for {time}'**
+  String scheduledFor(String time);
+
+  /// No description provided for @visibilitySpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get visibilitySpecified;
+
+  /// No description provided for @selectRecipients.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipients'**
+  String get selectRecipients;
+
+  /// No description provided for @searchUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search users'**
+  String get searchUsers;
+
+  /// No description provided for @pollNeedsTwoChoices.
+  ///
+  /// In en, this message translates to:
+  /// **'A poll needs at least two choices'**
+  String get pollNeedsTwoChoices;
+
+  /// No description provided for @charLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} / {limit}'**
+  String charLimit(int used, int limit);
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get noResults;
 }
 
 class _AppLocalizationsDelegate

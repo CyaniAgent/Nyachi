@@ -928,6 +928,77 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _pollChoicesMeta = const VerificationMeta(
+    'pollChoices',
+  );
+  @override
+  late final GeneratedColumn<String> pollChoices = GeneratedColumn<String>(
+    'poll_choices',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pollMultipleMeta = const VerificationMeta(
+    'pollMultiple',
+  );
+  @override
+  late final GeneratedColumn<bool> pollMultiple = GeneratedColumn<bool>(
+    'poll_multiple',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("poll_multiple" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _pollExpiresAtMeta = const VerificationMeta(
+    'pollExpiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> pollExpiresAt =
+      GeneratedColumn<DateTime>(
+        'poll_expires_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _reactionAcceptanceMeta =
+      const VerificationMeta('reactionAcceptance');
+  @override
+  late final GeneratedColumn<String> reactionAcceptance =
+      GeneratedColumn<String>(
+        'reaction_acceptance',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _visibleUserIdsMeta = const VerificationMeta(
+    'visibleUserIds',
+  );
+  @override
+  late final GeneratedColumn<String> visibleUserIds = GeneratedColumn<String>(
+    'visible_user_ids',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _scheduledAtMeta = const VerificationMeta(
+    'scheduledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> scheduledAt = GeneratedColumn<DateTime>(
+    'scheduled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     accountId,
@@ -937,6 +1008,12 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     localOnly,
     replyId,
     updatedAt,
+    pollChoices,
+    pollMultiple,
+    pollExpiresAt,
+    reactionAcceptance,
+    visibleUserIds,
+    scheduledAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -997,6 +1074,60 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('poll_choices')) {
+      context.handle(
+        _pollChoicesMeta,
+        pollChoices.isAcceptableOrUnknown(
+          data['poll_choices']!,
+          _pollChoicesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('poll_multiple')) {
+      context.handle(
+        _pollMultipleMeta,
+        pollMultiple.isAcceptableOrUnknown(
+          data['poll_multiple']!,
+          _pollMultipleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('poll_expires_at')) {
+      context.handle(
+        _pollExpiresAtMeta,
+        pollExpiresAt.isAcceptableOrUnknown(
+          data['poll_expires_at']!,
+          _pollExpiresAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reaction_acceptance')) {
+      context.handle(
+        _reactionAcceptanceMeta,
+        reactionAcceptance.isAcceptableOrUnknown(
+          data['reaction_acceptance']!,
+          _reactionAcceptanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visible_user_ids')) {
+      context.handle(
+        _visibleUserIdsMeta,
+        visibleUserIds.isAcceptableOrUnknown(
+          data['visible_user_ids']!,
+          _visibleUserIdsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('scheduled_at')) {
+      context.handle(
+        _scheduledAtMeta,
+        scheduledAt.isAcceptableOrUnknown(
+          data['scheduled_at']!,
+          _scheduledAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1034,6 +1165,30 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      pollChoices: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}poll_choices'],
+      ),
+      pollMultiple: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}poll_multiple'],
+      )!,
+      pollExpiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}poll_expires_at'],
+      ),
+      reactionAcceptance: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reaction_acceptance'],
+      ),
+      visibleUserIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visible_user_ids'],
+      ),
+      scheduledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}scheduled_at'],
+      ),
     );
   }
 
@@ -1051,6 +1206,16 @@ class Draft extends DataClass implements Insertable<Draft> {
   final bool localOnly;
   final String? replyId;
   final DateTime updatedAt;
+
+  /// JSON list of poll choices; null when the draft has no poll.
+  final String? pollChoices;
+  final bool pollMultiple;
+  final DateTime? pollExpiresAt;
+  final String? reactionAcceptance;
+
+  /// JSON list of user ids for the `specified` (direct message) visibility.
+  final String? visibleUserIds;
+  final DateTime? scheduledAt;
   const Draft({
     required this.accountId,
     required this.body,
@@ -1059,6 +1224,12 @@ class Draft extends DataClass implements Insertable<Draft> {
     required this.localOnly,
     this.replyId,
     required this.updatedAt,
+    this.pollChoices,
+    required this.pollMultiple,
+    this.pollExpiresAt,
+    this.reactionAcceptance,
+    this.visibleUserIds,
+    this.scheduledAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1074,6 +1245,22 @@ class Draft extends DataClass implements Insertable<Draft> {
       map['reply_id'] = Variable<String>(replyId);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || pollChoices != null) {
+      map['poll_choices'] = Variable<String>(pollChoices);
+    }
+    map['poll_multiple'] = Variable<bool>(pollMultiple);
+    if (!nullToAbsent || pollExpiresAt != null) {
+      map['poll_expires_at'] = Variable<DateTime>(pollExpiresAt);
+    }
+    if (!nullToAbsent || reactionAcceptance != null) {
+      map['reaction_acceptance'] = Variable<String>(reactionAcceptance);
+    }
+    if (!nullToAbsent || visibleUserIds != null) {
+      map['visible_user_ids'] = Variable<String>(visibleUserIds);
+    }
+    if (!nullToAbsent || scheduledAt != null) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt);
+    }
     return map;
   }
 
@@ -1088,6 +1275,22 @@ class Draft extends DataClass implements Insertable<Draft> {
           ? const Value.absent()
           : Value(replyId),
       updatedAt: Value(updatedAt),
+      pollChoices: pollChoices == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pollChoices),
+      pollMultiple: Value(pollMultiple),
+      pollExpiresAt: pollExpiresAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pollExpiresAt),
+      reactionAcceptance: reactionAcceptance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reactionAcceptance),
+      visibleUserIds: visibleUserIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(visibleUserIds),
+      scheduledAt: scheduledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduledAt),
     );
   }
 
@@ -1104,6 +1307,14 @@ class Draft extends DataClass implements Insertable<Draft> {
       localOnly: serializer.fromJson<bool>(json['localOnly']),
       replyId: serializer.fromJson<String?>(json['replyId']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      pollChoices: serializer.fromJson<String?>(json['pollChoices']),
+      pollMultiple: serializer.fromJson<bool>(json['pollMultiple']),
+      pollExpiresAt: serializer.fromJson<DateTime?>(json['pollExpiresAt']),
+      reactionAcceptance: serializer.fromJson<String?>(
+        json['reactionAcceptance'],
+      ),
+      visibleUserIds: serializer.fromJson<String?>(json['visibleUserIds']),
+      scheduledAt: serializer.fromJson<DateTime?>(json['scheduledAt']),
     );
   }
   @override
@@ -1117,6 +1328,12 @@ class Draft extends DataClass implements Insertable<Draft> {
       'localOnly': serializer.toJson<bool>(localOnly),
       'replyId': serializer.toJson<String?>(replyId),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'pollChoices': serializer.toJson<String?>(pollChoices),
+      'pollMultiple': serializer.toJson<bool>(pollMultiple),
+      'pollExpiresAt': serializer.toJson<DateTime?>(pollExpiresAt),
+      'reactionAcceptance': serializer.toJson<String?>(reactionAcceptance),
+      'visibleUserIds': serializer.toJson<String?>(visibleUserIds),
+      'scheduledAt': serializer.toJson<DateTime?>(scheduledAt),
     };
   }
 
@@ -1128,6 +1345,12 @@ class Draft extends DataClass implements Insertable<Draft> {
     bool? localOnly,
     Value<String?> replyId = const Value.absent(),
     DateTime? updatedAt,
+    Value<String?> pollChoices = const Value.absent(),
+    bool? pollMultiple,
+    Value<DateTime?> pollExpiresAt = const Value.absent(),
+    Value<String?> reactionAcceptance = const Value.absent(),
+    Value<String?> visibleUserIds = const Value.absent(),
+    Value<DateTime?> scheduledAt = const Value.absent(),
   }) => Draft(
     accountId: accountId ?? this.accountId,
     body: body ?? this.body,
@@ -1136,6 +1359,18 @@ class Draft extends DataClass implements Insertable<Draft> {
     localOnly: localOnly ?? this.localOnly,
     replyId: replyId.present ? replyId.value : this.replyId,
     updatedAt: updatedAt ?? this.updatedAt,
+    pollChoices: pollChoices.present ? pollChoices.value : this.pollChoices,
+    pollMultiple: pollMultiple ?? this.pollMultiple,
+    pollExpiresAt: pollExpiresAt.present
+        ? pollExpiresAt.value
+        : this.pollExpiresAt,
+    reactionAcceptance: reactionAcceptance.present
+        ? reactionAcceptance.value
+        : this.reactionAcceptance,
+    visibleUserIds: visibleUserIds.present
+        ? visibleUserIds.value
+        : this.visibleUserIds,
+    scheduledAt: scheduledAt.present ? scheduledAt.value : this.scheduledAt,
   );
   Draft copyWithCompanion(DraftsCompanion data) {
     return Draft(
@@ -1148,6 +1383,24 @@ class Draft extends DataClass implements Insertable<Draft> {
       localOnly: data.localOnly.present ? data.localOnly.value : this.localOnly,
       replyId: data.replyId.present ? data.replyId.value : this.replyId,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      pollChoices: data.pollChoices.present
+          ? data.pollChoices.value
+          : this.pollChoices,
+      pollMultiple: data.pollMultiple.present
+          ? data.pollMultiple.value
+          : this.pollMultiple,
+      pollExpiresAt: data.pollExpiresAt.present
+          ? data.pollExpiresAt.value
+          : this.pollExpiresAt,
+      reactionAcceptance: data.reactionAcceptance.present
+          ? data.reactionAcceptance.value
+          : this.reactionAcceptance,
+      visibleUserIds: data.visibleUserIds.present
+          ? data.visibleUserIds.value
+          : this.visibleUserIds,
+      scheduledAt: data.scheduledAt.present
+          ? data.scheduledAt.value
+          : this.scheduledAt,
     );
   }
 
@@ -1160,7 +1413,13 @@ class Draft extends DataClass implements Insertable<Draft> {
           ..write('visibility: $visibility, ')
           ..write('localOnly: $localOnly, ')
           ..write('replyId: $replyId, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('pollChoices: $pollChoices, ')
+          ..write('pollMultiple: $pollMultiple, ')
+          ..write('pollExpiresAt: $pollExpiresAt, ')
+          ..write('reactionAcceptance: $reactionAcceptance, ')
+          ..write('visibleUserIds: $visibleUserIds, ')
+          ..write('scheduledAt: $scheduledAt')
           ..write(')'))
         .toString();
   }
@@ -1174,6 +1433,12 @@ class Draft extends DataClass implements Insertable<Draft> {
     localOnly,
     replyId,
     updatedAt,
+    pollChoices,
+    pollMultiple,
+    pollExpiresAt,
+    reactionAcceptance,
+    visibleUserIds,
+    scheduledAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -1185,7 +1450,13 @@ class Draft extends DataClass implements Insertable<Draft> {
           other.visibility == this.visibility &&
           other.localOnly == this.localOnly &&
           other.replyId == this.replyId &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.pollChoices == this.pollChoices &&
+          other.pollMultiple == this.pollMultiple &&
+          other.pollExpiresAt == this.pollExpiresAt &&
+          other.reactionAcceptance == this.reactionAcceptance &&
+          other.visibleUserIds == this.visibleUserIds &&
+          other.scheduledAt == this.scheduledAt);
 }
 
 class DraftsCompanion extends UpdateCompanion<Draft> {
@@ -1196,6 +1467,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
   final Value<bool> localOnly;
   final Value<String?> replyId;
   final Value<DateTime> updatedAt;
+  final Value<String?> pollChoices;
+  final Value<bool> pollMultiple;
+  final Value<DateTime?> pollExpiresAt;
+  final Value<String?> reactionAcceptance;
+  final Value<String?> visibleUserIds;
+  final Value<DateTime?> scheduledAt;
   final Value<int> rowid;
   const DraftsCompanion({
     this.accountId = const Value.absent(),
@@ -1205,6 +1482,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
     this.localOnly = const Value.absent(),
     this.replyId = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.pollChoices = const Value.absent(),
+    this.pollMultiple = const Value.absent(),
+    this.pollExpiresAt = const Value.absent(),
+    this.reactionAcceptance = const Value.absent(),
+    this.visibleUserIds = const Value.absent(),
+    this.scheduledAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DraftsCompanion.insert({
@@ -1215,6 +1498,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
     this.localOnly = const Value.absent(),
     this.replyId = const Value.absent(),
     required DateTime updatedAt,
+    this.pollChoices = const Value.absent(),
+    this.pollMultiple = const Value.absent(),
+    this.pollExpiresAt = const Value.absent(),
+    this.reactionAcceptance = const Value.absent(),
+    this.visibleUserIds = const Value.absent(),
+    this.scheduledAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : accountId = Value(accountId),
        body = Value(body),
@@ -1228,6 +1517,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
     Expression<bool>? localOnly,
     Expression<String>? replyId,
     Expression<DateTime>? updatedAt,
+    Expression<String>? pollChoices,
+    Expression<bool>? pollMultiple,
+    Expression<DateTime>? pollExpiresAt,
+    Expression<String>? reactionAcceptance,
+    Expression<String>? visibleUserIds,
+    Expression<DateTime>? scheduledAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1238,6 +1533,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
       if (localOnly != null) 'local_only': localOnly,
       if (replyId != null) 'reply_id': replyId,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (pollChoices != null) 'poll_choices': pollChoices,
+      if (pollMultiple != null) 'poll_multiple': pollMultiple,
+      if (pollExpiresAt != null) 'poll_expires_at': pollExpiresAt,
+      if (reactionAcceptance != null) 'reaction_acceptance': reactionAcceptance,
+      if (visibleUserIds != null) 'visible_user_ids': visibleUserIds,
+      if (scheduledAt != null) 'scheduled_at': scheduledAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1250,6 +1551,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
     Value<bool>? localOnly,
     Value<String?>? replyId,
     Value<DateTime>? updatedAt,
+    Value<String?>? pollChoices,
+    Value<bool>? pollMultiple,
+    Value<DateTime?>? pollExpiresAt,
+    Value<String?>? reactionAcceptance,
+    Value<String?>? visibleUserIds,
+    Value<DateTime?>? scheduledAt,
     Value<int>? rowid,
   }) {
     return DraftsCompanion(
@@ -1260,6 +1567,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
       localOnly: localOnly ?? this.localOnly,
       replyId: replyId ?? this.replyId,
       updatedAt: updatedAt ?? this.updatedAt,
+      pollChoices: pollChoices ?? this.pollChoices,
+      pollMultiple: pollMultiple ?? this.pollMultiple,
+      pollExpiresAt: pollExpiresAt ?? this.pollExpiresAt,
+      reactionAcceptance: reactionAcceptance ?? this.reactionAcceptance,
+      visibleUserIds: visibleUserIds ?? this.visibleUserIds,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1288,6 +1601,24 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (pollChoices.present) {
+      map['poll_choices'] = Variable<String>(pollChoices.value);
+    }
+    if (pollMultiple.present) {
+      map['poll_multiple'] = Variable<bool>(pollMultiple.value);
+    }
+    if (pollExpiresAt.present) {
+      map['poll_expires_at'] = Variable<DateTime>(pollExpiresAt.value);
+    }
+    if (reactionAcceptance.present) {
+      map['reaction_acceptance'] = Variable<String>(reactionAcceptance.value);
+    }
+    if (visibleUserIds.present) {
+      map['visible_user_ids'] = Variable<String>(visibleUserIds.value);
+    }
+    if (scheduledAt.present) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1304,6 +1635,12 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
           ..write('localOnly: $localOnly, ')
           ..write('replyId: $replyId, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('pollChoices: $pollChoices, ')
+          ..write('pollMultiple: $pollMultiple, ')
+          ..write('pollExpiresAt: $pollExpiresAt, ')
+          ..write('reactionAcceptance: $reactionAcceptance, ')
+          ..write('visibleUserIds: $visibleUserIds, ')
+          ..write('scheduledAt: $scheduledAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1790,6 +2127,12 @@ typedef $$DraftsTableCreateCompanionBuilder = DraftsCompanion Function({
   Value<bool> localOnly,
   Value<String?> replyId,
   required DateTime updatedAt,
+  Value<String?> pollChoices,
+  Value<bool> pollMultiple,
+  Value<DateTime?> pollExpiresAt,
+  Value<String?> reactionAcceptance,
+  Value<String?> visibleUserIds,
+  Value<DateTime?> scheduledAt,
   Value<int> rowid,
 });
 typedef $$DraftsTableUpdateCompanionBuilder = DraftsCompanion Function({
@@ -1800,6 +2143,12 @@ typedef $$DraftsTableUpdateCompanionBuilder = DraftsCompanion Function({
   Value<bool> localOnly,
   Value<String?> replyId,
   Value<DateTime> updatedAt,
+  Value<String?> pollChoices,
+  Value<bool> pollMultiple,
+  Value<DateTime?> pollExpiresAt,
+  Value<String?> reactionAcceptance,
+  Value<String?> visibleUserIds,
+  Value<DateTime?> scheduledAt,
   Value<int> rowid,
 });
 
@@ -1844,6 +2193,36 @@ class $$DraftsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pollChoices => $composableBuilder(
+    column: $table.pollChoices,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pollMultiple => $composableBuilder(
+    column: $table.pollMultiple,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get pollExpiresAt => $composableBuilder(
+    column: $table.pollExpiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reactionAcceptance => $composableBuilder(
+    column: $table.reactionAcceptance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visibleUserIds => $composableBuilder(
+    column: $table.visibleUserIds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1891,6 +2270,36 @@ class $$DraftsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get pollChoices => $composableBuilder(
+    column: $table.pollChoices,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get pollMultiple => $composableBuilder(
+    column: $table.pollMultiple,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get pollExpiresAt => $composableBuilder(
+    column: $table.pollExpiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reactionAcceptance => $composableBuilder(
+    column: $table.reactionAcceptance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visibleUserIds => $composableBuilder(
+    column: $table.visibleUserIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DraftsTableAnnotationComposer
@@ -1924,6 +2333,36 @@ class $$DraftsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get pollChoices => $composableBuilder(
+    column: $table.pollChoices,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get pollMultiple => $composableBuilder(
+    column: $table.pollMultiple,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get pollExpiresAt => $composableBuilder(
+    column: $table.pollExpiresAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reactionAcceptance => $composableBuilder(
+    column: $table.reactionAcceptance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get visibleUserIds => $composableBuilder(
+    column: $table.visibleUserIds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => column,
+  );
 }
 
 class $$DraftsTableTableManager
@@ -1961,6 +2400,12 @@ class $$DraftsTableTableManager
                 Value<bool> localOnly = const Value.absent(),
                 Value<String?> replyId = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String?> pollChoices = const Value.absent(),
+                Value<bool> pollMultiple = const Value.absent(),
+                Value<DateTime?> pollExpiresAt = const Value.absent(),
+                Value<String?> reactionAcceptance = const Value.absent(),
+                Value<String?> visibleUserIds = const Value.absent(),
+                Value<DateTime?> scheduledAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DraftsCompanion(
                 accountId: accountId,
@@ -1970,6 +2415,12 @@ class $$DraftsTableTableManager
                 localOnly: localOnly,
                 replyId: replyId,
                 updatedAt: updatedAt,
+                pollChoices: pollChoices,
+                pollMultiple: pollMultiple,
+                pollExpiresAt: pollExpiresAt,
+                reactionAcceptance: reactionAcceptance,
+                visibleUserIds: visibleUserIds,
+                scheduledAt: scheduledAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1981,6 +2432,12 @@ class $$DraftsTableTableManager
                 Value<bool> localOnly = const Value.absent(),
                 Value<String?> replyId = const Value.absent(),
                 required DateTime updatedAt,
+                Value<String?> pollChoices = const Value.absent(),
+                Value<bool> pollMultiple = const Value.absent(),
+                Value<DateTime?> pollExpiresAt = const Value.absent(),
+                Value<String?> reactionAcceptance = const Value.absent(),
+                Value<String?> visibleUserIds = const Value.absent(),
+                Value<DateTime?> scheduledAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DraftsCompanion.insert(
                 accountId: accountId,
@@ -1990,6 +2447,12 @@ class $$DraftsTableTableManager
                 localOnly: localOnly,
                 replyId: replyId,
                 updatedAt: updatedAt,
+                pollChoices: pollChoices,
+                pollMultiple: pollMultiple,
+                pollExpiresAt: pollExpiresAt,
+                reactionAcceptance: reactionAcceptance,
+                visibleUserIds: visibleUserIds,
+                scheduledAt: scheduledAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

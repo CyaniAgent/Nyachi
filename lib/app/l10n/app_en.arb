@@ -287,5 +287,83 @@
         "type": "int"
       }
     }
-  }
+  },
+  "composerHint": "What's on your mind?",
+  "attachMedia": "Add images",
+  "poll": "Poll",
+  "pollChoiceHint": "Choice {n}",
+  "addChoice": "Add choice",
+  "pollMultipleVotes": "Allow multiple answers",
+  "pollDuration": "Poll duration",
+  "pollNoExpiry": "No expiry",
+  "pollMinutes": "{n} min",
+  "pollHours": "{n} hours",
+  "pollDays": "{n} days",
+  "reactionAcceptance": "Reaction acceptance",
+  "acceptanceAny": "Any reactions",
+  "acceptanceLikeOnly": "Likes only",
+  "acceptanceNonSensitive": "Non-sensitive only",
+  "acceptanceNonSensitiveLocalLike": "Non-sensitive; remote likes only",
+  "saveDraftNow": "Save draft",
+  "draftSaved": "Draft saved",
+  "preview": "Preview",
+  "resetDraft": "Reset",
+  "insertHashtag": "Hashtag",
+  "insertMention": "Mention",
+  "insertEmoji": "Emoji",
+  "schedule": "Schedule",
+  "scheduleRemove": "Send now",
+  "schedulePick": "Pick date and time",
+  "scheduledFor": "Scheduled for {time}",
+  "visibilitySpecified": "Direct",
+  "selectRecipients": "Recipients",
+  "searchUsers": "Search users",
+  "pollNeedsTwoChoices": "A poll needs at least two choices",
+  "charLimit": "{used} / {limit}",
+  "@pollChoiceHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@pollDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@scheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@charLimit": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "noResults": "No results"
 }
