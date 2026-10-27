@@ -174,7 +174,7 @@ jobs:
         run: |
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           ls -lh out
-          gh release create "$TAG" \
+          gh release create -R CyaniAgent/Nyachi "$TAG" \
             --title "Nyachi ${TAG#v}" \
             --prerelease \
             --generate-notes \
