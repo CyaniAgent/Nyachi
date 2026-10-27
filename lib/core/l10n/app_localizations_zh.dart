@@ -670,4 +670,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get driveSpace => '存储空间';
+
+  @override
+  String driveSelectedCount(int count) {
+    return '已选 $count 项';
+  }
+
+  @override
+  String get selectAll => '全选';
+
+  @override
+  String deleteItemsConfirm(int count) {
+    return '删除 $count 项？';
+  }
 }

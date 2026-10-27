@@ -270,5 +270,22 @@
   "newFolder": "New folder",
   "folderName": "Folder name",
   "create": "Create",
-  "driveSpace": "Drive space"
+  "driveSpace": "Drive space",
+  "driveSelectedCount": "Selected {count}",
+  "selectAll": "Select all",
+  "deleteItemsConfirm": "Delete {count} items?",
+  "@driveSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@deleteItemsConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

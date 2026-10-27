@@ -1389,6 +1389,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drive space'**
   String get driveSpace;
+
+  /// No description provided for @driveSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected {count}'**
+  String driveSelectedCount(int count);
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get selectAll;
+
+  /// No description provided for @deleteItemsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} items?'**
+  String deleteItemsConfirm(int count);
 }
 
 class _AppLocalizationsDelegate

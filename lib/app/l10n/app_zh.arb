@@ -270,5 +270,22 @@
   "newFolder": "新建文件夹",
   "folderName": "文件夹名称",
   "create": "创建",
-  "driveSpace": "存储空间"
+  "driveSpace": "存储空间",
+  "driveSelectedCount": "已选 {count} 项",
+  "selectAll": "全选",
+  "deleteItemsConfirm": "删除 {count} 项？",
+  "@driveSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@deleteItemsConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

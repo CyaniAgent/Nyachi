@@ -670,4 +670,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get driveSpace => 'ストレージ';
+
+  @override
+  String driveSelectedCount(int count) {
+    return '$count件を選択中';
+  }
+
+  @override
+  String get selectAll => 'すべて選択';
+
+  @override
+  String deleteItemsConfirm(int count) {
+    return '$count件を削除しますか？';
+  }
 }

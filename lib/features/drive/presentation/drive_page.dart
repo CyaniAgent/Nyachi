@@ -5,25 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart' hide Clip;
 
-import '../../../core/network/error_mapper.dart';
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/network/error_mapper.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/presentation/image_viewer.dart';
 import '../data/drive_repository.dart';
 
-/// One level of the drive folder stack, for breadcrumb navigation.
-class _Crumb {
-  const _Crumb({required this.id, required this.name});
-
-  final String? id;
-  final String name;
-}
-
 /// Remote drive browser laid out like the classic drive screen: breadcrumbs on
 /// top, the file list in the middle, quota in a bottom bar, and a FAB that
 /// offers create-folder / upload.
+///
+/// Long-pressing an entry (or the app-bar select button) enters selection mode;
+/// tapping entries then toggles their selection and the app bar offers delete.
 class DrivePage extends ConsumerStatefulWidget {
   const DrivePage({this.folderId, this.folderName, super.key});
 
@@ -35,12 +30,28 @@ class DrivePage extends ConsumerStatefulWidget {
 }
 
 class _DrivePageState extends ConsumerState<DrivePage> {
-  late List<_Crumb> _stack = [
-    _Crumb(id: widget.folderId, name: widget.folderName ?? ''),
-  ];
+  /// Folder breadcrumb below the drive root; empty when at the root.
+  List<_Crumb> _stack = const [];
+
+  /// Seeds the breadcrumb stack when the page was opened inside a folder.
+  List<_Crumb> _initialStack() {
+    final id = widget.folderId;
+    if (id == null) return const [];
+    return [_Crumb(id: id, name: widget.folderName ?? '')];
+  }
+
+  final Set<String> _selected = <String>{};
   var _busy = false;
 
-  String? get _currentFolderId => _stack.last.id;
+  bool get _selectMode => _selected.isNotEmpty;
+
+  String? get _currentFolderId => _stack.isEmpty ? null : _stack.last.id;
+
+  @override
+  void initState() {
+    super.initState();
+    _stack = _initialStack();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,15 +59,40 @@ class _DrivePageState extends ConsumerState<DrivePage> {
     final listing = ref.watch(driveListingProvider(_currentFolderId));
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.folderName ?? l10n.drive),
+        leading: _selectMode
+            ? IconButton(
+                tooltip: l10n.cancel,
+                onPressed: _exitSelection,
+                icon: const Icon(Icons.close),
+              )
+            : null,
+        title: Text(
+          _selectMode
+              ? l10n.driveSelectedCount(_selected.length)
+              : (widget.folderName ?? l10n.drive),
+        ),
         actions: [
-          IconButton(
-            tooltip: l10n.refresh,
-            onPressed: _busy
-                ? null
-                : () => ref.invalidate(driveListingProvider(_currentFolderId)),
-            icon: const Icon(Icons.refresh),
-          ),
+          if (_selectMode) ...[
+            IconButton(
+              tooltip: l10n.delete,
+              onPressed: _busy ? null : _deleteSelected,
+              icon: const Icon(Icons.delete_outlined),
+            ),
+          ] else ...[
+            IconButton(
+              tooltip: l10n.selectAll,
+              onPressed: _busy ? null : _selectAllVisible,
+              icon: const Icon(Icons.select_all_outlined),
+            ),
+            IconButton(
+              tooltip: l10n.refresh,
+              onPressed: _busy
+                  ? null
+                  : () =>
+                        ref.invalidate(driveListingProvider(_currentFolderId)),
+              icon: const Icon(Icons.refresh),
+            ),
+          ],
         ],
       ),
       body: listing.when(
@@ -92,11 +128,13 @@ class _DrivePageState extends ConsumerState<DrivePage> {
             data.capacity > 0 ? _quotaBar(context, l10n, data) : null,
         orElse: () => null,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _busy ? null : _addOptions,
-        tooltip: l10n.upload,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _selectMode
+          ? null
+          : FloatingActionButton(
+              onPressed: _busy ? null : _addOptions,
+              tooltip: l10n.upload,
+              child: const Icon(Icons.add),
+            ),
     );
   }
 
@@ -117,11 +155,8 @@ class _DrivePageState extends ConsumerState<DrivePage> {
             onPressed: isLast
                 ? null
                 : () => setState(() {
-                    if (isRoot) {
-                      _stack = [_Crumb(id: widget.folderId, name: '')];
-                    } else {
-                      _stack = _stack.sublist(0, index);
-                    }
+                    _stack = isRoot ? const [] : _stack.sublist(0, index);
+                    _selected.clear();
                   }),
             child: Text(
               title,
@@ -162,50 +197,24 @@ class _DrivePageState extends ConsumerState<DrivePage> {
     return ListView(
       children: [
         for (final folder in data.folders)
-          ListTile(
-            leading: Icon(
-              Icons.folder,
-              color: Theme.of(context).colorScheme.tertiary,
-            ),
-            title: Text(
-              folder.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(relativeTime(context, folder.createdAt)),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _openFolder(folder),
-            onLongPress: () => _deleteFolder(folder.id, folder.name),
+          _FolderTile(
+            folder: folder,
+            selected: _selected.contains(folder.id),
+            selectMode: _selectMode,
+            onOpen: () => _openFolder(folder),
+            onToggle: () => _toggle(folder.id),
+            onDelete: () => _deleteFolders({folder}),
           ),
-        for (final file in data.files) _fileTile(context, l10n, file),
+        for (final file in data.files)
+          _FileTile(
+            file: file,
+            selected: _selected.contains(file.id),
+            selectMode: _selectMode,
+            onOpen: () => showImageViewer(context, [file]),
+            onToggle: () => _toggle(file.id),
+            onDelete: () => _deleteFiles({file}),
+          ),
       ],
-    );
-  }
-
-  Widget _fileTile(
-    BuildContext context,
-    AppLocalizations l10n,
-    DriveFile file,
-  ) {
-    final isImage = file.type.startsWith('image/');
-    return ListTile(
-      leading: isImage
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: NyachiImage(
-                url: file.thumbnailUrl ?? file.url,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-              ),
-            )
-          : const Icon(Icons.insert_drive_file_outlined),
-      title: Text(file.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        '${_size(file.size.toInt())} · ${relativeTime(context, file.createdAt)}',
-      ),
-      onTap: isImage ? () => showImageViewer(context, [file]) : null,
-      onLongPress: () => _deleteFile(file.name, file.id),
     );
   }
 
@@ -252,10 +261,86 @@ class _DrivePageState extends ConsumerState<DrivePage> {
     );
   }
 
+  void _toggle(String id) {
+    setState(() {
+      if (!_selected.remove(id)) _selected.add(id);
+    });
+  }
+
+  void _selectAllVisible() {
+    final data = ref.read(driveListingProvider(_currentFolderId)).value;
+    if (data == null) return;
+    setState(() {
+      _selected.addAll(data.folders.map((f) => f.id));
+      _selected.addAll(data.files.map((f) => f.id));
+    });
+  }
+
+  void _exitSelection() {
+    setState(() => _selected.clear());
+  }
+
   void _openFolder(DriveFolder folder) {
-    setState(
-      () => _stack = [..._stack, _Crumb(id: folder.id, name: folder.name)],
+    setState(() {
+      _stack = [..._stack, _Crumb(id: folder.id, name: folder.name)];
+      _selected.clear();
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    final data = ref.read(driveListingProvider(_currentFolderId)).value;
+    if (data == null) return;
+    final folders = data.folders.where((f) => _selected.contains(f.id)).toSet();
+    final files = data.files.where((f) => _selected.contains(f.id)).toSet();
+    await _delete(context, folders: folders, files: files);
+    _exitSelection();
+  }
+
+  Future<void> _deleteFiles(Set<DriveFile> files) =>
+      _delete(context, files: files);
+
+  Future<void> _deleteFolders(Set<DriveFolder> folders) =>
+      _delete(context, folders: folders);
+
+  Future<void> _delete(
+    BuildContext context, {
+    Set<DriveFolder> folders = const {},
+    Set<DriveFile> files = const {},
+  }) async {
+    final l10n = context.l10n;
+    final count = folders.length + files.length;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(l10n.deleteItemsConfirm(count)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
     );
+    if (ok != true || !mounted) return;
+    setState(() => _busy = true);
+    final repo = ref.read(driveRepositoryProvider);
+    try {
+      for (final folder in folders) {
+        await repo.deleteFolder(folder.id);
+      }
+      for (final file in files) {
+        await repo.delete(file.id);
+      }
+      ref.invalidate(driveListingProvider(_currentFolderId));
+    } catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _addOptions() async {
@@ -350,60 +435,163 @@ class _DrivePageState extends ConsumerState<DrivePage> {
     }
   }
 
-  Future<void> _deleteFile(String name, String fileId) async {
-    final l10n = context.l10n;
-    final ok = await _confirm(l10n.deleteFileConfirm(name));
-    if (ok != true || !mounted) return;
-    setState(() => _busy = true);
-    try {
-      await ref.read(driveRepositoryProvider).delete(fileId);
-      ref.invalidate(driveListingProvider(_currentFolderId));
-    } catch (error) {
-      _showError(error);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _deleteFolder(String folderId, String name) async {
-    final l10n = context.l10n;
-    final ok = await _confirm(l10n.deleteFileConfirm(name));
-    if (ok != true || !mounted) return;
-    setState(() => _busy = true);
-    try {
-      await ref.read(driveRepositoryProvider).deleteFolder(folderId);
-      ref.invalidate(driveListingProvider(_currentFolderId));
-    } catch (error) {
-      _showError(error);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<bool?> _confirm(String message) {
-    final l10n = context.l10n;
-    return showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showError(Object error) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(mapFailure(error).message(context.l10n))),
+    );
+  }
+}
+
+/// One level of the drive folder stack, for breadcrumb navigation.
+class _Crumb {
+  const _Crumb({required this.id, required this.name});
+
+  final String? id;
+  final String name;
+
+  @override
+  bool operator ==(Object other) => other is _Crumb && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Leading slot shared by both tile kinds: a fixed 48x48 area so folder and
+/// file rows line up, with a selection check badge.
+class _TileLeading extends StatelessWidget {
+  const _TileLeading({required this.child, required this.selected});
+
+  final Widget child;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Stack(
+        children: [
+          Center(child: child),
+          if (selected)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.check,
+                  size: 12,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FolderTile extends StatelessWidget {
+  const _FolderTile({
+    required this.folder,
+    required this.selected,
+    required this.selectMode,
+    required this.onOpen,
+    required this.onToggle,
+    required this.onDelete,
+  });
+
+  final DriveFolder folder;
+  final bool selected;
+  final bool selectMode;
+  final VoidCallback onOpen;
+  final VoidCallback onToggle;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      tileColor: selected ? scheme.secondaryContainer.withAlpha(128) : null,
+      leading: _TileLeading(
+        selected: selected,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.folder, size: 20, color: scheme.onPrimaryContainer),
+        ),
+      ),
+      title: Text(folder.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(relativeTime(context, folder.createdAt)),
+      onTap: selectMode ? onToggle : onOpen,
+      onLongPress: onToggle,
+    );
+  }
+}
+
+class _FileTile extends StatelessWidget {
+  const _FileTile({
+    required this.file,
+    required this.selected,
+    required this.selectMode,
+    required this.onOpen,
+    required this.onToggle,
+    required this.onDelete,
+  });
+
+  final DriveFile file;
+  final bool selected;
+  final bool selectMode;
+  final VoidCallback onOpen;
+  final VoidCallback onToggle;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isImage = file.type.startsWith('image/');
+    return ListTile(
+      tileColor: selected ? scheme.secondaryContainer.withAlpha(128) : null,
+      leading: _TileLeading(
+        selected: selected,
+        child: isImage
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: NyachiImage(
+                  url: file.thumbnailUrl ?? file.url,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.insert_drive_file_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+      ),
+      title: Text(file.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        '${_size(file.size.toInt())} · ${relativeTime(context, file.createdAt)}',
+      ),
+      onTap: selectMode ? onToggle : (isImage ? onOpen : null),
+      onLongPress: onToggle,
     );
   }
 }

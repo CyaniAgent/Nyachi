@@ -675,4 +675,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveSpace => 'Drive space';
+
+  @override
+  String driveSelectedCount(int count) {
+    return 'Selected $count';
+  }
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String deleteItemsConfirm(int count) {
+    return 'Delete $count items?';
+  }
 }

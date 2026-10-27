@@ -1,7 +1,7 @@
 name: Prerelease
 
 # Publishes a pre-release from a version tag (e.g. v2.0.0-beta.1).
-# Artifacts: signed APK, AAB and the web bundle.
+# Artifacts: split-per-ABI APKs, AAB, and Windows/macOS/Linux bundles.
 on:
   push:
     tags:
@@ -16,7 +16,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -35,9 +35,16 @@ jobs:
         run: |
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          # Strip the leading "v"; the tag names the release, pubspec drives
-          # the build's own version metadata.
           echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Gradle
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties', 'pubspec.lock') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - run: flutter pub get
       - run: flutter gen-l10n
@@ -59,30 +66,115 @@ jobs:
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
           EOF
 
-      - run: flutter build apk --release
+      # Per-ABI APKs keep each download at a fraction of the fat APK size;
+      # the AAB stays the Play Store upload format.
+      - run: flutter build apk --release --split-per-abi
       - run: flutter build appbundle --release
-      - run: flutter build web --release
 
       - name: Collect artifacts
         run: |
           V="${{ steps.version.outputs.name }}"
           mkdir -p out
-          cp build/app/outputs/flutter-apk/app-release.apk "out/nyachi-$V.apk"
-          cp build/app/outputs/bundle/release/app-release.aab "out/nyachi-$V.aab"
-          (cd build/web && zip -qr "../../out/nyachi-$V-web.zip" .)
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "out/nyachi-$V-android-armeabi-v7a.apk"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "out/nyachi-$V-android-arm64-v8a.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk "out/nyachi-$V-android-x86_64.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "out/nyachi-$V-android.aab"
           ls -lh out
 
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
-          name: nyachi-prerelease
+          name: android
           path: out/*
+
+  desktop:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+          - os: windows-latest
+            target: windows-x64
+          - os: macos-latest
+            target: macos-arm64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e # v2.21.0
+        with:
+          flutter-version: 3.47.7
+          channel: stable
+          cache: true
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Linux build dependencies
+        if: matrix.target == 'linux-x64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev
+
+      - name: Cache CocoaPods
+        if: matrix.target == 'macos-arm64'
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('macos/Podfile.lock') }}
+          restore-keys: pods-${{ runner.os }}-
+
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: dart run build_runner build
+      - run: flutter build --release ${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || 'macos' }}
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          V="${{ steps.version.outputs.name }}"
+          T="${{ matrix.target }}"
+          export V T
+          mkdir -p out
+          case "$T" in
+            linux-x64)
+              (cd build/linux/x64/release/bundle && zip -qr "$GITHUB_WORKSPACE/out/nyachi-$V-$T.zip" .)
+              ;;
+            windows-x64)
+              powershell -NoProfile -Command "Compress-Archive -Path 'build/windows/x64/runner/Release/*' -DestinationPath 'out/nyachi-$env:V-$env:T.zip' -Force"
+              ;;
+            macos-arm64)
+              (cd build/macos/Build/Products/Release && zip -qry "$GITHUB_WORKSPACE/out/nyachi-$V-$T.zip" *.app)
+              ;;
+          esac
+          ls -lh out
+
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: desktop-${{ matrix.target }}
+          path: out/*
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [android, desktop]
+    steps:
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          path: out
+          merge-multiple: true
 
       - name: Publish pre-release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ steps.version.outputs.tag }}" \
-            --title "Nyachi ${{ steps.version.outputs.name }}" \
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          ls -lh out
+          gh release create "$TAG" \
+            --title "Nyachi ${TAG#v}" \
             --prerelease \
             --generate-notes \
             out/*

@@ -179,6 +179,9 @@ class NavigationSettingsPage extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
           child: ReorderableListView.builder(
+            // The default desktop drag handle is drawn over the trailing
+            // switch; draw our own handle next to it instead.
+            buildDefaultDragHandles: false,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             header: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -202,21 +205,34 @@ class NavigationSettingsPage extends ConsumerWidget {
                   ListTile(
                     leading: Icon(_tabIcon(tab)),
                     title: Text(_tabLabel(context, tab)),
-                    trailing: Switch(
-                      value: config.visible.contains(tab),
-                      onChanged: tab == AppTab.home
-                          ? null
-                          : (value) {
-                              final visible = {...config.visible};
-                              if (value) {
-                                visible.add(tab);
-                              } else {
-                                visible.remove(tab);
-                              }
-                              controller.setNavConfig(
-                                config.copyWith(visible: visible),
-                              );
-                            },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Switch(
+                          value: config.visible.contains(tab),
+                          onChanged: tab == AppTab.home
+                              ? null
+                              : (value) {
+                                  final visible = {...config.visible};
+                                  if (value) {
+                                    visible.add(tab);
+                                  } else {
+                                    visible.remove(tab);
+                                  }
+                                  controller.setNavConfig(
+                                    config.copyWith(visible: visible),
+                                  );
+                                },
+                        ),
+                        const SizedBox(width: 8),
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: Icon(
+                            Icons.drag_indicator,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const Divider(height: 1),
