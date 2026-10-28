@@ -152,7 +152,9 @@ jobs:
               (cd build/linux/x64/release/bundle && zip -qr "$GITHUB_WORKSPACE/out/nyachi-$V-$T.zip" .)
               ;;
             windows-x64)
-              powershell -NoProfile -Command "Compress-Archive -Path 'build/windows/x64/runner/Release/*' -DestinationPath 'out/nyachi-$env:V-$env:T.zip' -Force"
+              # Compress-Archive runs inside a bash-quoted string, so the
+              # PowerShell $env: form never reaches it; expand bash vars here.
+              powershell -NoProfile -Command "Compress-Archive -Path 'build/windows/x64/runner/Release/*' -DestinationPath 'out/nyachi-$V-$T.zip' -Force"
               ;;
             macos-arm64)
               (cd build/macos/Build/Products/Release && zip -qry "$GITHUB_WORKSPACE/out/nyachi-$V-$T.zip" *.app)
