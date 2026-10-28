@@ -539,15 +539,17 @@ class _MoreMenu extends ConsumerWidget {
             ),
           ),
         ),
-        PopupMenuItem<String>(
-          value: 'schedule',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.schedule),
-            title: Text(l10n.schedule),
+        if (ref.watch(instanceInfoProvider).value?.scheduledNotesSupported ??
+            false)
+          PopupMenuItem<String>(
+            value: 'schedule',
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.schedule),
+              title: Text(l10n.schedule),
+            ),
           ),
-        ),
         const PopupMenuDivider(),
         PopupMenuItem<String>(
           enabled: false,

@@ -12,6 +12,7 @@ import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../announcements/presentation/announcements_page.dart';
 import 'licenses_page.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/ui/content_width.dart';
@@ -411,6 +412,17 @@ class AboutSettingsPage extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.campaign_outlined),
+            title: Text(l10n.announcements),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => const AnnouncementsPage(),
+              ),
             ),
           ),
           const Divider(height: 1),

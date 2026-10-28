@@ -16,6 +16,7 @@ List<RouteBase> get $appRoutes => [
   $chatUserRoute,
   $chatRoomRoute,
   $driveRoute,
+  $announcementsRoute,
   $settingsRoute,
   $settingsAccountsRoute,
   $settingsNavigationRoute,
@@ -278,6 +279,34 @@ mixin $DriveRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/drive');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $announcementsRoute => GoRouteData.$route(
+  path: '/announcements',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: AnnouncementsRoute.$parentNavigatorKey,
+  factory: $AnnouncementsRoute._fromState,
+);
+
+mixin $AnnouncementsRoute on GoRouteData {
+  static AnnouncementsRoute _fromState(GoRouterState state) =>
+      const AnnouncementsRoute();
+
+  @override
+  String get location => GoRouteData.$location('/announcements');
 
   @override
   void go(BuildContext context) => context.go(location);

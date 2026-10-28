@@ -800,4 +800,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noResults => 'No results';
+
+  @override
+  String get announcements => 'Announcements';
+
+  @override
+  String get noAnnouncements => 'No announcements';
 }

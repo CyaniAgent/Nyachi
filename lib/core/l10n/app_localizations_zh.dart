@@ -794,4 +794,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noResults => '没有结果';
+
+  @override
+  String get announcements => '公告';
+
+  @override
+  String get noAnnouncements => '暂无公告';
 }

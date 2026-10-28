@@ -794,4 +794,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noResults => '結果なし';
+
+  @override
+  String get announcements => 'お知らせ';
+
+  @override
+  String get noAnnouncements => 'お知らせはありません';
 }

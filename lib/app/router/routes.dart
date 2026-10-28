@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/announcements/presentation/announcements_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/chat/domain/chat_models.dart';
 import '../../features/chat/presentation/chat_pages.dart';
@@ -176,6 +177,23 @@ class DriveRoute extends GoRouteData with $DriveRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const DrivePage();
+}
+
+@TypedGoRoute<AnnouncementsRoute>(path: '/announcements')
+class AnnouncementsRoute extends GoRouteData with $AnnouncementsRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const AnnouncementsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const AnnouncementsPage();
+  }
 }
 
 @TypedGoRoute<SettingsRoute>(path: '/settings')

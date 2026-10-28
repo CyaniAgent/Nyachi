@@ -365,5 +365,7 @@
       }
     }
   },
-  "noResults": "没有结果"
+  "noResults": "没有结果",
+  "announcements": "公告",
+  "noAnnouncements": "暂无公告"
 }

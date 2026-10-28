@@ -365,5 +365,7 @@
       }
     }
   },
-  "noResults": "No results"
+  "noResults": "No results",
+  "announcements": "Announcements",
+  "noAnnouncements": "No announcements"
 }

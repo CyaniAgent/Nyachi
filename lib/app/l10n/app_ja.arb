@@ -365,5 +365,7 @@
       }
     }
   },
-  "noResults": "結果なし"
+  "noResults": "結果なし",
+  "announcements": "お知らせ",
+  "noAnnouncements": "お知らせはありません"
 }

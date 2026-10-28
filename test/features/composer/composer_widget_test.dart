@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
+import 'package:nyachi/core/network/instance_repository.dart';
 import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
@@ -14,7 +15,13 @@ import 'package:nyachi/features/composer/presentation/compose_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Pumps [ComposerBody] in a page-like surface with a fake account and sender.
-Future<ProviderContainer> _pumpComposer(WidgetTester tester) async {
+///
+/// [scheduledNotes] mirrors `InstanceInfo.scheduledNotesSupported`, which gates
+/// the schedule entry in the overflow menu.
+Future<ProviderContainer> _pumpComposer(
+  WidgetTester tester, {
+  bool scheduledNotes = false,
+}) async {
   final database = AppDatabase(NativeDatabase.memory());
   addTearDown(database.close);
   SharedPreferences.setMockInitialValues({});
@@ -47,6 +54,14 @@ Future<ProviderContainer> _pumpComposer(WidgetTester tester) async {
           visibleUserIds = const [],
           scheduledAt,
         }) async {},
+      ),
+      instanceInfoProvider.overrideWith(
+        (ref) async => InstanceInfo(
+          name: 'Example',
+          themeColor: '#123456',
+          maxNoteTextLength: 3000,
+          scheduledNotesSupported: scheduledNotes,
+        ),
       ),
     ],
   );
@@ -151,8 +166,25 @@ void main() {
     expect(find.text('Likes only'), findsOneWidget);
     expect(find.text('Non-sensitive only'), findsOneWidget);
     expect(find.text('Save draft'), findsOneWidget);
-    expect(find.text('Schedule'), findsOneWidget);
     expect(find.text('Reset'), findsOneWidget);
+    // The schedule entry only appears once the server has been probed as
+    // supporting notes/drafts; this instance has not been.
+    expect(find.text('Schedule'), findsNothing);
+  });
+
+  testWidgets('the schedule entry appears when the server supports drafts', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester, scheduledNotes: true);
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schedule'), findsOneWidget);
   });
 
   testWidgets('visibility menu lists the direct option', (tester) async {

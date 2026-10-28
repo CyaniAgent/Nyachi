@@ -24,8 +24,18 @@ class ProfileRepository {
   final CacheDao cache;
   final String accountId;
 
+  /// Profiles change rarely; a fresh cache avoids a round trip on every open,
+  /// while a stale one still renders instantly and refreshes behind it.
+  static const _userTtl = Duration(minutes: 10);
+
   Future<UserDetailed?> user(String userId) async {
     final key = 'user:$userId';
+    final cached = await cache.read(accountId, key);
+    if (cached != null &&
+        DateTime.now().difference(cached.updatedAt) <= _userTtl) {
+      final parsed = _readPayload(cached.payload);
+      if (parsed != null) return parsed;
+    }
     try {
       final user = await client.users.showByUserId(userId: userId);
       await cache.write(accountId, key, jsonEncode(user.toJson()));
@@ -53,8 +63,12 @@ class ProfileRepository {
   Future<UserDetailed?> _read(String key) async {
     final cached = await cache.read(accountId, key);
     if (cached == null) return null;
+    return _readPayload(cached.payload);
+  }
+
+  UserDetailed? _readPayload(String payload) {
     try {
-      final json = jsonDecode(cached.payload);
+      final json = jsonDecode(payload);
       if (json is Map<String, dynamic>) return UserDetailed.fromJson(json);
       if (json is Map) {
         return UserDetailed.fromJson(Map<String, dynamic>.from(json));
