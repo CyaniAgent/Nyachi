@@ -1617,6 +1617,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No announcements'**
   String get noAnnouncements;
+
+  /// No description provided for @agreeAppTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the app terms and privacy policy'**
+  String get agreeAppTerms;
+
+  /// No description provided for @agreeInstanceTos.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to this instance\'s terms of service'**
+  String get agreeInstanceTos;
+
+  /// No description provided for @viewDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get viewDocument;
+
+  /// No description provided for @complianceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the terms above to continue'**
+  String get complianceRequired;
+
+  /// No description provided for @complianceTermsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get complianceTermsTitle;
+
+  /// No description provided for @compliancePrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get compliancePrivacyTitle;
+
+  /// No description provided for @complianceDocsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App Terms and Privacy Policy'**
+  String get complianceDocsTitle;
+
+  /// No description provided for @impressum.
+  ///
+  /// In en, this message translates to:
+  /// **'Impressum'**
+  String get impressum;
+
+  /// No description provided for @instanceRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Server rules'**
+  String get instanceRules;
+
+  /// No description provided for @instanceLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance links'**
+  String get instanceLinks;
+
+  /// No description provided for @metaLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load instance information'**
+  String get metaLoadFailed;
+
+  /// No description provided for @noServerRules.
+  ///
+  /// In en, this message translates to:
+  /// **'This instance has not published server rules'**
+  String get noServerRules;
+
+  /// No description provided for @oobeLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a language'**
+  String get oobeLanguageTitle;
+
+  /// No description provided for @oobeWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Nyachi'**
+  String get oobeWelcomeTitle;
+
+  /// No description provided for @oobeWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nyachi is a Misskey client. A few quick steps and you are ready to go.'**
+  String get oobeWelcomeBody;
+
+  /// No description provided for @oobeLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to your instance'**
+  String get oobeLoginTitle;
+
+  /// No description provided for @oobeLoginDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in — continue'**
+  String get oobeLoginDone;
+
+  /// No description provided for @oobeAppearanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get oobeAppearanceTitle;
+
+  /// No description provided for @oobeDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are all set'**
+  String get oobeDoneTitle;
+
+  /// No description provided for @oobeDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial setup is complete. Enjoy Nyachi!'**
+  String get oobeDoneBody;
+
+  /// No description provided for @oobeEnterApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Nyachi'**
+  String get oobeEnterApp;
+
+  /// No description provided for @oobeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get oobeBack;
+
+  /// No description provided for @oobeNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get oobeNext;
 }
 
 class _AppLocalizationsDelegate

@@ -18,8 +18,8 @@ void main() {
 
   test('unauthenticated routes redirect to login', () {
     const session = SessionState(accounts: [], active: null, initialized: true);
-    expect(authRedirect(session, '/home'), '/login');
-    expect(authRedirect(session, '/login'), isNull);
+    expect(authRedirect(session, '/home', oobeCompleted: true), '/login');
+    expect(authRedirect(session, '/login', oobeCompleted: true), isNull);
   });
 
   test('authenticated login redirects home', () {
@@ -28,8 +28,70 @@ void main() {
       active: account,
       initialized: true,
     );
-    expect(authRedirect(session, '/login'), '/home');
-    expect(authRedirect(session, '/notes/n1'), isNull);
+    expect(authRedirect(session, '/login', oobeCompleted: true), '/home');
+    expect(authRedirect(session, '/notes/n1', oobeCompleted: true), isNull);
+  });
+
+  test('uninitialized session never redirects', () {
+    const session = SessionState(
+      accounts: [],
+      active: null,
+      initialized: false,
+    );
+    expect(authRedirect(session, '/home', oobeCompleted: false), isNull);
+    expect(authRedirect(session, '/oobe', oobeCompleted: true), isNull);
+  });
+
+  test('on /oobe when completed releases by authentication', () {
+    final authed = SessionState(
+      accounts: [account],
+      active: account,
+      initialized: true,
+    );
+    expect(authRedirect(authed, '/oobe', oobeCompleted: true), '/home');
+    expect(
+      authRedirect(
+        const SessionState(accounts: [], active: null, initialized: true),
+        '/oobe',
+        oobeCompleted: true,
+      ),
+      '/login',
+    );
+  });
+
+  test('on /oobe while incomplete stays', () {
+    const unauthed = SessionState(
+      accounts: [],
+      active: null,
+      initialized: true,
+    );
+    expect(authRedirect(unauthed, '/oobe', oobeCompleted: false), isNull);
+    expect(
+      authRedirect(
+        SessionState(accounts: [account], active: account, initialized: true),
+        '/oobe',
+        oobeCompleted: false,
+      ),
+      isNull,
+    );
+  });
+
+  test('incomplete OOBE pins every other route', () {
+    const unauthed = SessionState(
+      accounts: [],
+      active: null,
+      initialized: true,
+    );
+    expect(authRedirect(unauthed, '/home', oobeCompleted: false), '/oobe');
+    expect(authRedirect(unauthed, '/login', oobeCompleted: false), '/oobe');
+    expect(
+      authRedirect(
+        SessionState(accounts: [account], active: account, initialized: true),
+        '/home',
+        oobeCompleted: false,
+      ),
+      '/oobe',
+    );
   });
 
   test('hidden current tab falls back home', () {

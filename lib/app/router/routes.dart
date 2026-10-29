@@ -11,6 +11,7 @@ import '../../features/composer/presentation/compose_page.dart';
 import '../../features/explore/presentation/explore_page.dart';
 import '../../features/notifications/presentation/notifications_page.dart';
 import '../../features/notes/presentation/note_detail_page.dart';
+import '../../features/oobe/presentation/oobe_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
 import '../../features/settings/presentation/licenses_page.dart';
@@ -47,6 +48,20 @@ class AddAccountRoute extends GoRouteData with $AddAccountRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const LoginPage(addAccount: true);
+  }
+}
+
+@TypedGoRoute<OobeRoute>(path: '/oobe')
+class OobeRoute extends GoRouteData with $OobeRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  const OobeRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const OobePage();
   }
 }
 

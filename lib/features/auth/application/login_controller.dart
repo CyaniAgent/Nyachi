@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/error_mapper.dart';
+import 'compliance_controller.dart';
 
 part 'login_controller.freezed.dart';
 part 'login_controller.g.dart';
@@ -98,7 +99,25 @@ class LoginController extends _$LoginController {
     return const LoginState();
   }
 
+  /// Compliance gate: both consent granularities must exist before any
+  /// sign-in request leaves the app. The UI disables the buttons; this
+  /// guards against bypassing the surface.
+  bool _complianceSatisfied(String host) {
+    try {
+      final normalized = normalizeHost(host);
+      final compliance = ref.read(complianceControllerProvider.notifier);
+      return compliance.isInstanceAccepted(normalized) &&
+          ref.read(complianceControllerProvider).appAccepted;
+    } on FormatException {
+      return false;
+    }
+  }
+
   Future<bool> startMiAuth(String host) async {
+    if (!_complianceSatisfied(host)) {
+      state = const LoginState(error: AppFailure(AppFailureKind.auth));
+      return false;
+    }
     _cancelled = false;
     state = const LoginState(busy: true);
     MiAuthService? service;
@@ -153,6 +172,10 @@ class LoginController extends _$LoginController {
   }
 
   Future<bool> loginWithToken(String host, String token) async {
+    if (!_complianceSatisfied(host)) {
+      state = const LoginState(error: AppFailure(AppFailureKind.auth));
+      return false;
+    }
     _cancelled = false;
     final trimmed = token.trim();
     if (trimmed.isEmpty) {

@@ -42,6 +42,7 @@ class AppSettings {
     required this.accentColor,
     required this.navConfig,
     required this.detailBreakpoint,
+    required this.oobeCompleted,
     this.centerContent = true,
   });
 
@@ -50,6 +51,10 @@ class AppSettings {
   final String accentColor;
   final NavConfig navConfig;
   final int detailBreakpoint;
+
+  /// Whether the first-run OOBE wizard has been completed. Until it is, the
+  /// router guard pins every route to `/oobe`.
+  final bool oobeCompleted;
 
   /// Centers the readable column on wide screens instead of left-aligning it.
   final bool centerContent;
@@ -60,6 +65,7 @@ class AppSettings {
     String? accentColor,
     NavConfig? navConfig,
     int? detailBreakpoint,
+    bool? oobeCompleted,
     bool? centerContent,
   }) {
     return AppSettings(
@@ -68,6 +74,7 @@ class AppSettings {
       accentColor: accentColor ?? this.accentColor,
       navConfig: navConfig ?? this.navConfig,
       detailBreakpoint: detailBreakpoint ?? this.detailBreakpoint,
+      oobeCompleted: oobeCompleted ?? this.oobeCompleted,
       centerContent: centerContent ?? this.centerContent,
     );
   }
@@ -82,6 +89,7 @@ class SettingsController extends _$SettingsController {
   static const hiddenKey = 'settings.hiddenTabs';
   static const detailBreakpointKey = 'layout.detailBreakpoint';
   static const centerContentKey = 'layout.centerContent';
+  static const oobeCompletedKey = 'oobe.completed';
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
 
@@ -109,6 +117,7 @@ class SettingsController extends _$SettingsController {
       localeCode: prefs.getString(localeKey) ?? 'system',
       accentColor: prefs.getString(accentKey) ?? 'instance',
       navConfig: nav,
+      oobeCompleted: prefs.getBool(oobeCompletedKey) ?? false,
       detailBreakpoint:
           (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
@@ -130,6 +139,13 @@ class SettingsController extends _$SettingsController {
   Future<void> setAccentColor(String color) async {
     state = state.copyWith(accentColor: color);
     await _prefs.setString(accentKey, color);
+  }
+
+  /// Persists OOBE completion; the router guard reads this via the settings
+  /// state to release the app from `/oobe`.
+  Future<void> completeOobe() async {
+    state = state.copyWith(oobeCompleted: true);
+    await _prefs.setBool(oobeCompletedKey, true);
   }
 
   Future<void> setDetailBreakpoint(int value) async {

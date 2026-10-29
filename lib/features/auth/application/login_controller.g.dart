@@ -41,7 +41,7 @@ final class LoginControllerProvider
   }
 }
 
-String _$loginControllerHash() => r'465dfc988e7b91400f62244377394f23b18ec984';
+String _$loginControllerHash() => r'889b134cd9edb17dbab6c8de162062c271f76f87';
 
 abstract class _$LoginController extends $Notifier<LoginState> {
   LoginState build();

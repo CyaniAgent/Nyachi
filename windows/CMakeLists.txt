@@ -32,6 +32,13 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# flutter_inappwebview_windows 0.6.0 still uses /await + <experimental/coroutine>,
+# which newer MSVC toolsets (14.5x) reject via a static assert. The upstream
+# plugin must move to <coroutine> before those headers are removed; this
+# definition only silences the deprecation until then.
+# NOTE(2026-10-29): drop this once flutter_inappwebview_windows ships the C++20 fix.
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by

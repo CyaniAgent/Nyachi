@@ -800,4 +800,73 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noAnnouncements => '暂无公告';
+
+  @override
+  String get agreeAppTerms => '我已阅读并同意应用条款与隐私政策';
+
+  @override
+  String get agreeInstanceTos => '我已阅读并同意该实例的服务条款';
+
+  @override
+  String get viewDocument => '查看';
+
+  @override
+  String get complianceRequired => '请先勾选同意相关条款';
+
+  @override
+  String get complianceTermsTitle => '服务条款';
+
+  @override
+  String get compliancePrivacyTitle => '隐私政策';
+
+  @override
+  String get complianceDocsTitle => '应用条款与隐私政策';
+
+  @override
+  String get impressum => 'Impressum';
+
+  @override
+  String get instanceRules => '服务器规则';
+
+  @override
+  String get instanceLinks => '实例链接';
+
+  @override
+  String get metaLoadFailed => '无法加载实例信息';
+
+  @override
+  String get noServerRules => '该实例未公布服务器规则';
+
+  @override
+  String get oobeLanguageTitle => '选择语言';
+
+  @override
+  String get oobeWelcomeTitle => '欢迎使用 Nyachi';
+
+  @override
+  String get oobeWelcomeBody => 'Nyachi 是一个 Misskey 客户端，只需几步即可完成初始设置。';
+
+  @override
+  String get oobeLoginTitle => '登录实例';
+
+  @override
+  String get oobeLoginDone => '已完成登录，继续';
+
+  @override
+  String get oobeAppearanceTitle => '外观';
+
+  @override
+  String get oobeDoneTitle => '一切就绪';
+
+  @override
+  String get oobeDoneBody => '初始设置已完成，祝你使用愉快！';
+
+  @override
+  String get oobeEnterApp => '进入 Nyachi';
+
+  @override
+  String get oobeBack => '上一步';
+
+  @override
+  String get oobeNext => '下一步';
 }

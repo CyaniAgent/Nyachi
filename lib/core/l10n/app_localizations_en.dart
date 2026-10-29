@@ -806,4 +806,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noAnnouncements => 'No announcements';
+
+  @override
+  String get agreeAppTerms =>
+      'I have read and agree to the app terms and privacy policy';
+
+  @override
+  String get agreeInstanceTos =>
+      'I have read and agree to this instance\'s terms of service';
+
+  @override
+  String get viewDocument => 'View';
+
+  @override
+  String get complianceRequired => 'Accept the terms above to continue';
+
+  @override
+  String get complianceTermsTitle => 'Terms of Service';
+
+  @override
+  String get compliancePrivacyTitle => 'Privacy Policy';
+
+  @override
+  String get complianceDocsTitle => 'App Terms and Privacy Policy';
+
+  @override
+  String get impressum => 'Impressum';
+
+  @override
+  String get instanceRules => 'Server rules';
+
+  @override
+  String get instanceLinks => 'Instance links';
+
+  @override
+  String get metaLoadFailed => 'Could not load instance information';
+
+  @override
+  String get noServerRules => 'This instance has not published server rules';
+
+  @override
+  String get oobeLanguageTitle => 'Choose a language';
+
+  @override
+  String get oobeWelcomeTitle => 'Welcome to Nyachi';
+
+  @override
+  String get oobeWelcomeBody =>
+      'Nyachi is a Misskey client. A few quick steps and you are ready to go.';
+
+  @override
+  String get oobeLoginTitle => 'Sign in to your instance';
+
+  @override
+  String get oobeLoginDone => 'Signed in — continue';
+
+  @override
+  String get oobeAppearanceTitle => 'Appearance';
+
+  @override
+  String get oobeDoneTitle => 'You are all set';
+
+  @override
+  String get oobeDoneBody => 'Initial setup is complete. Enjoy Nyachi!';
+
+  @override
+  String get oobeEnterApp => 'Enter Nyachi';
+
+  @override
+  String get oobeBack => 'Back';
+
+  @override
+  String get oobeNext => 'Next';
 }

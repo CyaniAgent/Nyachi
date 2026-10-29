@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/auth/session_controller.dart';
 import '../../core/ui/l10n_ext.dart';
+import '../../features/settings/application/app_settings.dart';
 import '../../features/shell/presentation/root_shell.dart';
 import 'navigator_keys.dart';
 import 'router_guards.dart';
@@ -24,11 +25,16 @@ GoRouter appRouter(Ref ref) {
   ref.listen(sessionControllerProvider, (previous, next) {
     refresh.refresh();
   });
+  ref.listen(settingsControllerProvider, (previous, next) {
+    refresh.refresh();
+  });
   final authenticatedRoutes = $appRoutes
       .where(
         (route) =>
             !(route is GoRoute &&
-                (route.path == '/login' || route.path == '/add-account')),
+                (route.path == '/login' ||
+                    route.path == '/add-account' ||
+                    route.path == '/oobe')),
       )
       .toList(growable: false);
   return GoRouter(
@@ -37,6 +43,7 @@ GoRouter appRouter(Ref ref) {
     routes: [
       $loginRoute,
       $addAccountRoute,
+      $oobeRoute,
       ShellRoute(
         navigatorKey: appShellNavigatorKey,
         builder: (context, state, child) =>
@@ -47,6 +54,7 @@ GoRouter appRouter(Ref ref) {
     redirect: (context, state) => authRedirect(
       ref.read(sessionControllerProvider),
       state.matchedLocation,
+      oobeCompleted: ref.read(settingsControllerProvider).oobeCompleted,
     ),
     errorBuilder: (context, state) {
       return Scaffold(

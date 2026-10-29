@@ -800,4 +800,74 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noAnnouncements => 'お知らせはありません';
+
+  @override
+  String get agreeAppTerms => 'アプリの利用規約とプライバシーポリシーに同意します';
+
+  @override
+  String get agreeInstanceTos => 'このインスタンスの利用規約に同意します';
+
+  @override
+  String get viewDocument => '表示';
+
+  @override
+  String get complianceRequired => '続行するには規約に同意してください';
+
+  @override
+  String get complianceTermsTitle => '利用規約';
+
+  @override
+  String get compliancePrivacyTitle => 'プライバシーポリシー';
+
+  @override
+  String get complianceDocsTitle => 'アプリの利用規約とプライバシーポリシー';
+
+  @override
+  String get impressum => 'Impressum';
+
+  @override
+  String get instanceRules => 'サーバーのルール';
+
+  @override
+  String get instanceLinks => 'インスタンスのリンク';
+
+  @override
+  String get metaLoadFailed => 'インスタンス情報を読み込めませんでした';
+
+  @override
+  String get noServerRules => 'このインスタンスはサーバーのルールを公開していません';
+
+  @override
+  String get oobeLanguageTitle => '言語を選択';
+
+  @override
+  String get oobeWelcomeTitle => 'Nyachi へようこそ';
+
+  @override
+  String get oobeWelcomeBody =>
+      'Nyachi は Misskey クライアントです。いくつかのステップで初期設定を完了しましょう。';
+
+  @override
+  String get oobeLoginTitle => 'インスタンスにログイン';
+
+  @override
+  String get oobeLoginDone => 'ログイン済み — 続行';
+
+  @override
+  String get oobeAppearanceTitle => '外観';
+
+  @override
+  String get oobeDoneTitle => '準備完了';
+
+  @override
+  String get oobeDoneBody => '初期設定が完了しました。楽しく使いましょう！';
+
+  @override
+  String get oobeEnterApp => 'Nyachi を始める';
+
+  @override
+  String get oobeBack => '戻る';
+
+  @override
+  String get oobeNext => '次へ';
 }
