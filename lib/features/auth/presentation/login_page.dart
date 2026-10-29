@@ -245,42 +245,48 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 8),
-        CheckboxListTile(
-          value: appChecked,
-          onChanged: (checked) {
-            if (checked ?? false) {
-              setState(() => _appUnchecked = false);
-              ref.read(complianceControllerProvider.notifier).acceptAppTerms();
-            } else {
-              setState(() => _appUnchecked = true);
-            }
-          },
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(l10n.agreeAppTerms),
-          secondary: TextButton(
-            onPressed: () => _openDocs(),
-            child: Text(l10n.viewDocument),
-          ),
+        Row(
+          children: [
+            Checkbox(
+              value: appChecked,
+              onChanged: (checked) {
+                if (checked ?? false) {
+                  setState(() => _appUnchecked = false);
+                  ref
+                      .read(complianceControllerProvider.notifier)
+                      .acceptAppTerms();
+                } else {
+                  setState(() => _appUnchecked = true);
+                }
+              },
+            ),
+            const SizedBox(width: 4),
+            Expanded(child: Text(l10n.agreeAppTerms)),
+            TextButton(
+              onPressed: () => _openDocs(),
+              child: Text(l10n.viewDocument),
+            ),
+          ],
         ),
         if (host != null)
-          CheckboxListTile(
-            value: instanceChecked,
-            onChanged: (checked) {
-              if (checked ?? false) {
-                setState(() => _instanceUnchecked = false);
-                ref
-                    .read(complianceControllerProvider.notifier)
-                    .acceptInstanceForHost(host);
-              } else {
-                setState(() => _instanceUnchecked = true);
-              }
-            },
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            title: Text(l10n.agreeInstanceTos),
+          Row(
+            children: [
+              Checkbox(
+                value: instanceChecked,
+                onChanged: (checked) {
+                  if (checked ?? false) {
+                    setState(() => _instanceUnchecked = false);
+                    ref
+                        .read(complianceControllerProvider.notifier)
+                        .acceptInstanceForHost(host);
+                  } else {
+                    setState(() => _instanceUnchecked = true);
+                  }
+                },
+              ),
+              const SizedBox(width: 4),
+              Expanded(child: Text(l10n.agreeInstanceTos)),
+            ],
           ),
       ],
     );

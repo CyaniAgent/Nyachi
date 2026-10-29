@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/network/error_mapper.dart';
@@ -17,10 +18,9 @@ import '../../auth/application/login_controller.dart';
 import '../../auth/presentation/compliance_doc_page.dart';
 import '../../auth/presentation/instance_summary_card.dart';
 import '../../settings/application/app_settings.dart';
-import '../../../app/theme/app_theme.dart';
 import '../application/oobe_controller.dart';
 
-/// First-run wizard: language → welcome → compliance + sign-in → appearance
+/// First-run wizard: language + welcome → compliance + sign-in → appearance
 /// → done. No skip and no offline exit; the router guard keeps the app on
 /// this route until [SettingsController.completeOobe] persists completion.
 class OobePage extends ConsumerWidget {
@@ -31,31 +31,45 @@ class OobePage extends ConsumerWidget {
     final step = ref.watch(oobeControllerProvider);
     final controller = ref.read(oobeControllerProvider.notifier);
     final l10n = context.l10n;
+    // The compliance + sign-in step never exposes the bottom next button:
+    // it is advanced by the sign-in flow itself, so login cannot be skipped.
+    final showNext = step == 0 || step == 2;
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: step == 2 ? 920 : 460),
+            constraints: const BoxConstraints(maxWidth: 460),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _StepDots(count: 5, index: step),
+                  _StepDots(count: OobeController.lastStep + 1, index: step),
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
                       switchInCurve: Curves.easeInOut,
                       switchOutCurve: Curves.easeInOut,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.06, 0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
                       child: KeyedSubtree(
                         key: ValueKey<int>(step),
                         child: SingleChildScrollView(
                           child: switch (step) {
                             0 => const _LanguageStep(),
-                            1 => const _WelcomeStep(),
-                            2 => const _OobeLoginStep(),
-                            3 => const _AppearanceStep(),
+                            1 => const _OobeLoginStep(),
+                            2 => const _AppearanceStep(),
                             _ => const _DoneStep(),
                           },
                         ),
@@ -65,18 +79,17 @@ class OobePage extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      if (step > 0)
-                        TextButton(
-                          onPressed: controller.back,
-                          child: Text(l10n.oobeBack),
-                        ),
+                      IconButton.filled(
+                        onPressed: step > 0 ? controller.back : null,
+                        icon: const Icon(Icons.arrow_back),
+                        tooltip: l10n.oobeBack,
+                      ),
                       const Spacer(),
-                      // Step 2 advances through the sign-in flow itself;
-                      // step 4 advances through its enter button.
-                      if (step == 0 || step == 1 || step == 3)
-                        FilledButton(
+                      if (showNext)
+                        IconButton.filled(
                           onPressed: controller.next,
-                          child: Text(l10n.oobeNext),
+                          icon: const Icon(Icons.arrow_forward),
+                          tooltip: l10n.oobeNext,
                         ),
                     ],
                   ),
@@ -90,7 +103,7 @@ class OobePage extends ConsumerWidget {
   }
 }
 
-/// Wizard progress indicator: one pill per step.
+/// Wizard progress indicator: one pill per step, animated between states.
 class _StepDots extends StatelessWidget {
   const _StepDots({required this.count, required this.index});
 
@@ -106,7 +119,9 @@ class _StepDots extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           for (var i = 0; i < count; i++)
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               width: i == index ? 20 : 8,
               height: 8,
@@ -123,51 +138,16 @@ class _StepDots extends StatelessWidget {
   }
 }
 
+/// Step 0: welcome headline with the language picker on the same page.
 class _LanguageStep extends ConsumerWidget {
   const _LanguageStep();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final settings = ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l10n.oobeLanguageTitle,
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 16),
-        RadioGroup<String>(
-          groupValue: settings.localeCode,
-          onChanged: (value) {
-            if (value != null) controller.setLocale(value);
-          },
-          child: Column(
-            children: [
-              for (final (code, label) in [
-                ('system', l10n.languageSystem),
-                ('en', l10n.languageEnglish),
-                ('zh', l10n.languageChinese),
-                ('ja', l10n.languageJapanese),
-              ])
-                RadioListTile<String>(value: code, title: Text(label)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WelcomeStep extends ConsumerWidget {
-  const _WelcomeStep();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -194,13 +174,32 @@ class _WelcomeStep extends ConsumerWidget {
           style: Theme.of(context).textTheme.bodyMedium
               ?.copyWith(color: scheme.onSurfaceVariant),
         ),
+        const SizedBox(height: 24),
+        Text(
+          l10n.oobeLanguageTitle,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        DropdownMenu<String>(
+          initialSelection: settings.localeCode,
+          expandedInsets: EdgeInsets.zero,
+          onSelected: (value) {
+            if (value != null) controller.setLocale(value);
+          },
+          dropdownMenuEntries: [
+            DropdownMenuEntry(value: 'system', label: l10n.languageSystem),
+            DropdownMenuEntry(value: 'zh', label: l10n.languageChinese),
+            DropdownMenuEntry(value: 'en', label: l10n.languageEnglish),
+            DropdownMenuEntry(value: 'ja', label: l10n.languageJapanese),
+          ],
+        ),
       ],
     );
   }
 }
 
-/// Compliance + sign-in step: the full login interaction (host → anonymous
-/// meta card → both consents → MiAuth/token) wizard-styled, reusing
+/// Compliance + sign-in step: the full login interaction (host → compact
+/// instance card → both consents → MiAuth/token) wizard-styled, reusing
 /// [LoginController]. If the session is already authenticated (app killed
 /// mid-OOBE), only a continue button shows.
 class _OobeLoginStep extends ConsumerStatefulWidget {
@@ -300,95 +299,58 @@ class _OobeLoginStepState extends ConsumerState<_OobeLoginStep> {
         !_instanceUnchecked;
     final canLogin = !state.busy && appChecked && instanceChecked;
 
-    final signInCard = Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _host,
-              focusNode: _hostFocus,
-              decoration: InputDecoration(
-                labelText: l10n.instanceHost,
-                hintText: l10n.instanceHostHint,
-              ),
-              autocorrect: false,
-              keyboardType: TextInputType.url,
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _commitHost(),
-            ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: canLogin
-                  ? () async {
-                      final ok = await controller.startMiAuth(_host.text);
-                      if (ok) _next();
-                    }
-                  : null,
-              icon: const Icon(Icons.login),
-              label: Text(l10n.miAuthLogin),
-            ),
-            _waitingSection(l10n, state, controller),
-            _errorSection(l10n, state, scheme),
-            _tokenFormSection(l10n, state, controller, canLogin),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.oobeLoginTitle,
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
-      ),
-    );
-    final complianceSection = _complianceSection(
-      l10n,
-      appChecked,
-      instanceChecked,
-    );
-
-    // Wide screens render the sign-in form and the instance summary side by
-    // side; compact screens stack them in one column.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 720;
-        if (!wide) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.oobeLoginTitle,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 16),
-              signInCard,
-              _metaSection(l10n),
-              complianceSection,
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.oobeLoginTitle,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [signInCard, complianceSection],
+                TextField(
+                  controller: _host,
+                  focusNode: _hostFocus,
+                  decoration: InputDecoration(
+                    labelText: l10n.instanceHost,
+                    hintText: l10n.instanceHostHint,
                   ),
+                  autocorrect: false,
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => _commitHost(),
                 ),
-                const SizedBox(width: 24),
-                Expanded(child: _metaSection(l10n)),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: canLogin
+                      ? () async {
+                          final ok = await controller.startMiAuth(_host.text);
+                          if (ok) _next();
+                        }
+                      : null,
+                  icon: const Icon(Icons.login),
+                  label: Text(l10n.miAuthLogin),
+                ),
+                _waitingSection(l10n, state, controller),
+                _errorSection(l10n, state, scheme),
+                _tokenFormSection(l10n, state, controller, canLogin),
               ],
             ),
-          ],
-        );
-      },
+          ),
+        ),
+        _metaSection(l10n),
+        _complianceSection(l10n, appChecked, instanceChecked),
+      ],
     );
   }
 
+  /// Compact instance card; the full rules and protocol links live on the
+  /// detail page it opens.
   Widget _metaSection(AppLocalizations l10n) {
     final host = _normalizedHost;
     if (host == null) return const SizedBox.shrink();
@@ -424,6 +386,8 @@ class _OobeLoginStepState extends ConsumerState<_OobeLoginStep> {
     );
   }
 
+  /// Consent rows: only the checkbox control and the label text toggle
+  /// consent; the rest of the row is inert.
   Widget _complianceSection(
     AppLocalizations l10n,
     bool appChecked,
@@ -434,42 +398,45 @@ class _OobeLoginStepState extends ConsumerState<_OobeLoginStep> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 8),
-        CheckboxListTile(
-          value: appChecked,
-          onChanged: (checked) {
-            if (checked ?? false) {
-              setState(() => _appUnchecked = false);
-              ref.read(complianceControllerProvider.notifier).acceptAppTerms();
-            } else {
-              setState(() => _appUnchecked = true);
-            }
-          },
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(l10n.agreeAppTerms),
-          secondary: TextButton(
-            onPressed: _openDocs,
-            child: Text(l10n.viewDocument),
-          ),
+        Row(
+          children: [
+            Checkbox(
+              value: appChecked,
+              onChanged: (checked) {
+                if (checked ?? false) {
+                  setState(() => _appUnchecked = false);
+                  ref
+                      .read(complianceControllerProvider.notifier)
+                      .acceptAppTerms();
+                } else {
+                  setState(() => _appUnchecked = true);
+                }
+              },
+            ),
+            const SizedBox(width: 4),
+            Expanded(child: Text(l10n.agreeAppTerms)),
+            TextButton(onPressed: _openDocs, child: Text(l10n.viewDocument)),
+          ],
         ),
         if (host != null)
-          CheckboxListTile(
-            value: instanceChecked,
-            onChanged: (checked) {
-              if (checked ?? false) {
-                setState(() => _instanceUnchecked = false);
-                ref
-                    .read(complianceControllerProvider.notifier)
-                    .acceptInstanceForHost(host);
-              } else {
-                setState(() => _instanceUnchecked = true);
-              }
-            },
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            title: Text(l10n.agreeInstanceTos),
+          Row(
+            children: [
+              Checkbox(
+                value: instanceChecked,
+                onChanged: (checked) {
+                  if (checked ?? false) {
+                    setState(() => _instanceUnchecked = false);
+                    ref
+                        .read(complianceControllerProvider.notifier)
+                        .acceptInstanceForHost(host);
+                  } else {
+                    setState(() => _instanceUnchecked = true);
+                  }
+                },
+              ),
+              const SizedBox(width: 4),
+              Expanded(child: Text(l10n.agreeInstanceTos)),
+            ],
           ),
       ],
     );

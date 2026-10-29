@@ -12,9 +12,9 @@ If you do not agree, do not use the app.
 ## 2. Relationship to the license
 
 Nyachi source code is licensed under AGPL-3.0-or-later; the full text is in
-[LICENSE](LICENSE). These terms govern your use of the official app/service and
-do not limit rights granted by the AGPL. If these terms conflict with the AGPL,
-the AGPL governs the code license.
+the LICENSE file of the source repository. These terms govern your use of
+the official app/service and do not limit rights granted by the AGPL. If
+these terms conflict with the AGPL, the AGPL governs the code license.
 
 ## 3. The service
 
@@ -101,7 +101,8 @@ consumers in their habitual residence are not affected.
 ## 12. Miscellaneous
 
 - If any provision is held invalid, the remaining provisions remain in effect.
-- These terms do not grant a trademark license; see [TRADEMARK.md](TRADEMARK.md).
+- These terms do not grant a trademark license; see the TRADEMARK file of the
+  source repository.
 - If you install through an app store, the store's terms may also apply.
 - Contact the maintainer through a GitHub Issue; use Security Advisories for
   security matters.

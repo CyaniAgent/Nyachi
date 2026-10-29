@@ -15,8 +15,10 @@ void main() {
     exitCode = 1;
     return;
   }
-  final config = jsonDecode(configFile.readAsStringSync()) as Map<String, Object?>;
-  final packages = (config['packages'] as List<Object?>).cast<Map<String, Object?>>();
+  final config =
+      jsonDecode(configFile.readAsStringSync()) as Map<String, Object?>;
+  final packages = (config['packages'] as List<Object?>)
+      .cast<Map<String, Object?>>();
   final entries = <Map<String, Object?>>[];
   for (final package in packages) {
     final name = package['name'] as String;

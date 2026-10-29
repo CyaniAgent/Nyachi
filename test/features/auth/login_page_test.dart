@@ -76,27 +76,23 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
 
-    // Anonymous meta card shows the fetched rules.
-    expect(find.textContaining('Be nice to each other'), findsOneWidget);
-    expect(find.textContaining('No illegal content'), findsOneWidget);
+    // Anonymous meta loaded: compact card shows the display name only.
+    expect(find.text('Misskey Hub'), findsOneWidget);
+    expect(find.textContaining('Be nice'), findsNothing);
 
     // Host committed but no consent yet: still disabled.
     expect(_miAuthButton(tester).onPressed, isNull);
 
     // App-level consent, then instance-level consent.
-    final appRow = find.text(
-      'I have read and agree to the app terms and privacy policy',
-    );
-    await tester.ensureVisible(appRow);
+    // Only the checkbox toggles consent now (text is inert).
+    final checkboxes = find.byType(Checkbox);
+    await tester.ensureVisible(checkboxes.first);
     await tester.pumpAndSettle();
-    await tester.tap(appRow);
-    await tester.pump();
-    final instanceRow = find.text(
-      "I have read and agree to this instance's terms of service",
-    );
-    await tester.ensureVisible(instanceRow);
+    await tester.tap(checkboxes.first);
     await tester.pumpAndSettle();
-    await tester.tap(instanceRow);
+    await tester.ensureVisible(checkboxes.at(1));
+    await tester.pumpAndSettle();
+    await tester.tap(checkboxes.at(1));
     await tester.pumpAndSettle();
 
     expect(_miAuthButton(tester).onPressed, isNotNull);

@@ -95,42 +95,44 @@ Future<void> _pumpWizard(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('wizard walks language → done and persists completion', (
+  testWidgets('wizard walks welcome+language → done and persists completion', (
     tester,
   ) async {
     await _pumpWizard(tester);
     await tester.pumpAndSettle();
 
-    // Step 0: switch language to Chinese; titles switch immediately.
-    expect(find.text('Choose a language'), findsOneWidget);
-    await tester.tap(find.text('简体中文'));
+    // Step 0 combines welcome and language; picking 中文 from the dropdown
+    // re-renders the page in Chinese immediately.
+    expect(find.text('Welcome to Nyachi'), findsOneWidget);
+    await tester.tap(find.text('System'));
     await tester.pumpAndSettle();
-    expect(find.text('选择语言'), findsOneWidget);
-    expect(find.text('Choose a language'), findsNothing);
-
-    // Step 1: welcome, in Chinese.
-    await tester.tap(find.text('下一步'));
+    await tester.tap(find.text('简体中文').last);
     await tester.pumpAndSettle();
     expect(find.text('欢迎使用 Nyachi'), findsOneWidget);
+    expect(find.text('选择语言'), findsOneWidget);
 
-    // Step 2: compliance + sign-in. Enter host, commit, both consents.
-    await tester.tap(find.text('下一步'));
+    // Step 1: compliance + sign-in. Enter host, commit, both consents.
+    await tester.tap(find.byIcon(Icons.arrow_forward));
     await tester.pumpAndSettle();
     expect(find.text('登录实例'), findsOneWidget);
+    // The sign-in step cannot be bypassed: no bottom next button.
+    expect(find.byIcon(Icons.arrow_forward), findsNothing);
     await tester.enterText(find.byType(TextField).first, 'misskey.io');
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-    expect(find.textContaining('Be nice'), findsOneWidget);
+    // Compact card: display name only, no inline rules.
+    expect(find.text('Misskey Hub'), findsOneWidget);
+    expect(find.textContaining('Be nice'), findsNothing);
 
-    final appRow = find.text('我已阅读并同意应用条款与隐私政策');
-    await tester.ensureVisible(appRow);
+    // Only the checkbox toggles consent now (text is inert).
+    final checkboxes = find.byType(Checkbox);
+    await tester.ensureVisible(checkboxes.first);
     await tester.pumpAndSettle();
-    await tester.tap(appRow);
+    await tester.tap(checkboxes.first);
     await tester.pumpAndSettle();
-    final instanceRow = find.text('我已阅读并同意该实例的服务条款');
-    await tester.ensureVisible(instanceRow);
+    await tester.ensureVisible(checkboxes.at(1));
     await tester.pumpAndSettle();
-    await tester.tap(instanceRow);
+    await tester.tap(checkboxes.at(1));
     await tester.pumpAndSettle();
 
     // Fake MiAuth succeeds → wizard advances to appearance.
@@ -140,9 +142,10 @@ void main() {
     await tester.tap(miAuthButton);
     await tester.pumpAndSettle();
     expect(find.text('外观'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
 
-    // Step 3 → step 4.
-    await tester.tap(find.text('下一步'));
+    // Step 2 → step 3.
+    await tester.tap(find.byIcon(Icons.arrow_forward));
     await tester.pumpAndSettle();
     expect(find.text('一切就绪'), findsOneWidget);
 
@@ -160,12 +163,12 @@ void main() {
     await _pumpWizard(tester);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Next'));
+    await tester.tap(find.byIcon(Icons.arrow_forward));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in to your instance'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
     expect(find.text('Welcome to Nyachi'), findsOneWidget);
-
-    await tester.tap(find.text('Back'));
-    await tester.pumpAndSettle();
-    expect(find.text('Choose a language'), findsOneWidget);
   });
 }

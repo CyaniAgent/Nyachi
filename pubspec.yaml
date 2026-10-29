@@ -3,7 +3,7 @@ description: "A Misskey client."
 publish_to: 'none'
 repository: https://github.com/CyaniAgent/Nyachi
 issue_tracker: https://github.com/CyaniAgent/Nyachi/issues
-version: 2.0.0-beta.3+2
+version: 2.0.0-beta.4+3
 
 environment:
   sdk: ^3.13.5
@@ -42,6 +42,7 @@ dev_dependencies:
   dart_pubspec_licenses: ^3.0.12
   drift_dev: ^2.35.1
   fake_async: ^1.3.1
+  flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
@@ -59,3 +60,24 @@ flutter:
     - assets/licenses.json
     - TERMS.md
     - PRIVACY.md
+
+flutter_launcher_icons:
+  # Full icon (primaryContainer background + paw) for iOS, macOS, Windows.
+  image_path: "assets/brand/app_icon_full.png"
+  # Adaptive Android icon: solid background color + centered paw in the
+  # safe zone, so launcher masks never clip the paw.
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/brand/app_icon_fg.png"
+    background_color: "#EADDFF"
+    theme_color: "#EADDFF"
+  windows:
+    generate: true
+    icon_size: 256
+  macos:
+    generate: true
+  adaptive_icon_background: "#EADDFF"
+  adaptive_icon_foreground: "assets/brand/app_icon_fg.png"
