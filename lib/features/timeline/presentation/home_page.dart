@@ -4,12 +4,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/network_image.dart';
+import '../../announcements/data/announcement_repository.dart';
 import '../../notes/application/note_list_controller.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../notes/presentation/note_list.dart';
@@ -76,6 +79,19 @@ class _HomePageState extends ConsumerState<HomePage>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final labels = [l10n.home, l10n.local, l10n.hybrid, l10n.global];
+    // Surface unread dialog announcements once, after the first frame.
+    ref.listen(pendingDialogAnnouncementsProvider, (previous, current) {
+      if (current.isEmpty) return;
+      final known = previous == null
+          ? const <String>{}
+          : {for (final item in previous) item.id};
+      final fresh = current.where((item) => !known.contains(item.id));
+      if (fresh.isEmpty) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showAnnouncementDialog(fresh.first);
+      });
+    });
     return DefaultTabController(
       length: labels.length,
       child: Builder(
@@ -104,6 +120,7 @@ class _HomePageState extends ConsumerState<HomePage>
                   padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
                   child: CompactTabBar(labels: labels),
                 ),
+                const _AnnouncementBanners(),
                 Expanded(
                   child: TabBarView(
                     controller: controller,
@@ -119,6 +136,56 @@ class _HomePageState extends ConsumerState<HomePage>
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showAnnouncementDialog(Announcement announcement) {
+    final l10n = context.l10n;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.campaign_outlined,
+              size: 20,
+              color: Theme.of(dialogContext).colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                announcement.title.isEmpty
+                    ? l10n.announcements
+                    : announcement.title,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(announcement.text),
+              if (announcement.imageUrl case final url?)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: NyachiImage(url: url, fit: BoxFit.contain),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              final read = ref.read(readAnnouncementsProvider.notifier);
+              Navigator.of(dialogContext).pop();
+              await read.markRead(announcement.id);
+            },
+            child: Text(l10n.create),
+          ),
+        ],
       ),
     );
   }
@@ -208,6 +275,50 @@ class _StreamHeader extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Persistent banners for unread `display: banner` announcements. Dismissing
+/// marks the announcement read on the server; tapping opens the full list.
+class _AnnouncementBanners extends ConsumerWidget {
+  const _AnnouncementBanners();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final banners = ref.watch(bannerAnnouncementsProvider);
+    if (banners.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final read = ref.read(readAnnouncementsProvider.notifier);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final announcement in banners.take(3))
+          Material(
+            color: theme.colorScheme.secondaryContainer,
+            child: ListTile(
+              dense: true,
+              leading: Icon(
+                Icons.campaign_outlined,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+              title: Text(
+                announcement.title.isEmpty
+                    ? announcement.text
+                    : announcement.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () => GoRouter.of(context).push('/announcements'),
+              trailing: IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () => read.markRead(announcement.id),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

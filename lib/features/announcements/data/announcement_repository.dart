@@ -73,7 +73,7 @@ class AnnouncementRepository {
   /// Marks an announcement as read on the server.
   Future<void> markRead(String announcementId) async {
     try {
-      await client.announcements.showValue(announcementId: announcementId);
+      await client.account.readAnnouncement(announcementId: announcementId);
     } catch (e) {
       if (e is MisskeyAuthenticationException) rethrow;
       logSilentFallback('announcement_repository.markRead', e);
@@ -83,24 +83,66 @@ class AnnouncementRepository {
 
 /// Announcements for the active account, cached across restarts.
 @Riverpod(keepAlive: true)
-Future<List<Announcement>> announcements(Ref ref) async {
+AnnouncementRepository announcementRepository(Ref ref) {
   final active = ref.watch(sessionControllerProvider).active;
-  if (active == null) return const [];
+  if (active == null) {
+    throw StateError('No active account.');
+  }
   return AnnouncementRepository(
     client: ref.watch(misskeyClientProvider),
     cache: ref.watch(cacheDaoProvider),
     accountId: active.id,
-  ).list();
+  );
 }
 
-/// Unread announcements that should interrupt the user (`display: dialog`).
 @Riverpod(keepAlive: true)
-Future<List<Announcement>> pendingDialogAnnouncements(Ref ref) async {
-  final all = await ref.watch(announcementsProvider.future);
+Future<List<Announcement>> announcements(Ref ref) async {
+  final active = ref.watch(sessionControllerProvider).active;
+  if (active == null) return const [];
+  return ref.watch(announcementRepositoryProvider).list();
+}
+
+/// Announcement ids marked read during this session. The server's `isRead`
+/// flag only updates on the next refresh, so this set hides them in between.
+@Riverpod(keepAlive: true)
+class ReadAnnouncements extends _$ReadAnnouncements {
+  @override
+  Set<String> build() => const {};
+
+  Future<void> markRead(String announcementId) async {
+    state = {...state, announcementId};
+    await ref.read(announcementRepositoryProvider).markRead(announcementId);
+    ref.invalidate(announcementsProvider);
+  }
+}
+
+/// Unread announcements that should render as a persistent banner
+/// (`display: banner`) at the top of the timeline.
+@riverpod
+List<Announcement> bannerAnnouncements(Ref ref) {
+  final all = ref.watch(announcementsProvider).value ?? const [];
+  final read = ref.watch(readAnnouncementsProvider);
   return all
       .where(
         (item) =>
-            item.display == AnnouncementDisplay.dialog && item.isRead != true,
+            item.display == AnnouncementDisplay.banner &&
+            item.isRead != true &&
+            !read.contains(item.id),
+      )
+      .toList();
+}
+
+/// Unread announcements that should interrupt the user (`display: dialog`).
+@riverpod
+List<Announcement> pendingDialogAnnouncements(Ref ref) {
+  final all = ref.watch(announcementsProvider).value ?? const [];
+  final read = ref.watch(readAnnouncementsProvider);
+  return all
+      .where(
+        (item) =>
+            item.display == AnnouncementDisplay.dialog &&
+            item.isRead != true &&
+            !read.contains(item.id),
       )
       .toList();
 }
