@@ -10,8 +10,11 @@ The rewrite on `develop` replaces the archived 1.3.4 app. The legacy snapshot at
   login, Home/Local/Hybrid/Global timelines with Home streaming, notes,
   reactions, renotes, replies, composer drafts, notifications, explore/search,
   tags, profiles, and 1:1/room chat with text and media.
-- `main` remains the legacy line until the rewrite is release-ready.
-- There is no published app release yet.
+- First-run OOBE wizard (language, compliance, sign-in, appearance) shipped;
+  the in-app brand mark doubles as the launcher icon on every platform.
+- Pre-releases are cut from `develop` version tags; the `Prerelease` workflow
+  builds split-per-ABI APKs, an AAB, and desktop bundles automatically.
+  Releases are infrequent by policy — only when the maintainer calls for one.
 
 ## Requirements
 
@@ -60,6 +63,7 @@ SharedPreferences, logs, or exceptions.
 
 ## Documentation
 
+- [User guide](docs/USER_GUIDE.md) — first-run wizard, sign-in, compliance
 - [Architecture](docs/ARCHITECTURE.md)
 - [Style guide](docs/STYLE_GUIDE.md)
 - [Code generation](docs/CODEGEN.md)

@@ -53,6 +53,17 @@ dev_dependencies:
   riverpod_generator: ^4.0.9
   riverpod_lint: ^3.1.9
 
+dependency_overrides:
+  # 6.1.5 line breaks under AGP 9: flutter_inappwebview_android 1.1.3 ships
+  # `proguard-android.txt`, which AGP 9 rejects. The 6.2.0-beta.3 line uses
+  # `proguard-android-optimize.txt` and consistent platform interfaces.
+  # Drop the whole block when 6.2.0 goes stable.
+  flutter_inappwebview: 6.2.0-beta.3
+  flutter_inappwebview_android: 1.2.0-beta.3
+  flutter_inappwebview_ios: 1.2.0-beta.3
+  flutter_inappwebview_macos: 1.2.0-beta.3
+  flutter_inappwebview_platform_interface: 1.4.0-beta.3
+
 flutter:
   uses-material-design: true
   generate: true
