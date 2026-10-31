@@ -566,6 +566,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get accentColor => 'アクセントカラー';
 
   @override
+  String get systemColor => 'システムの色';
+
+  @override
   String get instanceColor => 'インスタンスの色';
 
   @override

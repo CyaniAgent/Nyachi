@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/network/error_mapper.dart';
@@ -18,6 +17,7 @@ import '../../auth/application/login_controller.dart';
 import '../../auth/presentation/compliance_doc_page.dart';
 import '../../auth/presentation/instance_summary_card.dart';
 import '../../settings/application/app_settings.dart';
+import '../../settings/presentation/accent_color_picker.dart';
 import '../application/oobe_controller.dart';
 
 /// First-run wizard: language + welcome → compliance + sign-in → appearance
@@ -599,83 +599,8 @@ class _OobeLoginStepState extends ConsumerState<_OobeLoginStep> {
   }
 }
 
-/// Accent swatch — copied from `settings_page.dart` `_AccentDot` (private
-/// there) to keep the appearance controls visually identical.
-class _AccentDot extends StatelessWidget {
-  const _AccentDot({
-    required this.label,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: label,
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected ? scheme.onSurface : scheme.outlineVariant,
-                width: selected ? 2.5 : 1,
-              ),
-            ),
-            child: selected
-                ? Icon(
-                    Icons.check,
-                    size: 18,
-                    color:
-                        ThemeData.estimateBrightnessForColor(color) ==
-                            Brightness.dark
-                        ? Colors.white
-                        : Colors.black,
-                  )
-                : null,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-const _accentColors = [
-  ('#3F51B5', 'indigo'),
-  ('#E91E63', 'pink'),
-  ('#4CAF50', 'green'),
-  ('#2196F3', 'blue'),
-  ('#FF9800', 'orange'),
-];
-
 class _AppearanceStep extends ConsumerWidget {
   const _AppearanceStep();
-
-  String _accentLabel(AppLocalizations l10n, String key) {
-    return switch (key) {
-      'indigo' => l10n.colorIndigo,
-      'pink' => l10n.colorPink,
-      'green' => l10n.colorGreen,
-      'blue' => l10n.colorBlue,
-      'orange' => l10n.colorOrange,
-      _ => key,
-    };
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -693,24 +618,10 @@ class _AppearanceStep extends ConsumerWidget {
         const SizedBox(height: 16),
         Text(l10n.accentColor, style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            _AccentDot(
-              label: l10n.instanceColor,
-              color: parseThemeColor(instance?.themeColor),
-              selected: settings.accentColor == 'instance',
-              onTap: () => controller.setAccentColor('instance'),
-            ),
-            for (final accent in _accentColors)
-              _AccentDot(
-                label: _accentLabel(l10n, accent.$2),
-                color: parseThemeColor(accent.$1),
-                selected: settings.accentColor == accent.$1,
-                onTap: () => controller.setAccentColor(accent.$1),
-              ),
-          ],
+        AccentColorPicker(
+          selected: settings.accentColor,
+          instanceColor: instance?.themeColor,
+          onSelected: controller.setAccentColor,
         ),
         const SizedBox(height: 24),
         Text(l10n.theme, style: Theme.of(context).textTheme.titleSmall),

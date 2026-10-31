@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  dynamic_color
   flutter_inappwebview_windows
   flutter_secure_storage_windows
   media_kit_libs_windows_video

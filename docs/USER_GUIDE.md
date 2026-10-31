@@ -13,8 +13,8 @@ steps are mandatory.
    (system, 简体中文, English, 日本語). The page re-renders immediately.
 2. **Compliance & sign-in** — read the app terms, accept two checkboxes, and
    sign in (details below).
-3. **Appearance** — accent colour (including "instance colour", which follows
-   the server you signed in to) and light/dark/system theme.
+3. **Appearance** — accent colour (system, instance, or a fixed swatch) and
+   light/dark/system theme.
 4. **Done** — enter the app.
 
 Progress shows as animated pills at the top; back/forward arrow buttons move
@@ -52,8 +52,11 @@ server's display name before you sign in.
 ## Appearance
 
 Settings → Appearance offers the accent colour swatches (indigo, pink, green,
-blue, orange) plus "Instance colour", which seeds the theme from the active
-server's own branding. Theme mode is a system/light/dark segmented control.
+blue, orange) plus two that follow their source: "System colour" uses the
+platform palette (Android's Material You wallpaper colours, the Windows accent
+colour, or the Linux portal equivalent) and "Instance colour", which seeds the
+theme from the active server's own branding. Every swatch is labelled in place.
+Theme mode is a system/light/dark segmented control.
 
 ## Web PWA
 

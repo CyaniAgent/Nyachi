@@ -6,13 +6,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../core/l10n/app_localizations.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../announcements/presentation/announcements_page.dart';
+import 'accent_color_picker.dart';
 import 'contributors_page.dart';
 import 'licenses_page.dart';
 import '../../../app/theme/app_theme.dart';
@@ -267,24 +267,10 @@ class AppearanceSettingsPage extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _AccentDot(
-                  label: l10n.instanceColor,
-                  color: parseThemeColor(instance?.themeColor),
-                  selected: settings.accentColor == 'instance',
-                  onTap: () => controller.setAccentColor('instance'),
-                ),
-                for (final accent in _accentColors)
-                  _AccentDot(
-                    label: _accentLabel(l10n, accent.$2),
-                    color: parseThemeColor(accent.$1),
-                    selected: settings.accentColor == accent.$1,
-                    onTap: () => controller.setAccentColor(accent.$1),
-                  ),
-              ],
+            child: AccentColorPicker(
+              selected: settings.accentColor,
+              instanceColor: instance?.themeColor,
+              onSelected: controller.setAccentColor,
             ),
           ),
           const Divider(height: 1),
@@ -491,25 +477,6 @@ class _LicensesTileState extends State<_LicensesTile> {
   }
 }
 
-const _accentColors = [
-  ('#3F51B5', 'indigo'),
-  ('#E91E63', 'pink'),
-  ('#4CAF50', 'green'),
-  ('#2196F3', 'blue'),
-  ('#FF9800', 'orange'),
-];
-
-String _accentLabel(AppLocalizations l10n, String key) {
-  return switch (key) {
-    'indigo' => l10n.colorIndigo,
-    'pink' => l10n.colorPink,
-    'green' => l10n.colorGreen,
-    'blue' => l10n.colorBlue,
-    'orange' => l10n.colorOrange,
-    _ => key,
-  };
-}
-
 class _SettingsBody extends StatelessWidget {
   const _SettingsBody({required this.children});
 
@@ -569,58 +536,3 @@ IconData _tabIcon(AppTab tab) => switch (tab) {
   AppTab.chat => Icons.chat_bubble_outline,
   AppTab.profile => Icons.person_outline,
 };
-
-/// Selectable accent colour swatch.
-class _AccentDot extends StatelessWidget {
-  const _AccentDot({
-    required this.label,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: label,
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected ? scheme.onSurface : scheme.outlineVariant,
-                width: selected ? 2.5 : 1,
-              ),
-            ),
-            child: selected
-                ? Icon(
-                    Icons.check,
-                    size: 18,
-                    color:
-                        ThemeData.estimateBrightnessForColor(color) ==
-                            Brightness.dark
-                        ? Colors.white
-                        : Colors.black,
-                  )
-                : null,
-          ),
-        ),
-      ),
-    );
-  }
-}

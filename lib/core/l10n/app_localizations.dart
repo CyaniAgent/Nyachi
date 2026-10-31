@@ -1192,6 +1192,12 @@ abstract class AppLocalizations {
   /// **'Accent color'**
   String get accentColor;
 
+  /// No description provided for @systemColor.
+  ///
+  /// In en, this message translates to:
+  /// **'System color'**
+  String get systemColor;
+
   /// No description provided for @instanceColor.
   ///
   /// In en, this message translates to:

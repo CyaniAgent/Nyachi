@@ -38,12 +38,15 @@ ThemeData buildAppTheme({
   required Brightness brightness,
   required Color seed,
   required bool isWide,
+  ColorScheme? colorScheme,
 }) {
-  final scheme = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: brightness,
-    dynamicSchemeVariant: DynamicSchemeVariant.rainbow,
-  );
+  final scheme =
+      colorScheme ??
+      ColorScheme.fromSeed(
+        seedColor: seed,
+        brightness: brightness,
+        dynamicSchemeVariant: DynamicSchemeVariant.rainbow,
+      );
   final dividerColor = brightness == Brightness.dark
       ? scheme.surfaceContainerHighest
       : scheme.surfaceContainer;

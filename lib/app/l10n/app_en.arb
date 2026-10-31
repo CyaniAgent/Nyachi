@@ -215,6 +215,7 @@
   "signIn": "Sign in",
   "refresh": "Refresh",
   "accentColor": "Accent color",
+  "systemColor": "System color",
   "instanceColor": "Instance color",
   "colorIndigo": "Indigo",
   "colorPink": "Pink",

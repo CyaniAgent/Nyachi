@@ -575,6 +575,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accentColor => 'Accent color';
 
   @override
+  String get systemColor => 'System color';
+
+  @override
   String get instanceColor => 'Instance color';
 
   @override

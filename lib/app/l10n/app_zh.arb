@@ -215,6 +215,7 @@
   "signIn": "登录",
   "refresh": "刷新",
   "accentColor": "主题色",
+  "systemColor": "跟随系统",
   "instanceColor": "跟随实例",
   "colorIndigo": "靛蓝",
   "colorPink": "粉色",

@@ -36,6 +36,9 @@ dependencies:
   web: ^1.1.1
   flutter_markdown_plus: ^1.0.12
   flutter_inappwebview: ^6.1.5
+  # 2.x delegates to the standalone material_ui package, whose ColorScheme is a
+  # different type from Flutter's; 1.9.0 uses the framework's own.
+  dynamic_color: ^1.9.0
 
 dev_dependencies:
   build_runner: ^2.16.2
