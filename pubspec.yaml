@@ -3,7 +3,7 @@ description: "A Misskey client."
 publish_to: 'none'
 repository: https://github.com/CyaniAgent/Nyachi
 issue_tracker: https://github.com/CyaniAgent/Nyachi/issues
-version: 2.0.0-beta.5+4
+version: 2.0.0-beta.6+5
 
 environment:
   sdk: ^3.13.5
