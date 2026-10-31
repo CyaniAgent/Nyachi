@@ -109,8 +109,7 @@ jobs:
       matrix:
         include:
           # Pin the oldest supported LTS for Linux release binaries: glibc
-          # built on a newer release refuses to start on older ones, and the
-          # WPE WebKit dev packages the webview needs exist here.
+          # built on a newer release refuses to start on older ones.
           - os: ubuntu-24.04
             target: linux-x64
           - os: ubuntu-latest
@@ -134,18 +133,13 @@ jobs:
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
 
-      # flutter_inappwebview_linux renders through WPE WebKit and hard-fails
-      # at CMake configure time without the dev package; the FDO backend is
-      # its documented fallback when WPEPlatform is absent.
       - name: Install Linux build dependencies
         if: matrix.target == 'linux-x64'
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libsecret-1-dev libjsoncpp-dev \
-            libmpv-dev mpv \
-            libepoxy-dev libwpe-1.0-dev libwpebackend-fdo-1.0-dev \
-            libwpewebkit-1.0-dev
+            libmpv-dev mpv
 
       - name: Cache CocoaPods
         if: matrix.target == 'macos-arm64'
