@@ -41,6 +41,9 @@ Flow: `feature/*` / `fix/*` → `develop` → `release/*` → `main`.
 
 - Follow SemVer; use `-alpha`, `-beta`, and `-rc` for prereleases.
 - Release tags use `vX.Y.Z` and include change notes and known issues.
+- Pre-release (`-beta`/`-rc`) tags are cut from `develop`; stable tags must
+  point at `main`. While `main` still holds the legacy 1.3.4 history, only
+  pre-releases are cut (the `Cut release` workflow enforces this).
 - Releases must pass formatting, static analysis, tests, and build checks.
 - Release artifacts must include the license and third-party notices.
 - Never print secrets in CI; inject signing keys only through protected
