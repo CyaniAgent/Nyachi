@@ -108,7 +108,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          # Pin the oldest supported LTS for Linux release binaries: glibc
+          # built on a newer release refuses to start on older ones, and the
+          # WPE WebKit dev packages the webview needs exist here.
+          - os: ubuntu-24.04
             target: linux-x64
           - os: ubuntu-latest
             target: web
