@@ -57,6 +57,10 @@ flutter/flutter#194785 the same worker can instead be provided as
 
 ## Web notes
 
+Releases ship two web archives: `web` (JavaScript) and `web-wasm`
+(WebAssembly, with a JavaScript fallback for browsers that cannot run it).
+Both contain the same application.
+
 `web/sqlite3.wasm` and `web/drift_worker.js` must be served with the app. Serve
 `sqlite3.wasm` as `application/wasm`. COOP/COEP headers are recommended but not
 required; Drift falls back to IndexedDB/FileSystem storage. Private/incognito

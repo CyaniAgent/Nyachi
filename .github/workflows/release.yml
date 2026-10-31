@@ -114,6 +114,10 @@ jobs:
             target: linux-x64
           - os: ubuntu-latest
             target: web
+          # Same app, compiled to WebAssembly with a JS fallback for browsers
+          # that cannot run it.
+          - os: ubuntu-latest
+            target: web-wasm
           - os: windows-latest
             target: windows-x64
           - os: macos-latest
@@ -164,6 +168,7 @@ jobs:
             windows-x64) flutter build windows --release ;;
             macos-arm64) flutter build macos --release ;;
             web) flutter build web --release ;;
+            web-wasm) flutter build web --release --wasm ;;
           esac
 
       - name: Collect artifacts
@@ -185,7 +190,7 @@ jobs:
             macos-arm64)
               (cd build/macos/Build/Products/Release && zip -qry "$GITHUB_WORKSPACE/out/nyachi-$V-$T.zip" *.app)
               ;;
-            web)
+            web|web-wasm)
               (cd build/web && zip -qr "$GITHUB_WORKSPACE/out/nyachi-$V-$T.zip" .)
               ;;
           esac

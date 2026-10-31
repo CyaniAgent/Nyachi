@@ -31,6 +31,9 @@ jobs:
       # the custom web/flutter_bootstrap.js; Flutter's uninstaller stub is
       # emitted as a dead file and never registered.
       - run: flutter build web --release
+      # The release ships a WebAssembly build alongside the JS one; compile it
+      # here so a wasm-incompatible dependency fails CI, not a release.
+      - run: flutter build web --release --wasm -o build/web-wasm
 
   android-build:
     runs-on: ubuntu-latest
