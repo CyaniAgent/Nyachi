@@ -131,13 +131,18 @@ jobs:
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
 
+      # flutter_inappwebview_linux renders through WPE WebKit and hard-fails
+      # at CMake configure time without the dev package; the FDO backend is
+      # its documented fallback when WPEPlatform is absent.
       - name: Install Linux build dependencies
         if: matrix.target == 'linux-x64'
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libsecret-1-dev libjsoncpp-dev \
-            libmpv-dev mpv
+            libmpv-dev mpv \
+            libepoxy-dev libwpe-1.0-dev libwpebackend-fdo-1.0-dev \
+            libwpewebkit-1.0-dev
 
       - name: Cache CocoaPods
         if: matrix.target == 'macos-arm64'
@@ -155,6 +160,7 @@ jobs:
       - run: flutter gen-l10n
       - run: dart run build_runner build
       - name: Build
+        shell: bash
         run: |
           case "${{ matrix.target }}" in
             linux-x64) flutter build linux --release ;;
