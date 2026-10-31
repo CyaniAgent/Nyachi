@@ -29,6 +29,22 @@ jobs:
         with:
           ref: develop
 
+      - name: Require green CI on develop HEAD
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          SUMMARY=$(gh api \
+            "repos/CyaniAgent/Nyachi/commits/$SHA/check-runs" \
+            --jq '{total: .total_count, ok: ([.check_runs[] | select(.conclusion == "success")] | length)}')
+          TOTAL=$(echo "$SUMMARY" | jq .total)
+          OK=$(echo "$SUMMARY" | jq .ok)
+          if [ "$TOTAL" -eq 0 ] || [ "$TOTAL" != "$OK" ]; then
+            echo "::error::develop HEAD ($SHA) is not CI-green ($OK/$TOTAL checks succeeded)."
+            echo "::error::Fix CI on develop before cutting a release."
+            exit 1
+          fi
+
       - name: Validate version input
         run: |
           V="${{ inputs.version }}"
