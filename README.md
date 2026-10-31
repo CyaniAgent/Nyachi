@@ -47,9 +47,12 @@ flutter build web --release --pwa-strategy=none
 
 CI runs the same steps after regenerating code and requires a clean
 `git diff --exit-code`. The `--pwa-strategy=none` flag matters: Flutter's
-built-in web service worker is an uninstaller stub since 3.47, and PWA
-offline caching is provided by `web/nyachi_service_worker.js` instead
-(registered from `web/index.html` via the custom `web/flutter_bootstrap.js`).
+built-in web service worker is an uninstaller stub since 3.47 (official
+deprecation, flutter/flutter#156910), and PWA offline caching is provided by
+`web/nyachi_service_worker.js` instead (registered from `web/index.html` via
+the custom `web/flutter_bootstrap.js`). On Flutter versions containing
+flutter/flutter#194785, rename the file to `web/flutter_service_worker.js`
+and drop the flag — the tool then adopts a project-provided worker directly.
 
 ## Web notes
 
