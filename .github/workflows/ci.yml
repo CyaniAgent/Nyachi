@@ -64,6 +64,11 @@ jobs:
           path: ~/Library/Caches/CocoaPods
           key: pods-${{ runner.os }}-${{ hashFiles('macos/Podfile.lock') }}
           restore-keys: pods-${{ runner.os }}-
+      # SPM wraps podspec plugins with the plugin's own platform floor
+      # (flutter_inappwebview_macos declares 10.14 while its code needs
+      # 10.15+), so build through CocoaPods, which follows the project's
+      # 12.0 deployment target.
+      - run: flutter config --no-enable-swift-package-manager
       - run: flutter pub get
       # `flutter build macos` has no --no-codesign flag (that is `build ios`).
       # Without a signing identity the tool falls back to an unsigned build,

@@ -1,7 +1,15 @@
-name: Prerelease
+name: Release
 
-# Publishes a pre-release from a version tag (e.g. v2.0.0-beta.1).
+# Builds and publishes a version tag (e.g. v2.0.0-beta.5).
 # Artifacts: split-per-ABI APKs, AAB, and Windows/macOS/Linux bundles.
+#
+# Release semantics come from the tag itself:
+#   - v2.0.0-beta.* / v2.0.0-rc.*  → marked as a pre-release
+#   - anything else (v2.0.0)       → a stable release
+#
+# Releases are infrequent by policy: only cut one when the maintainer asks.
+# To cut one, run the "Cut release" workflow with the new version number; it
+# bumps pubspec.yaml, commits, tags, and dispatches this workflow.
 on:
   push:
     tags:
@@ -9,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing tag to publish (e.g. v2.0.0-beta.1)'
+        description: 'Existing tag to publish (e.g. v2.0.0-beta.5)'
         required: true
       dry_run:
         description: 'Build only; do not create the release'
@@ -65,12 +73,14 @@ jobs:
             exit 1
           fi
           echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/nyachi-release.jks"
-          cat > android/key.properties <<EOF
-          storeFile=$RUNNER_TEMP/nyachi-release.jks
-          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-          EOF
+          # Group redirection instead of a heredoc: an indented EOF inside a
+          # YAML block scalar never terminates the heredoc.
+          {
+            echo "storeFile=$RUNNER_TEMP/nyachi-release.jks"
+            echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}"
+            echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}"
+            echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}"
+          } > android/key.properties
 
       # Per-ABI APKs keep each download at a fraction of the fat APK size;
       # the AAB stays the Play Store upload format.
@@ -135,6 +145,10 @@ jobs:
           key: pods-${{ runner.os }}-${{ hashFiles('macos/Podfile.lock') }}
           restore-keys: pods-${{ runner.os }}-
 
+      # Same rationale as ci.yml: SPM builds podspec plugins with the
+      # plugin's 10.14 platform floor and breaks on 10.15+ APIs.
+      - run: flutter config --no-enable-swift-package-manager
+        if: matrix.target == 'macos-arm64'
       - run: flutter pub get
       - run: flutter gen-l10n
       - run: dart run build_runner build
@@ -174,19 +188,31 @@ jobs:
     # artifact but stops short of publishing.
     if: github.event_name == 'push' || inputs.dry_run != 'true'
     steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify tag matches pubspec version
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          PUBSPEC="v$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+          if [ "$TAG" != "$PUBSPEC" ]; then
+            echo "::error::tag $TAG does not match pubspec version $PUBSPEC"
+            exit 1
+          fi
+
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           path: out
           merge-multiple: true
 
-      - name: Publish pre-release
+      - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           ls -lh out
-          gh release create -R CyaniAgent/Nyachi "$TAG" \
-            --title "Nyachi ${TAG#v}" \
-            --prerelease \
-            --generate-notes \
-            out/*
+          # beta/rc tags publish as pre-releases; anything else is stable.
+          FLAGS=(--title "Nyachi ${TAG#v}" --generate-notes out/*)
+          if [[ "$TAG" == *-beta* || "$TAG" == *-rc* ]]; then
+            FLAGS+=(--prerelease)
+          fi
+          gh release create -R CyaniAgent/Nyachi "$TAG" "${FLAGS[@]}"

@@ -8,20 +8,20 @@ part of 'oobe_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// OOBE step index. Steps: 0 language, 1 welcome, 2 compliance + sign-in,
-/// 3 appearance, 4 done. The wizard cannot be skipped: completion persists
+/// OOBE step index. Steps: 0 language + welcome, 1 compliance + sign-in,
+/// 2 appearance, 3 done. The wizard cannot be skipped: completion persists
 /// `oobe.completed` and the router guard releases the app only afterwards.
 
 @ProviderFor(OobeController)
 final oobeControllerProvider = OobeControllerProvider._();
 
-/// OOBE step index. Steps: 0 language, 1 welcome, 2 compliance + sign-in,
-/// 3 appearance, 4 done. The wizard cannot be skipped: completion persists
+/// OOBE step index. Steps: 0 language + welcome, 1 compliance + sign-in,
+/// 2 appearance, 3 done. The wizard cannot be skipped: completion persists
 /// `oobe.completed` and the router guard releases the app only afterwards.
 final class OobeControllerProvider
     extends $NotifierProvider<OobeController, int> {
-  /// OOBE step index. Steps: 0 language, 1 welcome, 2 compliance + sign-in,
-  /// 3 appearance, 4 done. The wizard cannot be skipped: completion persists
+  /// OOBE step index. Steps: 0 language + welcome, 1 compliance + sign-in,
+  /// 2 appearance, 3 done. The wizard cannot be skipped: completion persists
   /// `oobe.completed` and the router guard releases the app only afterwards.
   OobeControllerProvider._()
     : super(
@@ -50,10 +50,10 @@ final class OobeControllerProvider
   }
 }
 
-String _$oobeControllerHash() => r'51a02882a51cc85e0d84edeaea456d8c80925ab4';
+String _$oobeControllerHash() => r'34a618c3aa65c3b3e1097613a1c3acc34c4b5f69';
 
-/// OOBE step index. Steps: 0 language, 1 welcome, 2 compliance + sign-in,
-/// 3 appearance, 4 done. The wizard cannot be skipped: completion persists
+/// OOBE step index. Steps: 0 language + welcome, 1 compliance + sign-in,
+/// 2 appearance, 3 done. The wizard cannot be skipped: completion persists
 /// `oobe.completed` and the router guard releases the app only afterwards.
 
 abstract class _$OobeController extends $Notifier<int> {

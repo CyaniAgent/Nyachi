@@ -1,0 +1,68 @@
+name: Cut release
+
+# Bumps pubspec.yaml to the requested version, commits, tags, and dispatches
+# the Release workflow. Releases are infrequent by policy: run this only when
+# the maintainer asks for one.
+#
+# The tag push made with GITHUB_TOKEN does not trigger `on: push` workflows
+# (GitHub blocks recursive workflow triggers), so this workflow explicitly
+# dispatches release.yml via `gh workflow run`.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to cut, without the leading v (e.g. 2.0.0-beta.5)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: develop
+
+      - name: Validate version input
+        run: |
+          V="${{ inputs.version }}"
+          if ! grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)*$' <<<"$V"; then
+            echo "::error::'$V' is not a valid semver like 2.0.0-beta.5"
+            exit 1
+          fi
+          if git rev-parse "v$V" >/dev/null 2>&1; then
+            echo "::error::tag v$V already exists"
+            exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+        id: version
+
+      - name: Bump pubspec version
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          BUILD=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f2)
+          NEXT=$((BUILD + 1))
+          sed -i "s/^version: .*/version: $V+$NEXT/" pubspec.yaml
+          grep '^version:' pubspec.yaml
+
+      - name: Commit and tag
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          git config user.name "nyachi-release-bot"
+          git config user.email "release@users.noreply.github.com"
+          git add pubspec.yaml
+          git commit -m "chore: bump to $V"
+          git tag "v$V"
+          git push origin HEAD:develop "v$V"
+
+      - name: Dispatch release build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          gh workflow run release.yml -R CyaniAgent/Nyachi \
+            --ref develop \
+            -f tag="v$V" \
+            -f dry_run=false
