@@ -4,73 +4,82 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/features/notes/presentation/emoji_text.dart';
 
-EmojiSimple _local(String name, String url, {List<String> aliases = const []}) {
-  return EmojiSimple(name: name, category: null, aliases: aliases, url: url);
-}
-
 void main() {
-  group('EmojiText.resolveUrl', () {
-    test('uses the note map for a remote emoji instead of guessing a URL', () {
-      final url = EmojiText.resolveUrl(
-        ':blobcat@remote.example:',
-        emojis: const {
-          'blobcat@remote.example': 'https://remote.example/emoji/blobcat.webp',
-        },
+  const catalogue = [
+    EmojiSimple(
+      aliases: [],
+      name: 'soukamo',
+      category: null,
+      url: 'https://files.example.test/soukamo.png',
+    ),
+    EmojiSimple(
+      aliases: ['lol'],
+      name: 'lmao',
+      category: null,
+      url: 'https://files.example.test/lmao.png',
+    ),
+  ];
+
+  group('local reactions resolve from the instance catalogue', () {
+    // Misskey marks a reaction on this instance's own emoji with `@.` and keeps
+    // it out of reactionEmojis, so the catalogue is the only source. Treating
+    // it as a remote shortcode left every such reaction as plain text.
+    test(':name@.: uses the catalogue', () {
+      expect(
+        EmojiText.resolveUrl(':soukamo@.:', catalog: catalogue),
+        'https://files.example.test/soukamo.png',
       );
-      expect(url, 'https://remote.example/emoji/blobcat.webp');
     });
 
-    test('resolves a local shortcode from the note map', () {
-      final url = EmojiText.resolveUrl(
-        ':nyachi:',
-        emojis: const {'nyachi': 'https://local.example/emoji/nyachi.webp'},
+    test('a bare :name: uses the catalogue', () {
+      expect(
+        EmojiText.resolveUrl(':soukamo:', catalog: catalogue),
+        'https://files.example.test/soukamo.png',
       );
-      expect(url, 'https://local.example/emoji/nyachi.webp');
     });
 
-    test('falls back to the local catalogue only for local shortcodes', () {
-      final catalog = [
-        _local('nyachi', 'https://local.example/emoji/nyachi.webp'),
-      ];
+    test('an alias resolves to the same emoji', () {
       expect(
-        EmojiText.resolveUrl(':nyachi:', catalog: catalog),
-        'https://local.example/emoji/nyachi.webp',
+        EmojiText.resolveUrl(':lol@.:', catalog: catalogue),
+        'https://files.example.test/lmao.png',
       );
-      // A remote shortcode must never be resolved from the local catalogue,
-      // even when the bare name matches.
+    });
+
+    test('the catalogue wins when reactionEmojis has no entry', () {
       expect(
-        EmojiText.resolveUrl(':nyachi@remote.example:', catalog: catalog),
+        EmojiText.resolveUrl(':soukamo@.:', emojis: const {}),
         isNull,
+        reason: 'without a catalogue the URL cannot be known',
       );
     });
+  });
 
-    test('a remote emoji stays unresolved when the note has no mapping', () {
+  group('remote reactions need the note map', () {
+    test(':name@host: resolves from reactionEmojis', () {
       expect(
         EmojiText.resolveUrl(
-          ':blobcat@remote.example:',
-          emojis: const {'other': 'https://x/y.webp'},
+          ':muri@misskey.io:',
+          emojis: const {
+            'muri@misskey.io': 'https://media.example.test/muri.png',
+          },
         ),
-        isNull,
+        'https://media.example.test/muri.png',
       );
     });
 
-    test('unicode reactions are not shortcodes', () {
-      expect(EmojiText.resolveUrl('👍'), isNull);
-      expect(EmojiText.plainName('👍'), '👍');
-    });
-
-    test('resolves aliases from the local catalogue', () {
-      final catalog = [
-        _local(
-          'nyachi',
-          'https://local.example/emoji/nyachi.webp',
-          aliases: ['nyacchi'],
-        ),
-      ];
+    test('the local catalogue never answers a remote shortcode', () {
       expect(
-        EmojiText.resolveUrl(':nyacchi:', catalog: catalog),
-        'https://local.example/emoji/nyachi.webp',
+        EmojiText.resolveUrl(':soukamo@other.test:', catalog: catalogue),
+        isNull,
+        reason: 'a local name must not stand in for another server\'s emoji',
       );
+    });
+
+    test('hasRemoteHost separates @. from a real host', () {
+      expect(EmojiText.hasRemoteHost(':soukamo@.:'), isFalse);
+      expect(EmojiText.hasRemoteHost(':soukamo:'), isFalse);
+      expect(EmojiText.hasRemoteHost(':muri@misskey.io:'), isTrue);
+      expect(EmojiText.hasRemoteHost('👍'), isFalse);
     });
   });
 }

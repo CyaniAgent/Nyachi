@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:flutter/material.dart';
+import 'package:misskey_dart_api/misskey_dart_api.dart' show Note;
 
 import '../../../core/ui/time_format.dart';
 import 'emoji_text.dart';
@@ -13,22 +14,24 @@ import 'emoji_text.dart';
 class ReactionChip extends StatelessWidget {
   const ReactionChip({
     required this.reaction,
+    required this.note,
     required this.count,
     required this.selected,
     required this.onPressed,
-    this.emojis,
     super.key,
   });
 
   static const height = 32.0;
 
   final String reaction;
+
+  /// The note this reaction belongs to; its `reactionEmojis` cover remote
+  /// emoji, and the reaction itself identifies local ones.
+  final Note note;
+
   final num count;
   final bool selected;
   final VoidCallback? onPressed;
-
-  /// The note's `reactionEmojis`, required to render emoji hosted elsewhere.
-  final Map<String, String>? emojis;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +58,7 @@ class ReactionChip extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  EmojiText(emoji: reaction, emojis: emojis, size: 16),
+                  NoteEmojiText(emoji: reaction, note: note, size: 16),
                   const SizedBox(width: 5),
                   Text(
                     compactCount(context, count),

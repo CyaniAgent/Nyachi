@@ -162,7 +162,7 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                         for (final entry in note.reactions.entries.take(4))
                           ReactionChip(
                             reaction: entry.key,
-                            emojis: note.reactionEmojis,
+                            note: note,
                             count: entry.value,
                             selected: note.myReaction == entry.key,
                             onPressed: _busy

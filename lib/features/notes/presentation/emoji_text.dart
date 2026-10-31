@@ -64,6 +64,11 @@ class EmojiText extends StatelessWidget {
   }
 
   /// Resolves a reaction's image URL, or null when it cannot be known.
+  ///
+  /// Misskey writes a local custom-emoji reaction as `:name@.:` and omits it
+  /// from `reactionEmojis`; bare `:name:` is the older form. Both mean "look it
+  /// up on this instance", so [catalog] answers them. Only a reaction hosted on
+  /// another server needs the [emojis] map.
   static String? resolveUrl(
     String raw, {
     Map<String, String>? emojis,
@@ -72,16 +77,19 @@ class EmojiText extends StatelessWidget {
     final name = shortcodeName(raw);
     if (name == null) return null;
     final host = _host(raw);
+    final local = host == null || host == '.';
     if (emojis != null) {
-      final direct = host == null ? emojis[name] : emojis['$name@$host'];
+      final direct = local ? emojis[name] : emojis['$name@$host'];
       if (direct != null && direct.isNotEmpty) return direct;
       // Servers sometimes key remote emoji by bare name only.
-      final bare = emojis[name];
-      if (host == null && bare != null && bare.isNotEmpty) return bare;
+      if (local) {
+        final bare = emojis[name];
+        if (bare != null && bare.isNotEmpty) return bare;
+      }
     }
     // Local catalogue entries are URLs on this instance; use them only when the
     // shortcode is local, otherwise the name could collide with a remote one.
-    if (host == null && catalog != null) {
+    if (local && catalog != null) {
       for (final emoji in catalog) {
         if (emoji.name == name || emoji.aliases.contains(name)) {
           return emoji.url;
@@ -99,6 +107,14 @@ class EmojiText extends StatelessWidget {
     final inner = raw.substring(1, raw.length - 1);
     if (inner.isEmpty) return null;
     return inner.contains('@') ? inner.split('@').first : inner;
+  }
+
+  /// Whether the reaction names a server other than this one.
+  ///
+  /// `@.` is Misskey's placeholder for the local instance, so it is not remote.
+  static bool hasRemoteHost(String raw) {
+    final host = _host(raw);
+    return host != null && host != '.';
   }
 
   static String? _host(String raw) {
@@ -128,8 +144,11 @@ class NoteEmojiText extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // `:name@.:` is this instance, exactly like a bare `:name:`; only a
+    // reaction naming another server must ignore the local catalogue.
     final localOnly =
-        EmojiText.shortcodeName(emoji) != null && !emoji.contains('@');
+        EmojiText.shortcodeName(emoji) != null &&
+        !EmojiText.hasRemoteHost(emoji);
     return EmojiText(
       emoji: emoji,
       emojis: note.reactionEmojis,
