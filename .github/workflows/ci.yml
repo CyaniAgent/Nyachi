@@ -27,7 +27,10 @@ jobs:
         run: |
           test -f web/sqlite3.wasm
           test -f web/drift_worker.js
-      - run: flutter build web --release
+      # PWA offline caching is provided by web/nyachi_service_worker.js;
+      # --pwa-strategy=none keeps Flutter's uninstaller stub out of the
+      # build so it never competes for the scope.
+      - run: flutter build web --release --pwa-strategy=none
 
   android-build:
     runs-on: ubuntu-latest

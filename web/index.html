@@ -18,19 +18,30 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="A Misskey client.">
+  <meta name="theme-color" content="#EADDFF">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="nyachi">
+  <meta name="apple-mobile-web-app-title" content="Nyachi">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>nyachi</title>
+  <title>Nyachi</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    // PWA offline support; see web/nyachi_service_worker.js. The Flutter
+    // loader must be built with --pwa-strategy=none so its uninstaller stub
+    // never competes for this scope.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('nyachi_service_worker.js');
+      });
+    }
+  </script>
 </head>
 <body>
   <!--

@@ -1,13 +1,16 @@
 {
-    "name": "nyachi",
-    "short_name": "nyachi",
+    "name": "Nyachi",
+    "short_name": "Nyachi",
+    "id": "/",
     "start_url": ".",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#EADDFF",
     "theme_color": "#EADDFF",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
+    "description": "A Misskey client.",
+    "categories": [
+        "social"
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",

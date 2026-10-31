@@ -55,6 +55,16 @@ Settings → Appearance offers the accent colour swatches (indigo, pink, green,
 blue, orange) plus "Instance colour", which seeds the theme from the active
 server's own branding. Theme mode is a system/light/dark segmented control.
 
+## Web PWA
+
+The web build is a full PWA: installable from the browser menu, launched in
+its own window, and usable offline. A service worker caches the app shell and
+then caches every asset as it loads — the next offline start runs the last
+cached version. Local data (accounts, drafts, timelines cache) lives in
+browser storage and survives reloads regardless of connectivity. Install
+requires HTTPS (or localhost); deployment notes live in the repository
+README.
+
 ## App icon
 
 The launcher icon is the in-app brand mark: the pets paw on the theme's

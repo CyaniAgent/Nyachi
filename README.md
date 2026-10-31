@@ -42,11 +42,14 @@ Do not add `*.g.dart` or `*.freezed.dart` to `.gitignore`. See
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
-flutter build web --release
+flutter build web --release --pwa-strategy=none
 ```
 
 CI runs the same steps after regenerating code and requires a clean
-`git diff --exit-code`.
+`git diff --exit-code`. The `--pwa-strategy=none` flag matters: Flutter's
+built-in web service worker is an uninstaller stub since 3.47, and PWA
+offline caching is provided by `web/nyachi_service_worker.js` instead
+(registered from `web/index.html` via the custom `web/flutter_bootstrap.js`).
 
 ## Web notes
 
