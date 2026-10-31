@@ -11,6 +11,13 @@
   "switchLabel": "切换",
   "add": "添加",
   "search": "搜索",
+  "contributionsCount": "{count} 次贡献",
+  "@contributionsCount": {
+    "placeholders": {
+      "count": {"type": "num"}
+    }
+  },
+  "contributorsEmpty": "暂无贡献者",
   "ok": "确定",
   "done": "完成",
   "copied": "已复制",

@@ -43,6 +43,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get search => '検索';
 
   @override
+  String contributionsCount(num count) {
+    return '$count 件の貢献';
+  }
+
+  @override
+  String get contributorsEmpty => 'コントリビューターはまだいません';
+
+  @override
   String get ok => 'OK';
 
   @override

@@ -166,6 +166,18 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get search;
 
+  /// No description provided for @contributionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 contribution} other{{count} contributions}}'**
+  String contributionsCount(num count);
+
+  /// No description provided for @contributorsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No contributors yet'**
+  String get contributorsEmpty;
+
   /// No description provided for @ok.
   ///
   /// In en, this message translates to:

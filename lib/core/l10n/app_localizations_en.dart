@@ -43,6 +43,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get search => 'Search';
 
   @override
+  String contributionsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count contributions',
+      one: '1 contribution',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get contributorsEmpty => 'No contributors yet';
+
+  @override
   String get ok => 'OK';
 
   @override

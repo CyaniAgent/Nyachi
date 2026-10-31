@@ -11,6 +11,13 @@
   "switchLabel": "Switch",
   "add": "Add",
   "search": "Search",
+  "contributionsCount": "{count, plural, =1{1 contribution} other{{count} contributions}}",
+  "@contributionsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "contributorsEmpty": "No contributors yet",
   "ok": "OK",
   "done": "Done",
   "copied": "Copied",

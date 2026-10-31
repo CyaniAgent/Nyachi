@@ -13,6 +13,7 @@ import '../../../core/ui/avatar.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../announcements/presentation/announcements_page.dart';
+import 'contributors_page.dart';
 import 'licenses_page.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/ui/content_width.dart';
@@ -428,10 +429,17 @@ class AboutSettingsPage extends StatelessWidget {
           const Divider(height: 1),
           const _LicensesTile(),
           const Divider(height: 1),
-          _AboutSection(
-            icon: Icons.people_outline,
-            title: l10n.contributors,
-            body: l10n.contributorsBody,
+          ListTile(
+            leading: const Icon(Icons.people_outline),
+            title: Text(l10n.contributors),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(l10n.contributorsBody),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(builder: (_) => const ContributorsPage()),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -479,31 +487,6 @@ class _LicensesTileState extends State<_LicensesTile> {
           onTap: () => openDetail(context, const SettingsLicensesLocation()),
         );
       },
-    );
-  }
-}
-
-/// Non-interactive titled block used by the about page.
-class _AboutSection extends StatelessWidget {
-  const _AboutSection({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
-
-  final IconData icon;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Text(body),
-      ),
     );
   }
 }

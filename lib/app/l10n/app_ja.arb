@@ -11,6 +11,13 @@
   "switchLabel": "切り替え",
   "add": "追加",
   "search": "検索",
+  "contributionsCount": "{count} 件の貢献",
+  "@contributionsCount": {
+    "placeholders": {
+      "count": {"type": "num"}
+    }
+  },
+  "contributorsEmpty": "コントリビューターはまだいません",
   "ok": "OK",
   "done": "完了",
   "copied": "コピーしました",

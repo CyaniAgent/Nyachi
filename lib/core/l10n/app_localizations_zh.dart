@@ -43,6 +43,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get search => '搜索';
 
   @override
+  String contributionsCount(num count) {
+    return '$count 次贡献';
+  }
+
+  @override
+  String get contributorsEmpty => '暂无贡献者';
+
+  @override
   String get ok => '确定';
 
   @override
