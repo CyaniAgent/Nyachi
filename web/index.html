@@ -33,9 +33,9 @@
   <title>Nyachi</title>
   <link rel="manifest" href="manifest.json">
   <script>
-    // PWA offline support; see web/nyachi_service_worker.js. The Flutter
-    // loader must be built with --pwa-strategy=none so its uninstaller stub
-    // never competes for this scope.
+    // PWA offline support; see web/nyachi_service_worker.js. The custom
+    // web/flutter_bootstrap.js keeps Flutter's uninstaller stub
+    // unregistered.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('nyachi_service_worker.js');

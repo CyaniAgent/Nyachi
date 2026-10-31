@@ -6,7 +6,8 @@
 // nyachi_service_worker.js, registered from index.html. Keep this file in
 // sync with Flutter's bootstrap template when upgrading Flutter; the
 // flutter-js and build-config placeholders are substituted by
-// `flutter build web` (build with --pwa-strategy=none).
+// `flutter build web`. Because this file exists, the build adopts it
+// verbatim instead of injecting service worker registration.
 
 {{flutter_js}}
 {{flutter_build_config}}

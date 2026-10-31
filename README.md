@@ -42,17 +42,18 @@ Do not add `*.g.dart` or `*.freezed.dart` to `.gitignore`. See
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
-flutter build web --release --pwa-strategy=none
+flutter build web --release
 ```
 
 CI runs the same steps after regenerating code and requires a clean
-`git diff --exit-code`. The `--pwa-strategy=none` flag matters: Flutter's
-built-in web service worker is an uninstaller stub since 3.47 (official
-deprecation, flutter/flutter#156910), and PWA offline caching is provided by
-`web/nyachi_service_worker.js` instead (registered from `web/index.html` via
-the custom `web/flutter_bootstrap.js`). On Flutter versions containing
-flutter/flutter#194785, rename the file to `web/flutter_service_worker.js`
-and drop the flag — the tool then adopts a project-provided worker directly.
+`git diff --exit-code`. PWA offline caching does not use Flutter's built-in
+service worker — it is an uninstaller stub since 3.47 (official deprecation,
+flutter/flutter#156910) and the build emits it as a dead, never-registered
+file. The live worker is `web/nyachi_service_worker.js`, registered from
+`web/index.html` through the custom `web/flutter_bootstrap.js`, which the
+build adopts verbatim when present. On Flutter versions containing
+flutter/flutter#194785 the same worker can instead be provided as
+`web/flutter_service_worker.js` directly.
 
 ## Web notes
 
