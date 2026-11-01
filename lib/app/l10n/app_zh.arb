@@ -406,10 +406,11 @@
   "updateOpen": "打开发布页",
   "updateFailed": "无法检查更新",
   "cacheManagement": "缓存管理",
-  "cacheManagementSubtitle": "实例信息、表情目录与通知的本地缓存",
+  "cacheManagementSubtitle": "实例信息、表情目录、通知与关注列表的本地缓存",
   "cacheKindInstanceMeta": "实例信息",
   "cacheKindEmojiCatalog": "表情目录",
   "cacheKindNotifications": "通知",
+  "cacheKindFollowings": "关注列表",
   "cacheEntryCount": "{count} 条记录",
   "@cacheEntryCount": {
     "placeholders": {

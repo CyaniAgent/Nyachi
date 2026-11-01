@@ -8,7 +8,7 @@ import '../storage/storage_providers.dart';
 part 'cache_manager.g.dart';
 
 /// Kinds of locally persisted caches shown and managed in settings.
-enum CacheKind { instanceMeta, emojiCatalog, notifications }
+enum CacheKind { instanceMeta, emojiCatalog, notifications, followings }
 
 /// Aggregated size information for one [CacheKind].
 typedef CacheKindStats = ({int entries, int bytes});
@@ -29,10 +29,14 @@ class CacheManager {
   static const emojiCatalogKey = 'emoji';
   static const notificationsKey = 'notifications';
 
+  /// Following list, used as the local mention-candidate source.
+  static const followingsKey = 'followings';
+
   static const Map<CacheKind, List<String>> _keysByKind = {
     CacheKind.instanceMeta: [instanceMetaKey, instanceMetaProbeKey],
     CacheKind.emojiCatalog: [emojiCatalogKey],
     CacheKind.notifications: [notificationsKey],
+    CacheKind.followings: [followingsKey],
   };
 
   CacheKind? _kindForKey(String key) {

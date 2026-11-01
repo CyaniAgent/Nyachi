@@ -9,6 +9,7 @@ import '../../../core/ui/content_width.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../notes/application/emoji_catalog.dart';
 import '../../notifications/application/notification_list_controller.dart';
+import '../../composer/application/mention_candidates.dart';
 
 /// Lists every managed cache kind with its entry count and byte size and
 /// lets the user clear one kind or everything.
@@ -42,6 +43,7 @@ class _CacheSettingsPageState extends ConsumerState<CacheSettingsPage> {
     CacheKind.notifications => ref.invalidate(
       notificationListControllerProvider,
     ),
+    CacheKind.followings => ref.invalidate(mentionCandidatesProvider),
   };
 
   Future<void> _clear(CacheKind kind) => _clearWithConfirm(
@@ -57,6 +59,7 @@ class _CacheSettingsPageState extends ConsumerState<CacheSettingsPage> {
       ref.invalidate(instanceInfoProvider);
       ref.invalidate(emojiCatalogProvider);
       ref.invalidate(notificationListControllerProvider);
+      ref.invalidate(mentionCandidatesProvider);
     },
   );
 
@@ -99,6 +102,7 @@ class _CacheSettingsPageState extends ConsumerState<CacheSettingsPage> {
       CacheKind.instanceMeta: l10n.cacheKindInstanceMeta,
       CacheKind.emojiCatalog: l10n.cacheKindEmojiCatalog,
       CacheKind.notifications: l10n.cacheKindNotifications,
+      CacheKind.followings: l10n.cacheKindFollowings,
     };
     return Scaffold(
       appBar: AppBar(title: Text(l10n.cacheManagement)),
@@ -157,6 +161,7 @@ class _CacheSettingsPageState extends ConsumerState<CacheSettingsPage> {
     CacheKind.instanceMeta => Icons.dns_outlined,
     CacheKind.emojiCatalog => Icons.emoji_emotions_outlined,
     CacheKind.notifications => Icons.notifications_outlined,
+    CacheKind.followings => Icons.people_outline,
   };
 }
 

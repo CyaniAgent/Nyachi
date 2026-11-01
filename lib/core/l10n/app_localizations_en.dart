@@ -924,7 +924,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cacheManagementSubtitle =>
-      'Cached instance info, emoji catalogue and notifications';
+      'Cached instance info, emoji catalogue, notifications and following list';
 
   @override
   String get cacheKindInstanceMeta => 'Instance info';
@@ -934,6 +934,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cacheKindNotifications => 'Notifications';
+
+  @override
+  String get cacheKindFollowings => 'Following list';
 
   @override
   String cacheEntryCount(int count) {

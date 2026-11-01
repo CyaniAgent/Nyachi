@@ -907,7 +907,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cacheManagement => '缓存管理';
 
   @override
-  String get cacheManagementSubtitle => '实例信息、表情目录与通知的本地缓存';
+  String get cacheManagementSubtitle => '实例信息、表情目录、通知与关注列表的本地缓存';
 
   @override
   String get cacheKindInstanceMeta => '实例信息';
@@ -917,6 +917,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cacheKindNotifications => '通知';
+
+  @override
+  String get cacheKindFollowings => '关注列表';
 
   @override
   String cacheEntryCount(int count) {

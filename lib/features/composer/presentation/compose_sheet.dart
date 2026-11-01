@@ -19,7 +19,9 @@ import '../../drive/data/drive_repository.dart';
 import '../../notes/application/emoji_catalog.dart';
 import '../../notes/presentation/note_content.dart';
 import '../application/composer_controller.dart';
+import '../domain/completion_trigger.dart';
 import 'compose_page.dart';
+import 'completion_panel.dart';
 import 'composer_panel.dart';
 import 'emoji_insert_sheet.dart';
 import 'recipient_picker.dart';
@@ -70,6 +72,64 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
   var _hasCw = false;
   var _uploading = 0;
 
+  /// Token under the caret, or null when no completion panel is open.
+  CompletionTrigger? _trigger;
+  var _triggerIndex = 0;
+  var _triggerDismissed = false;
+
+  /// Recomputes the open completion token from the current caret position.
+  ///
+  /// A dismissed trigger stays dismissed until the caret leaves it, so Escape
+  /// is not undone by the next keystroke inside the same token.
+  void _syncTrigger() {
+    final value = _text.value;
+    if (!value.selection.isValid || !value.selection.isCollapsed) {
+      _closeTrigger();
+      return;
+    }
+    final next = triggerAt(value.text, value.selection.baseOffset);
+    if (next == null) {
+      _closeTrigger();
+      return;
+    }
+    if (_triggerDismissed && next.start == _trigger?.start) return;
+    if (next.start != _trigger?.start || next.query != _trigger?.query) {
+      _triggerIndex = 0;
+    }
+    _triggerDismissed = false;
+    if (next.start == _trigger?.start && next.query == _trigger?.query) return;
+    setState(() => _trigger = next);
+  }
+
+  void _closeTrigger() {
+    _triggerDismissed = false;
+    if (_trigger == null) return;
+    setState(() {
+      _trigger = null;
+      _triggerIndex = 0;
+    });
+  }
+
+  /// Replaces the active token with [entry] and moves the caret past it.
+  void _applyCompletion(CompletionEntry entry) {
+    final trigger = _trigger;
+    if (trigger == null) return;
+    final value = _text.value;
+    final applied = trigger.apply(value.text, entry.insert);
+    _text.value = TextEditingValue(
+      text: applied.text,
+      selection: TextSelection.collapsed(offset: applied.caret),
+    );
+    ref
+        .read(composerControllerProvider(widget.replyId).notifier)
+        .setText(applied.text);
+    _triggerDismissed = false;
+    setState(() {
+      _trigger = null;
+      _triggerIndex = 0;
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -84,7 +144,14 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _text.addListener(_syncTrigger);
+  }
+
+  @override
   void dispose() {
+    _text.removeListener(_syncTrigger);
     _text.dispose();
     _cw.dispose();
     super.dispose();
@@ -183,17 +250,55 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
                           onChanged: controller.setCw,
                         ),
                       ),
-                    TextField(
-                      controller: _text,
-                      minLines: widget.expandContent ? 10 : 4,
-                      maxLines: null,
-                      autofocus: !_hasCw,
-                      decoration: InputDecoration(
-                        hintText: l10n.composerHint,
-                        border: InputBorder.none,
+                    Focus(
+                      // The panel must win Enter/arrows before the field acts
+                      // on them, so keys pass through here first.
+                      onKeyEvent: (_, event) {
+                        final trigger = _trigger;
+                        if (trigger == null) return KeyEventResult.ignored;
+                        final consumed = handleCompletionKey(
+                          event: event,
+                          entryCount: completionEntries(ref, trigger).length,
+                          selectedIndex: _triggerIndex,
+                          onHighlight: (index) =>
+                              setState(() => _triggerIndex = index),
+                          onAccept: (index) {
+                            final entry = completionEntries(
+                              ref,
+                              trigger,
+                            )[index];
+                            _applyCompletion(entry);
+                          },
+                          onDismiss: () {
+                            _triggerDismissed = true;
+                            _closeTrigger();
+                          },
+                        );
+                        return consumed
+                            ? KeyEventResult.handled
+                            : KeyEventResult.ignored;
+                      },
+                      child: TextField(
+                        controller: _text,
+                        minLines: widget.expandContent ? 10 : 4,
+                        maxLines: null,
+                        autofocus: !_hasCw,
+                        decoration: InputDecoration(
+                          hintText: l10n.composerHint,
+                          border: InputBorder.none,
+                        ),
+                        onChanged: controller.setText,
                       ),
-                      onChanged: controller.setText,
                     ),
+                    if (_trigger != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: CompletionPanel(
+                          trigger: _trigger!,
+                          selectedIndex: _triggerIndex,
+                          onSelected: _applyCompletion,
+                        ),
+                      ),
                     if (state.showPoll)
                       _PollEditor(state: state, controller: controller),
                   ],

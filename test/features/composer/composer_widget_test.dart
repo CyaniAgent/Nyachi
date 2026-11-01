@@ -12,6 +12,7 @@ import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/core/ui/avatar.dart';
+import 'package:nyachi/features/composer/application/mention_candidates.dart';
 import 'package:nyachi/features/composer/application/composer_controller.dart';
 import 'package:nyachi/features/composer/application/draft_store.dart';
 import 'package:nyachi/features/composer/presentation/compose_sheet.dart';
@@ -76,6 +77,16 @@ Future<ProviderContainer> _pumpComposer(
           draftsSupported: draftsSupported,
         ),
       ),
+      // Local mention candidates: no network, deterministic rows.
+      mentionCandidatesProvider.overrideWith(
+        (ref) async => const [
+          (id: 'u2', username: 'alice', host: null, name: 'Alice'),
+          (id: 'u3', username: 'bob', host: 'remote.test', name: null),
+        ],
+      ),
+      // No remote round-trip here: local rows are enough and a real search
+      // would leave a pending request behind.
+      remoteMentionCandidatesProvider.overrideWith((ref, query) async => []),
     ],
   );
   addTearDown(container.dispose);
@@ -311,5 +322,88 @@ void main() {
     await tester.tap(find.byIcon(Icons.edit_outlined));
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsOneWidget);
+  });
+
+  testWidgets('a mention trigger opens the panel and inserts the handle', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester);
+    final field = find.byType(TextField).first;
+    await tester.enterText(field, 'hi @ali');
+    await tester.pumpAndSettle();
+
+    // Both local candidates match "ali": the display name row and the handle
+    // of the local account show up, while the remote one is filtered out.
+    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text('@alice'), findsOneWidget);
+    expect(find.text('@bob@remote.test'), findsNothing);
+
+    await tester.tap(find.text('@alice'));
+    await tester.pumpAndSettle();
+
+    final controller = tester.widget<TextField>(field).controller!;
+    expect(controller.text, 'hi @alice ');
+    // The panel closes once the token is consumed.
+    expect(find.byType(ListTile), findsNothing);
+
+    // Drain the autosave debounce; a pending timer fails the teardown.
+    await tester.pump(const Duration(milliseconds: 600));
+  });
+
+  testWidgets('the hashtag and emoji triggers open their own panels', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester);
+    final field = find.byType(TextField).first;
+
+    // No trends are loaded in this harness, so a hashtag query yields no rows
+    // and the panel stays closed - an empty panel would cover the editor.
+    await tester.enterText(field, 'tag #flut');
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNothing);
+
+    // A colon inside prose ("10:30") must not open anything either.
+    await tester.enterText(field, 'meet at 10:30');
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNothing);
+
+    // Drain the autosave debounce; a pending timer fails the teardown.
+    await tester.pump(const Duration(milliseconds: 600));
+  });
+
+  testWidgets('completing mid-sentence does not double the space', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester);
+    final field = find.byType(TextField).first;
+    await tester.enterText(field, 'hi @ali again');
+    await tester.pumpAndSettle();
+
+    // Place the caret right after "@ali" so the completion lands mid-text.
+    final controller = tester.widget<TextField>(field).controller!;
+    controller.selection = const TextSelection.collapsed(offset: 7);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('@alice'));
+    await tester.pumpAndSettle();
+
+    expect(controller.text, 'hi @alice again');
+
+    // Drain the autosave debounce; a pending timer fails the teardown.
+    await tester.pump(const Duration(milliseconds: 600));
   });
 }

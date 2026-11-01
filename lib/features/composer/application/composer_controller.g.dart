@@ -59,7 +59,7 @@ final class ComposerControllerProvider
 }
 
 String _$composerControllerHash() =>
-    r'68e8620ef8a573e4991e70ed46121329c988a3f0';
+    r'1d79da4075dc7031e63436401add3bb466dc295d';
 
 final class ComposerControllerFamily extends $Family
     with

@@ -425,10 +425,11 @@
   "updateOpen": "Open release",
   "updateFailed": "Could not check for updates",
   "cacheManagement": "Cache management",
-  "cacheManagementSubtitle": "Cached instance info, emoji catalogue and notifications",
+  "cacheManagementSubtitle": "Cached instance info, emoji catalogue, notifications and following list",
   "cacheKindInstanceMeta": "Instance info",
   "cacheKindEmojiCatalog": "Emoji catalogue",
   "cacheKindNotifications": "Notifications",
+  "cacheKindFollowings": "Following list",
   "cacheEntryCount": "{count, plural, =1{1 entry} other{{count} entries}}",
   "@cacheEntryCount": {
     "placeholders": {

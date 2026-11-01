@@ -908,7 +908,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cacheManagement => 'キャッシュ管理';
 
   @override
-  String get cacheManagementSubtitle => 'インスタンス情報・絵文字カタログ・通知のローカルキャッシュ';
+  String get cacheManagementSubtitle => 'インスタンス情報・絵文字カタログ・通知・フォロー一覧のローカルキャッシュ';
 
   @override
   String get cacheKindInstanceMeta => 'インスタンス情報';
@@ -918,6 +918,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cacheKindNotifications => '通知';
+
+  @override
+  String get cacheKindFollowings => 'フォロー一覧';
 
   @override
   String cacheEntryCount(int count) {

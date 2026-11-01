@@ -1819,7 +1819,7 @@ abstract class AppLocalizations {
   /// No description provided for @cacheManagementSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Cached instance info, emoji catalogue and notifications'**
+  /// **'Cached instance info, emoji catalogue, notifications and following list'**
   String get cacheManagementSubtitle;
 
   /// No description provided for @cacheKindInstanceMeta.
@@ -1839,6 +1839,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications'**
   String get cacheKindNotifications;
+
+  /// No description provided for @cacheKindFollowings.
+  ///
+  /// In en, this message translates to:
+  /// **'Following list'**
+  String get cacheKindFollowings;
 
   /// No description provided for @cacheEntryCount.
   ///

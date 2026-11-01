@@ -62,6 +62,7 @@ void main() {
     expect(find.text('Instance info'), findsOneWidget);
     expect(find.text('Emoji catalogue'), findsOneWidget);
     expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('Following list'), findsOneWidget);
     expect(find.text('Clear all caches'), findsOneWidget);
     expect(find.text('1 entry · 1 B'), findsNWidgets(2));
     expect(find.text('1 entry · 2 B'), findsOneWidget);
@@ -95,8 +96,9 @@ void main() {
       isNotNull,
     );
 
-    // The list reloads: the emoji kind now reports no entries.
-    expect(find.text('0 entries · 0 B'), findsOneWidget);
+    // The list reloads: the emoji kind reports no entries. The following-list
+    // kind was never seeded, so two rows now read zero.
+    expect(find.text('0 entries · 0 B'), findsNWidgets(2));
     expect(find.text('1 entry · 1 B'), findsOneWidget);
     expect(find.text('1 entry · 2 B'), findsOneWidget);
   });
