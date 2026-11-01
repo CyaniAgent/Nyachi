@@ -126,4 +126,4 @@ final class AvailableReleaseProvider
   }
 }
 
-String _$availableReleaseHash() => r'6aa2537a68b97d67115bcb367e77d7b71cfa1797';
+String _$availableReleaseHash() => r'cceae41b21f001c57a48e521edd7c3a2619018d1';
