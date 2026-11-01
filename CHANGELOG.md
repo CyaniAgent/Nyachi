@@ -3,6 +3,15 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
+## [Unreleased]
+
+### Bug fixes
+
+- Web requests no longer try to set `User-Agent`, a header browsers refuse;
+  the SDK set it unconditionally and every request logged a console warning.
+- The appearance picker no longer offers "System color" on the web, where no
+  system palette exists and the choice silently did nothing.
+
 ## [2.0.0-beta.9] - 2026-11-01
 
 ### Codename

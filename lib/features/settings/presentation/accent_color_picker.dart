@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
@@ -53,12 +54,16 @@ class AccentColorPicker extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
-            _AccentDot(
-              label: l10n.systemColor,
-              color: dynamicScheme?.primary ?? appFallbackSeed,
-              selected: selected == 'system',
-              onTap: () => onSelected('system'),
-            ),
+            // Web has no system palette API: dynamic_color always reports null
+            // there, so "system" would be a dead choice that silently falls
+            // back to the seed. Offer it only where a palette can exist.
+            if (!kIsWeb)
+              _AccentDot(
+                label: l10n.systemColor,
+                color: dynamicScheme?.primary ?? appFallbackSeed,
+                selected: selected == 'system',
+                onTap: () => onSelected('system'),
+              ),
             _AccentDot(
               label: l10n.instanceColor,
               color: parseThemeColor(instanceColor),
