@@ -985,4 +985,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get reportSent => '通報を送信しました';
+
+  @override
+  String get emojiOther => 'その他';
 }

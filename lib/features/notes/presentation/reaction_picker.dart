@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/ui/l10n_ext.dart';
-import '../../../core/ui/network_image.dart';
+import '../../../core/ui/grouped_emoji_grid.dart';
 import '../application/emoji_catalog.dart';
 import 'emoji_text.dart';
 
@@ -43,8 +43,12 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
           top: 16,
           bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
         ),
-        child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+          ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -84,56 +88,39 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
                 onChanged: (value) => setState(() => _query = value.trim()),
               ),
               const SizedBox(height: 8),
-              emojis.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, _) => const SizedBox.shrink(),
-                data: (items) {
-                  final filtered = items
-                      .where(
-                        (emoji) =>
-                            _query.isEmpty ||
-                            emoji.name.toLowerCase().contains(
-                              _query.toLowerCase(),
-                            ) ||
-                            (emoji.category ?? '').toLowerCase().contains(
-                              _query.toLowerCase(),
-                            ),
-                      )
-                      .toList(growable: false);
-                  if (filtered.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(context.l10n.noSearchResults),
-                    );
-                  }
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filtered.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 6,
-                          mainAxisSpacing: 6,
-                          crossAxisSpacing: 6,
-                        ),
-                    itemBuilder: (context, index) {
-                      final emoji = filtered[index];
-                      return InkWell(
-                        onTap: () => Navigator.pop(context, ':${emoji.name}:'),
-                        child: Tooltip(
-                          message: emoji.name,
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: NyachiImage(
-                              url: emoji.url,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
+              Flexible(
+                child: emojis.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (_, _) => const SizedBox.shrink(),
+                  data: (items) {
+                    final filtered = items
+                        .where(
+                          (emoji) =>
+                              _query.isEmpty ||
+                              emoji.name.toLowerCase().contains(
+                                _query.toLowerCase(),
+                              ) ||
+                              (emoji.category ?? '').toLowerCase().contains(
+                                _query.toLowerCase(),
+                              ),
+                        )
+                        .toList(growable: false);
+                    if (filtered.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(context.l10n.noSearchResults),
                       );
-                    },
-                  );
-                },
+                    }
+                    return GroupedEmojiGrid(
+                      emojis: filtered,
+                      crossAxisCount: 6,
+                      otherLabel: context.l10n.emojiOther,
+                      onPick: (emoji) =>
+                          Navigator.pop(context, ':${emoji.name}:'),
+                    );
+                  },
+                ),
               ),
             ],
           ),

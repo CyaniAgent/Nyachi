@@ -984,4 +984,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reportSent => '举报已提交';
+
+  @override
+  String get emojiOther => '其他';
 }

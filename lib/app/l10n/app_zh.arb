@@ -445,5 +445,6 @@
   },
   "reportUserHint": "请填写举报理由（必填）",
   "reportSent": "举报已提交",
-  "removeReaction": "取消反应"
+  "removeReaction": "取消反应",
+  "emojiOther": "其他"
 }

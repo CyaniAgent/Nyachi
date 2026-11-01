@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/ui/grouped_emoji_grid.dart';
 import '../../../core/ui/l10n_ext.dart';
-import '../../../core/ui/network_image.dart';
 import '../../notes/application/emoji_catalog.dart';
 
 /// Returns a `:shortcode:` for the emoji the user picked, or null on dismiss.
@@ -66,32 +66,13 @@ class _EmojiInsertSheetState extends ConsumerState<_EmojiInsertSheet> {
             Expanded(
               child: filtered.isEmpty
                   ? Center(child: Text(l10n.noResults))
-                  : GridView.builder(
+                  : GroupedEmojiGrid(
+                      emojis: filtered,
+                      maxCrossAxisExtent: 56,
+                      otherLabel: l10n.emojiOther,
                       padding: const EdgeInsets.all(12),
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 56,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                          ),
-                      itemBuilder: (context, index) {
-                        final emoji = filtered[index];
-                        return Tooltip(
-                          message: emoji.name,
-                          child: InkWell(
-                            onTap: () =>
-                                Navigator.of(context).pop(':${emoji.name}:'),
-                            child: Center(
-                              child: NyachiImage(
-                                url: emoji.url,
-                                width: 32,
-                                height: 32,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                      onPick: (emoji) =>
+                          Navigator.of(context).pop(':${emoji.name}:'),
                     ),
             ),
           ],

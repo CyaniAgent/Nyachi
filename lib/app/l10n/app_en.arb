@@ -464,5 +464,6 @@
   },
   "reportUserHint": "Describe the reason (required)",
   "reportSent": "Report sent",
-  "removeReaction": "Remove reaction"
+  "removeReaction": "Remove reaction",
+  "emojiOther": "Other"
 }

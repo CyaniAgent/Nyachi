@@ -1009,4 +1009,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportSent => 'Report sent';
+
+  @override
+  String get emojiOther => 'Other';
 }

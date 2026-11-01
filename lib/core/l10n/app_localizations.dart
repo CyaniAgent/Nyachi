@@ -1965,6 +1965,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Report sent'**
   String get reportSent;
+
+  /// No description provided for @emojiOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get emojiOther;
 }
 
 class _AppLocalizationsDelegate
