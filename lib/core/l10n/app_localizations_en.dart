@@ -669,7 +669,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openFullComposer => 'Open full composer';
 
   @override
-  String get attachFiles => 'Attach files';
+  String get attachLocalFile => 'Choose a local file';
 
   @override
   String get uploading => 'Uploading…';
@@ -698,6 +698,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAll => 'Select all';
 
   @override
+  String get driveEmpty => 'Nothing here yet';
+
+  @override
   String deleteItemsConfirm(int count) {
     return 'Delete $count items?';
   }
@@ -706,7 +709,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get composerHint => 'What\'s on your mind?';
 
   @override
-  String get attachMedia => 'Add images';
+  String get attachFromDrive => 'Choose from drive';
 
   @override
   String get poll => 'Poll';

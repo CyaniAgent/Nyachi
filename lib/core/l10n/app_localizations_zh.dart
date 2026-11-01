@@ -658,7 +658,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get openFullComposer => '展开完整编辑器';
 
   @override
-  String get attachFiles => '添加附件';
+  String get attachLocalFile => '选择本地文件';
 
   @override
   String get uploading => '上传中…';
@@ -687,6 +687,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get selectAll => '全选';
 
   @override
+  String get driveEmpty => '这里还没有文件';
+
+  @override
   String deleteItemsConfirm(int count) {
     return '删除 $count 项？';
   }
@@ -695,7 +698,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get composerHint => '在想些什么呢？';
 
   @override
-  String get attachMedia => '添加图片';
+  String get attachFromDrive => '从网盘选择';
 
   @override
   String get poll => '投票';

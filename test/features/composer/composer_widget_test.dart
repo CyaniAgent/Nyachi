@@ -125,8 +125,10 @@ void main() {
     expect(find.text('Post'), findsOneWidget);
     // Hint text of the text area.
     expect(find.text("What's on your mind?"), findsOneWidget);
-    // Toolbar tools.
-    expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+    // Toolbar tools: one paperclip now covers both upload sources.
+    expect(find.byIcon(Icons.attach_file), findsOneWidget);
+    expect(find.byIcon(Icons.image_outlined), findsNothing);
+    expect(find.byIcon(Icons.cloud_upload_outlined), findsNothing);
     expect(find.byIcon(Icons.how_to_vote_outlined), findsOneWidget);
     expect(find.byIcon(Icons.tag), findsOneWidget);
     expect(find.byIcon(Icons.alternate_email), findsOneWidget);

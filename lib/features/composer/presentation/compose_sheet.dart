@@ -22,6 +22,7 @@ import '../application/composer_controller.dart';
 import '../domain/completion_trigger.dart';
 import 'compose_page.dart';
 import 'completion_panel.dart';
+import 'drive_file_picker.dart';
 import 'composer_panel.dart';
 import 'emoji_insert_sheet.dart';
 import 'recipient_picker.dart';
@@ -336,8 +337,8 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
             state: state,
             controller: controller,
             uploading: _uploading,
-            onPickImages: () => _attach(FileType.image),
-            onPickFiles: () => _attach(FileType.any),
+            onPickLocalFile: () => _attach(),
+            onPickFromDrive: _attachFromDrive,
             onToggleCw: () {
               setState(() {
                 _hasCw = !_hasCw;
@@ -368,10 +369,10 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
     );
   }
 
-  Future<void> _attach(FileType type) async {
+  Future<void> _attach() async {
     final provider = composerControllerProvider(widget.replyId);
     final controller = ref.read(provider.notifier);
-    final picked = await FilePicker.pickFiles(type: type);
+    final picked = await FilePicker.pickFiles(type: FileType.any);
     if (picked.isEmpty || !mounted) return;
     setState(() => _uploading += picked.length);
     final drive = ref.read(driveRepositoryProvider);
@@ -389,6 +390,19 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
           SnackBar(content: Text(mapFailure(error).message(context.l10n))),
         );
       }
+    }
+  }
+
+  /// Attaches drive files as they are; the picker returns ids, nothing is
+  /// re-uploaded.
+  Future<void> _attachFromDrive() async {
+    final ids = await showDriveFilePicker(context);
+    if (ids == null || ids.isEmpty || !mounted) return;
+    final controller = ref.read(
+      composerControllerProvider(widget.replyId).notifier,
+    );
+    for (final id in ids) {
+      controller.addFileId(id);
     }
   }
 }
@@ -693,14 +707,17 @@ extension _AcceptanceLabels on AppLocalizations {
   };
 }
 
-/// Bottom toolbar: images, files, poll, CW, #, @, emoji.
+/// Where an attachment comes from; mirrors the paperclip menu.
+enum _AttachSource { localFile, driveFile }
+
+/// Bottom toolbar: attachments, poll, CW, #, @, emoji.
 class _ComposerToolbar extends StatelessWidget {
   const _ComposerToolbar({
     required this.state,
     required this.controller,
     required this.uploading,
-    required this.onPickImages,
-    required this.onPickFiles,
+    required this.onPickLocalFile,
+    required this.onPickFromDrive,
     required this.onToggleCw,
     required this.onInsert,
   });
@@ -708,8 +725,8 @@ class _ComposerToolbar extends StatelessWidget {
   final ComposerState state;
   final ComposerController controller;
   final int uploading;
-  final VoidCallback onPickImages;
-  final VoidCallback onPickFiles;
+  final VoidCallback onPickLocalFile;
+  final VoidCallback onPickFromDrive;
   final VoidCallback onToggleCw;
   final ValueChanged<String> onInsert;
 
@@ -719,21 +736,43 @@ class _ComposerToolbar extends StatelessWidget {
 
     return Row(
       children: [
-        IconButton(
-          tooltip: l10n.attachMedia,
-          onPressed: uploading > 0 ? null : onPickImages,
-          icon: const Icon(Icons.image_outlined),
-        ),
-        IconButton(
-          tooltip: l10n.attachFiles,
-          onPressed: uploading > 0 ? null : onPickFiles,
-          icon: uploading > 0
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.cloud_upload_outlined),
+        PopupMenuButton<_AttachSource>(
+          tooltip: l10n.attach,
+          enabled: uploading == 0,
+          onSelected: (source) {
+            switch (source) {
+              case _AttachSource.localFile:
+                onPickLocalFile();
+              case _AttachSource.driveFile:
+                onPickFromDrive();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: _AttachSource.localFile,
+              child: ListTile(
+                leading: const Icon(Icons.upload_file_outlined),
+                title: Text(l10n.attachLocalFile),
+              ),
+            ),
+            PopupMenuItem(
+              value: _AttachSource.driveFile,
+              child: ListTile(
+                leading: const Icon(Icons.drive_file_move_outline),
+                title: Text(l10n.attachFromDrive),
+              ),
+            ),
+          ],
+          child: IconButton(
+            onPressed: null,
+            icon: uploading > 0
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.attach_file),
+          ),
         ),
         IconButton(
           tooltip: l10n.poll,

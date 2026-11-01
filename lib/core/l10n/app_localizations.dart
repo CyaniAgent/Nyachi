@@ -1354,11 +1354,11 @@ abstract class AppLocalizations {
   /// **'Open full composer'**
   String get openFullComposer;
 
-  /// No description provided for @attachFiles.
+  /// No description provided for @attachLocalFile.
   ///
   /// In en, this message translates to:
-  /// **'Attach files'**
-  String get attachFiles;
+  /// **'Choose a local file'**
+  String get attachLocalFile;
 
   /// No description provided for @uploading.
   ///
@@ -1408,6 +1408,12 @@ abstract class AppLocalizations {
   /// **'Select all'**
   String get selectAll;
 
+  /// No description provided for @driveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet'**
+  String get driveEmpty;
+
   /// No description provided for @deleteItemsConfirm.
   ///
   /// In en, this message translates to:
@@ -1420,11 +1426,11 @@ abstract class AppLocalizations {
   /// **'What\'s on your mind?'**
   String get composerHint;
 
-  /// No description provided for @attachMedia.
+  /// No description provided for @attachFromDrive.
   ///
   /// In en, this message translates to:
-  /// **'Add images'**
-  String get attachMedia;
+  /// **'Choose from drive'**
+  String get attachFromDrive;
 
   /// No description provided for @poll.
   ///

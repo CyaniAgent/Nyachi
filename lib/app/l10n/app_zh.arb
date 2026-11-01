@@ -270,7 +270,7 @@
   "centerContent": "内容居中",
   "centerContentHint": "宽屏时内容列居中显示",
   "openFullComposer": "展开完整编辑器",
-  "attachFiles": "添加附件",
+  "attachLocalFile": "选择本地文件",
   "uploading": "上传中…",
   "noAttachments": "无附件",
   "newFolder": "新建文件夹",
@@ -279,6 +279,7 @@
   "driveSpace": "存储空间",
   "driveSelectedCount": "已选 {count} 项",
   "selectAll": "全选",
+  "driveEmpty": "这里还没有文件",
   "deleteItemsConfirm": "删除 {count} 项？",
   "@driveSelectedCount": {
     "placeholders": {
@@ -295,7 +296,7 @@
     }
   },
   "composerHint": "在想些什么呢？",
-  "attachMedia": "添加图片",
+  "attachFromDrive": "从网盘选择",
   "poll": "投票",
   "pollChoiceHint": "选项 {n}",
   "addChoice": "添加选项",

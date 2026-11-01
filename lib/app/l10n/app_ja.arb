@@ -270,7 +270,7 @@
   "centerContent": "コンテンツを中央に",
   "centerContentHint": "ワイド画面で本文を中央に表示します",
   "openFullComposer": "エディタを全画面で開く",
-  "attachFiles": "ファイルを添付",
+  "attachLocalFile": "ローカルファイルを選択",
   "uploading": "アップロード中…",
   "noAttachments": "添付なし",
   "newFolder": "フォルダを作成",
@@ -279,6 +279,7 @@
   "driveSpace": "ストレージ",
   "driveSelectedCount": "{count}件を選択中",
   "selectAll": "すべて選択",
+  "driveEmpty": "まだ何もありません",
   "deleteItemsConfirm": "{count}件を削除しますか？",
   "@driveSelectedCount": {
     "placeholders": {
@@ -295,7 +296,7 @@
     }
   },
   "composerHint": "何か書こう？",
-  "attachMedia": "画像を添付",
+  "attachFromDrive": "ドライブから選択",
   "poll": "アンケート",
   "pollChoiceHint": "選択肢 {n}",
   "addChoice": "選択肢を追加",

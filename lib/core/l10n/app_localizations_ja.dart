@@ -658,7 +658,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get openFullComposer => 'エディタを全画面で開く';
 
   @override
-  String get attachFiles => 'ファイルを添付';
+  String get attachLocalFile => 'ローカルファイルを選択';
 
   @override
   String get uploading => 'アップロード中…';
@@ -687,6 +687,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get selectAll => 'すべて選択';
 
   @override
+  String get driveEmpty => 'まだ何もありません';
+
+  @override
   String deleteItemsConfirm(int count) {
     return '$count件を削除しますか？';
   }
@@ -695,7 +698,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get composerHint => '何か書こう？';
 
   @override
-  String get attachMedia => '画像を添付';
+  String get attachFromDrive => 'ドライブから選択';
 
   @override
   String get poll => 'アンケート';
