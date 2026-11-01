@@ -12,6 +12,7 @@ import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
 import '../application/notification_list_controller.dart';
 
@@ -82,43 +83,39 @@ class NotificationsPage extends ConsumerWidget {
         ],
       );
     }
-    return ListView.separated(
-      itemCount: state.items.length + 1,
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        if (index == state.items.length) {
-          if (state.loadingMore) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (state.hasMore) {
-            return Padding(
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                child: TextButton(
-                  onPressed: controller.loadMore,
-                  child: Text(l10n.loadMore),
-                ),
-              ),
-            );
-          }
-          if (state.error != null) {
-            return Padding(
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                child: FailureAction(
-                  failure: state.error!,
-                  onRetry: controller.refresh,
-                ),
-              ),
-            );
-          }
-          return const SizedBox(height: 24);
-        }
-        return _NotificationTile(notification: state.items[index]);
+    return ScrollEdgeLoader(
+      canLoad: () {
+        final current = ref.read(notificationListControllerProvider);
+        return current.hasMore && !current.loadingMore && !current.refreshing;
       },
+      onEdge: controller.loadMore,
+      child: ListView.separated(
+        itemCount: state.items.length + 1,
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          if (index == state.items.length) {
+            if (state.loadingMore) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (state.error != null) {
+              return Padding(
+                padding: const EdgeInsets.all(8),
+                child: Center(
+                  child: FailureAction(
+                    failure: state.error!,
+                    onRetry: controller.refresh,
+                  ),
+                ),
+              );
+            }
+            return const SizedBox(height: 24);
+          }
+          return _NotificationTile(notification: state.items[index]);
+        },
+      ),
     );
   }
 }

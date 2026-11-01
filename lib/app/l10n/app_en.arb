@@ -143,7 +143,6 @@
   "uploadFailed": "Upload failed",
   "sendFailed": "Could not send",
   "noMessages": "No messages yet",
-  "loadOlder": "Load older",
   "roomOwner": "Owner",
   "accounts": "Accounts",
   "navigation": "Navigation",
@@ -185,7 +184,6 @@
       }
     }
   },
-  "loadMore": "Load more",
   "serverNameFallback": "Misskey",
   "chatRoom": "Room",
   "chatWith": "Chat",

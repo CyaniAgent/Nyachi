@@ -11,6 +11,7 @@ import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/network_image.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
 import '../application/note_detail_controller.dart';
 import 'note_card.dart';
@@ -85,11 +86,21 @@ class _NoteDetailPageState extends ConsumerState<NoteDetailPage> {
                       ),
                     NoteCard(note: note, detailMode: true),
                     const Divider(height: 24),
-                    _RepliesSection(
-                      state: state,
-                      controller: controller,
-                      onRetry: () => ref.invalidate(
-                        noteDetailControllerProvider(widget.noteId),
+                    ScrollEdgeLoader(
+                      canLoad: () {
+                        final current = ref.read(
+                          noteDetailControllerProvider(widget.noteId),
+                        );
+                        return current.repliesHasMore &&
+                            !current.repliesLoadingMore;
+                      },
+                      onEdge: controller.loadMoreReplies,
+                      child: _RepliesSection(
+                        state: state,
+                        controller: controller,
+                        onRetry: () => ref.invalidate(
+                          noteDetailControllerProvider(widget.noteId),
+                        ),
                       ),
                     ),
                   ],
@@ -144,14 +155,10 @@ class _RepliesSection extends StatelessWidget {
           )
         else
           for (final reply in state.replies) _ReplyTile(note: reply),
-        if (state.repliesHasMore)
-          Center(
-            child: TextButton(
-              onPressed: state.repliesLoadingMore
-                  ? null
-                  : controller.loadMoreReplies,
-              child: Text(l10n.loadOlder),
-            ),
+        if (state.repliesLoadingMore)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
           ),
       ],
     );

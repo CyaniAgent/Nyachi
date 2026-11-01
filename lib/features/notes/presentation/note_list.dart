@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/scroll_edge_loader.dart';
 import '../application/note_list_controller.dart';
 import '../domain/note_feed_source.dart';
 import 'note_card.dart';
@@ -45,13 +46,22 @@ class NoteList extends ConsumerWidget {
           final trailing = slack <= 0
               ? 12.0
               : (centered ? 12.0 + slack / 2 : 12.0 + slack);
-          return _content(context, state, controller, l10n, inset, trailing);
+          return _content(
+            ref,
+            context,
+            state,
+            controller,
+            l10n,
+            inset,
+            trailing,
+          );
         },
       ),
     );
   }
 
   Widget _content(
+    WidgetRef ref,
     BuildContext context,
     NoteListState state,
     NoteListController controller,
@@ -67,80 +77,79 @@ class NoteList extends ConsumerWidget {
         (state.usingCache ? 1 : 0) +
         (state.error != null && state.items.isNotEmpty ? 1 : 0) +
         (header == null ? 0 : 1);
-    final footer = state.items.isNotEmpty && state.hasMore ? 1 : 0;
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(leading, 4, trailing, 24),
-      itemCount:
-          state.items.length + bannerCount + footer + (showEmpty ? 1 : 0),
-      separatorBuilder: (context, index) => header != null && index == 0
-          ? const SizedBox.shrink()
-          : const Divider(height: 1),
-      itemBuilder: (context, index) {
-        var cursor = 0;
-        if (header != null) {
-          if (index == cursor) return header!;
-          cursor++;
-        }
-        if (state.usingCache) {
-          if (index == cursor) {
-            return _Banner(
-              icon: Icons.cloud_off_outlined,
-              text: l10n.usingCache,
-            );
+    final footer = state.items.isNotEmpty && state.loadingMore ? 1 : 0;
+    return ScrollEdgeLoader(
+      canLoad: () {
+        final current = ref.read(noteListControllerProvider(source));
+        return current.hasMore &&
+            !current.loadingMore &&
+            !current.refreshing &&
+            current.items.isNotEmpty;
+      },
+      onEdge: controller.loadMore,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(leading, 4, trailing, 24),
+        itemCount:
+            state.items.length + bannerCount + footer + (showEmpty ? 1 : 0),
+        separatorBuilder: (context, index) => header != null && index == 0
+            ? const SizedBox.shrink()
+            : const Divider(height: 1),
+        itemBuilder: (context, index) {
+          var cursor = 0;
+          if (header != null) {
+            if (index == cursor) return header!;
+            cursor++;
           }
-          cursor++;
-        }
-        if (state.error != null && state.items.isNotEmpty) {
-          if (index == cursor) {
-            return _Banner(
-              icon: Icons.error_outline,
-              text: state.error!.message(l10n),
-              action: FailureAction(
-                failure: state.error!,
-                onRetry: controller.refresh,
+          if (state.usingCache) {
+            if (index == cursor) {
+              return _Banner(
+                icon: Icons.cloud_off_outlined,
+                text: l10n.usingCache,
+              );
+            }
+            cursor++;
+          }
+          if (state.error != null && state.items.isNotEmpty) {
+            if (index == cursor) {
+              return _Banner(
+                icon: Icons.error_outline,
+                text: state.error!.message(l10n),
+                action: FailureAction(
+                  failure: state.error!,
+                  onRetry: controller.refresh,
+                ),
+              );
+            }
+            cursor++;
+          }
+          if (showEmpty) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 120),
+              child: Center(
+                child: Column(
+                  children: [
+                    Text(emptyText ?? l10n.emptyTimeline),
+                    if (state.error != null)
+                      FailureAction(
+                        failure: state.error!,
+                        onRetry: controller.refresh,
+                      ),
+                  ],
+                ),
               ),
             );
           }
-          cursor++;
-        }
-        if (showEmpty) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 120),
-            child: Center(
-              child: Column(
-                children: [
-                  Text(emptyText ?? l10n.emptyTimeline),
-                  if (state.error != null)
-                    FailureAction(
-                      failure: state.error!,
-                      onRetry: controller.refresh,
-                    ),
-                ],
-              ),
-            ),
-          );
-        }
-        final noteIndex = index - cursor;
-        if (noteIndex < state.items.length) {
-          return NoteCard(note: state.items[noteIndex]);
-        }
-        if (state.loadingMore) {
+          final noteIndex = index - cursor;
+          if (noteIndex < state.items.length) {
+            return NoteCard(note: state.items[noteIndex]);
+          }
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
           );
-        }
-        return Padding(
-          padding: const EdgeInsets.all(8),
-          child: Center(
-            child: TextButton(
-              onPressed: controller.loadMore,
-              child: Text(l10n.loadMore),
-            ),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }

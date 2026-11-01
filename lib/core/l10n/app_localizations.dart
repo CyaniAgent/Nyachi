@@ -928,12 +928,6 @@ abstract class AppLocalizations {
   /// **'No messages yet'**
   String get noMessages;
 
-  /// No description provided for @loadOlder.
-  ///
-  /// In en, this message translates to:
-  /// **'Load older'**
-  String get loadOlder;
-
   /// No description provided for @roomOwner.
   ///
   /// In en, this message translates to:
@@ -1089,12 +1083,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} characters'**
   String characterCount(int count);
-
-  /// No description provided for @loadMore.
-  ///
-  /// In en, this message translates to:
-  /// **'Load more'**
-  String get loadMore;
 
   /// No description provided for @serverNameFallback.
   ///

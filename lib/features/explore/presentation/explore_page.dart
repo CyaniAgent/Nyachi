@@ -11,6 +11,7 @@ import '../../../core/ui/content_width.dart';
 import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
+import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../notes/presentation/note_list.dart';
@@ -154,30 +155,29 @@ class _UserResults extends ConsumerWidget {
     if (state.items.isEmpty) {
       return Center(child: Text(state.error?.message(l10n) ?? l10n.noUsers));
     }
-    return ListView.separated(
-      itemCount: state.items.length + 1,
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        if (index == state.items.length) {
-          if (state.loadingMore) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (state.hasMore) {
-            return Center(
-              child: TextButton(
-                onPressed: controller.loadMore,
-                child: Text(l10n.loadMore),
-              ),
-            );
-          }
-          return const SizedBox(height: 24);
-        }
-        final user = state.items[index];
-        return _UserTile(user: user);
+    return ScrollEdgeLoader(
+      canLoad: () {
+        final current = ref.read(userSearchControllerProvider(query));
+        return current.hasMore && !current.loadingMore;
       },
+      onEdge: controller.loadMore,
+      child: ListView.separated(
+        itemCount: state.items.length + 1,
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          if (index == state.items.length) {
+            if (state.loadingMore) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return const SizedBox(height: 24);
+          }
+          final user = state.items[index];
+          return _UserTile(user: user);
+        },
+      ),
     );
   }
 }

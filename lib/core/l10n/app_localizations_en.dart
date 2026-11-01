@@ -435,9 +435,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMessages => 'No messages yet';
 
   @override
-  String get loadOlder => 'Load older';
-
-  @override
   String get roomOwner => 'Owner';
 
   @override
@@ -518,9 +515,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String characterCount(int count) {
     return '$count characters';
   }
-
-  @override
-  String get loadMore => 'Load more';
 
   @override
   String get serverNameFallback => 'Misskey';

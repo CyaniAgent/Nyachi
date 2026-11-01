@@ -426,9 +426,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noMessages => 'メッセージはまだありません';
 
   @override
-  String get loadOlder => '過去のメッセージを読み込む';
-
-  @override
   String get roomOwner => 'オーナー';
 
   @override
@@ -509,9 +506,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String characterCount(int count) {
     return '$count 文字';
   }
-
-  @override
-  String get loadMore => 'さらに読み込む';
 
   @override
   String get serverNameFallback => 'Misskey';

@@ -143,7 +143,6 @@
   "uploadFailed": "アップロードに失敗しました",
   "sendFailed": "送信できませんでした",
   "noMessages": "メッセージはまだありません",
-  "loadOlder": "過去のメッセージを読み込む",
   "roomOwner": "オーナー",
   "accounts": "アカウント",
   "navigation": "ナビゲーション",
@@ -177,7 +176,6 @@
       }
     }
   },
-  "loadMore": "さらに読み込む",
   "serverNameFallback": "Misskey",
   "chatRoom": "ルーム",
   "chatWith": "チャット",

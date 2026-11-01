@@ -426,9 +426,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noMessages => '暂无消息';
 
   @override
-  String get loadOlder => '加载更早';
-
-  @override
   String get roomOwner => '创建者';
 
   @override
@@ -509,9 +506,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String characterCount(int count) {
     return '$count 个字符';
   }
-
-  @override
-  String get loadMore => '加载更多';
 
   @override
   String get serverNameFallback => 'Misskey';

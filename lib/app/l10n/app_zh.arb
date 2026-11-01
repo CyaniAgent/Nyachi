@@ -143,7 +143,6 @@
   "uploadFailed": "上传失败",
   "sendFailed": "发送失败",
   "noMessages": "暂无消息",
-  "loadOlder": "加载更早",
   "roomOwner": "创建者",
   "accounts": "账号",
   "navigation": "导航",
@@ -177,7 +176,6 @@
       }
     }
   },
-  "loadMore": "加载更多",
   "serverNameFallback": "Misskey",
   "chatRoom": "聊天室",
   "chatWith": "聊天",
