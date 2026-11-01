@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
+import '../../../app/detail_panel/detail_panel_controller.dart';
 import '../../../app/detail_panel/detail_panel_coordinator.dart';
 import '../../../app/detail_panel/detail_panel_host.dart';
 import '../../../app/detail_panel/detail_panel_scope.dart';
+import '../../../app/router/back_navigation.dart';
 import '../../../app/router/navigator_keys.dart';
 import '../../../app/router/router_guards.dart';
 import '../../../app/theme/app_theme.dart';
@@ -31,6 +33,7 @@ class RootShell extends ConsumerStatefulWidget {
 
 class _RootShellState extends ConsumerState<RootShell> {
   DetailPanelCoordinator? _coordinator;
+  ValueNotifier<DetailPanelCoordinator?>? _coordinatorNotifier;
   Uri? _syncedUri;
   double? _syncedWidth;
   int? _syncedBreakpoint;
@@ -56,11 +59,27 @@ class _RootShellState extends ConsumerState<RootShell> {
   }
 
   void _ensureCoordinator() {
-    _coordinator ??= DetailPanelCoordinator(
+    if (_coordinator != null) return;
+    final coordinator = DetailPanelCoordinator(
       container: ProviderScope.containerOf(context, listen: false),
       router: GoRouter.of(context),
       initialUri: widget.uri,
     );
+    _coordinator = coordinator;
+    final notifier = ref.read(detailPanelCoordinatorProvider);
+    _coordinatorNotifier = notifier;
+    notifier.value = coordinator;
+  }
+
+  @override
+  void dispose() {
+    // Back handling must not reach a coordinator whose shell is gone. `ref` is
+    // unsafe here, so the notifier captured at creation is used instead.
+    final notifier = _coordinatorNotifier;
+    if (notifier != null && identical(notifier.value, _coordinator)) {
+      notifier.value = null;
+    }
+    super.dispose();
   }
 
   bool _initialUriOpensPanel() {
@@ -117,6 +136,10 @@ class _RootShellState extends ConsumerState<RootShell> {
     final config = ref.watch(settingsControllerProvider).navConfig;
     final breakpoint = ref.watch(settingsControllerProvider).detailBreakpoint;
     final width = MediaQuery.sizeOf(context).width;
+    // The back handler reads the panel stack, so the shell has to rebuild when
+    // it opens or closes; otherwise the system back button keeps a stale
+    // `canPop` and refuses to unwind the panel.
+    ref.watch(detailPanelControllerProvider);
     _ensureCoordinator();
     _queueSync();
     final coordinator = _coordinator;
@@ -137,19 +160,30 @@ class _RootShellState extends ConsumerState<RootShell> {
           snapInitialOpen: _snapInitialOpen ?? false,
           child: widget.child,
         );
+        final container = ProviderScope.containerOf(context, listen: false);
         return DetailPanelScope(
           coordinator: coordinator,
-          child: ShellChrome(
-            selectedIndex: _selectedVisibleIndex(
-              config,
-              current,
-              width >= kCompactBreakpoint,
+          child: PopScope(
+            // Platform back must unwind panel and tab state before it may
+            // leave the app; with nothing left it keeps the platform's own
+            // behaviour, so back at a tab root still exits.
+            canPop: !hasStateToUnwind(container, currentIndex: currentIndex),
+            onPopInvokedWithResult: (didPop, _) {
+              if (didPop) return;
+              unwindAppState(container, currentIndex: currentIndex);
+            },
+            child: ShellChrome(
+              selectedIndex: _selectedVisibleIndex(
+                config,
+                current,
+                width >= kCompactBreakpoint,
+              ),
+              onDestinationSelected: (tab) => _select(shell, tab),
+              onProfile: () => _select(shell, AppTab.profile),
+              onSettings: () => GoRouter.of(context).push('/settings'),
+              onDrive: () => GoRouter.of(context).push('/drive'),
+              child: content,
             ),
-            onDestinationSelected: (tab) => _select(shell, tab),
-            onProfile: () => _select(shell, AppTab.profile),
-            onSettings: () => GoRouter.of(context).push('/settings'),
-            onDrive: () => GoRouter.of(context).push('/drive'),
-            child: content,
           ),
         );
       },

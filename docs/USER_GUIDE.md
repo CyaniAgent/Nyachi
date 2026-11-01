@@ -68,6 +68,22 @@ browser storage and survives reloads regardless of connectivity. Install
 requires HTTPS (or localhost); deployment notes live in the repository
 README.
 
+## Back navigation
+
+Back means the same thing everywhere: platform back, the browser's back
+button, and the on-screen arrows all undo one layer of whatever is open.
+
+1. Full-screen views such as the image viewer close first.
+2. A panel layer closes next — the wide-screen detail panel steps back one
+   entry at a time, and only closes when its last entry is reached.
+3. Pushed pages (a note, a profile, settings) close before the tab does.
+4. On a tab other than the timeline, back returns to the timeline.
+
+At the timeline with nothing open, back behaves the way the platform expects:
+Android and desktop close the app, and the browser leaves the page. In the
+browser every panel change is a separate history entry, so back and forward
+also restore the panel exactly as it was.
+
 ## App icon
 
 The launcher icon is the in-app brand mark: the pets paw on the theme's
