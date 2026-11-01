@@ -17,6 +17,7 @@ class NyachiAvatar extends StatelessWidget {
     this.borderColor,
     this.borderWidth = 3,
     super.key,
+    this.onTap,
   });
 
   final String? url;
@@ -35,6 +36,9 @@ class NyachiAvatar extends StatelessWidget {
   /// Optional circular border ring (e.g. the profile page's surface ring).
   final Color? borderColor;
   final double borderWidth;
+
+  /// Makes the avatar tappable (used as the composer's panel entry).
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -73,30 +77,37 @@ class NyachiAvatar extends StatelessWidget {
               ),
             ),
     );
-    if (!showStatus) return avatar;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        avatar,
-        Positioned(
-          right: -2,
-          bottom: -2,
-          child: Container(
-            width: size * 0.36,
-            height: size * 0.36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF23A559),
-              border: Border.all(
-                color:
-                    statusRingColor ??
-                    Theme.of(context).scaffoldBackgroundColor,
-                width: size * 0.09,
+    if (showStatus) {
+      avatar = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          avatar,
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: size * 0.36,
+              height: size * 0.36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF23A559),
+                border: Border.all(
+                  color:
+                      statusRingColor ??
+                      Theme.of(context).scaffoldBackgroundColor,
+                  width: size * 0.09,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      );
+    }
+    if (onTap == null) return avatar;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(size),
+      child: avatar,
     );
   }
 }

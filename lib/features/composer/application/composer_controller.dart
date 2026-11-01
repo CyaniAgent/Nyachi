@@ -133,6 +133,11 @@ abstract class ComposerState with _$ComposerState {
   const factory ComposerState({
     @Default('') String text,
     String? cw,
+
+    /// The note being replied to. Starts as the composer's launch context and
+    /// follows a draft loaded from the avatar panel, so every write below
+    /// (persist, post, invalidate) stays in the loaded draft's context.
+    String? replyId,
     @Default(NotesCreateRequestVisibility.public)
     NotesCreateRequestVisibility visibility,
     @Default(false) bool localOnly,
@@ -160,7 +165,6 @@ class ComposerController extends _$ComposerController {
   Timer? _debounce;
   var _dirty = false;
   var _disposed = false;
-  late String? _replyId;
 
   /// Captured in [build] so the dispose-persist can write without touching
   /// `ref` or reading `state` inside a riverpod lifecycle callback.
@@ -173,7 +177,6 @@ class ComposerController extends _$ComposerController {
 
   @override
   ComposerState build(String? replyId) {
-    _replyId = replyId;
     _disposed = false;
     _debounce?.cancel();
     _dirty = false;
@@ -193,8 +196,10 @@ class ComposerController extends _$ComposerController {
         unawaited(_persist(snapshot: snapshot));
       }
     });
+    final initial = ComposerState(replyId: replyId);
+    _lastState = initial;
     unawaited(Future<void>.microtask(_restoreDraft));
-    return const ComposerState();
+    return initial;
   }
 
   int maxLength() =>
@@ -225,18 +230,31 @@ class ComposerController extends _$ComposerController {
     final drafts = await store.list();
     if (_disposed || drafts.isEmpty) return;
     final draft = drafts
-        .where((candidate) => candidate.replyId == _replyId)
+        .where((candidate) => candidate.replyId == state.replyId)
         .firstOrNull;
     if (draft == null) return;
-    final visibility = _parseVisibility(draft.visibility);
+    _applyDraft(draft);
+  }
+
+  /// Loads [draft] from the avatar panel into this composer, replacing the
+  /// current content and following the draft's own reply context.
+  void loadDraft(ComposerDraft draft) {
+    _debounce?.cancel();
+    _dirty = false;
+    _applyDraft(draft);
+  }
+
+  void _applyDraft(ComposerDraft draft) {
     final pollChoices = _decodeStringList(draft.pollChoices);
-    state = state.copyWith(
+    final next = state.copyWith(
       text: draft.text,
       cw: draft.cw,
-      visibility: visibility,
+      replyId: draft.replyId,
+      visibility: _parseVisibility(draft.visibility),
       localOnly: draft.localOnly,
       draftId: draft.id,
       restored: true,
+      error: null,
       showPoll: pollChoices != null,
       pollChoices: pollChoices ?? const ['', ''],
       pollMultiple: draft.pollMultiple,
@@ -246,6 +264,8 @@ class ComposerController extends _$ComposerController {
       scheduledAt: draft.scheduledAt,
       fileIds: draft.fileIds,
     );
+    _lastState = next;
+    state = next;
   }
 
   void setText(String value) {
@@ -421,7 +441,7 @@ class ComposerController extends _$ComposerController {
       cw: current.cw,
       visibility: current.visibility.name,
       localOnly: current.localOnly,
-      replyId: _replyId,
+      replyId: current.replyId,
       updatedAt: DateTime.now(),
       fileIds: current.fileIds,
       pollChoices: current.showPoll
@@ -443,20 +463,38 @@ class ComposerController extends _$ComposerController {
     return id;
   }
 
+  /// Drops the draft currently loaded in this composer and clears the content
+  /// back to a blank post in the composer's reply context.
   Future<void> deleteDraft() async {
+    await deleteStoredDraft(state.draftId);
     _debounce?.cancel();
     _dirty = false;
-    final id = state.draftId;
-    if (id != null) await _store?.delete(id);
     if (_disposed) return;
-    state = state.copyWith(
+    final next = state.copyWith(
       text: '',
       cw: null,
       localOnly: false,
       draftId: null,
       restored: false,
       error: null,
+      showPoll: false,
+      pollChoices: const ['', ''],
+      pollMultiple: false,
+      pollExpiresAt: null,
+      reactionAcceptance: null,
+      visibleUserIds: const <String>[],
+      scheduledAt: null,
+      fileIds: const <String>[],
     );
+    _lastState = next;
+    state = next;
+  }
+
+  /// Deletes a stored draft by id, whether or not it is the loaded one. Used
+  /// by the avatar panel's rows.
+  Future<void> deleteStoredDraft(String? id) async {
+    if (id == null) return;
+    await _store?.delete(id);
   }
 
   Future<bool> post() async {
@@ -466,6 +504,7 @@ class ComposerController extends _$ComposerController {
     await _persist(force: true);
     state = state.copyWith(posting: true, error: null);
     try {
+      final replyId = state.replyId;
       final choices = validPollChoices();
       final scheduled = state.scheduledAt;
       await ref.read(composerSenderProvider)(
@@ -473,7 +512,7 @@ class ComposerController extends _$ComposerController {
         cw: state.cw,
         visibility: state.visibility,
         localOnly: state.localOnly,
-        replyId: _replyId,
+        replyId: replyId,
         fileIds: state.fileIds,
         pollChoices: choices.isEmpty ? null : choices,
         pollMultiple: state.pollMultiple,
@@ -488,7 +527,6 @@ class ComposerController extends _$ComposerController {
         await _store?.delete(draftId);
       }
       ref.invalidate(noteListControllerProvider);
-      final replyId = _replyId;
       if (replyId != null) {
         ref.invalidate(noteDetailControllerProvider(replyId));
       }

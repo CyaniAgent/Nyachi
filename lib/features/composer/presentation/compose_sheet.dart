@@ -18,6 +18,7 @@ import '../../notes/application/emoji_catalog.dart';
 import '../../notes/presentation/note_content.dart';
 import '../application/composer_controller.dart';
 import 'compose_page.dart';
+import 'composer_panel.dart';
 import 'emoji_insert_sheet.dart';
 import 'recipient_picker.dart';
 
@@ -151,7 +152,7 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
                 ),
               ),
             ),
-          if (widget.replyId != null) ReplyPreviewCard(noteId: widget.replyId!),
+          if (state.replyId != null) ReplyPreviewCard(noteId: state.replyId!),
           Flexible(
             child: SingleChildScrollView(
               child: Column(
@@ -341,7 +342,11 @@ class _ComposerHeader extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.close),
         ),
-        NyachiAvatar(url: account?.avatarUrl, size: 32),
+        NyachiAvatar(
+          url: account?.avatarUrl,
+          size: 32,
+          onTap: () => showComposerPanel(context, replyId: replyId),
+        ),
         const SizedBox(width: 4),
         Flexible(
           child: _VisibilityMenu(

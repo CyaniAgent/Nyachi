@@ -982,4 +982,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get emojiOther => 'その他';
+
+  @override
+  String get drafts => '下書き';
+
+  @override
+  String get noDrafts => '保存された下書きはありません';
+
+  @override
+  String get draftsLoadFailed => '下書きを読み込めませんでした';
+
+  @override
+  String get scheduledPosts => '予約投稿';
+
+  @override
+  String get noScheduledPosts => '予約投稿はありません';
 }

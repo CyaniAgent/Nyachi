@@ -463,5 +463,10 @@
   "reportUserHint": "Describe the reason (required)",
   "reportSent": "Report sent",
   "removeReaction": "Remove reaction",
-  "emojiOther": "Other"
+  "emojiOther": "Other",
+  "drafts": "Drafts",
+  "noDrafts": "No saved drafts",
+  "draftsLoadFailed": "Could not load drafts",
+  "scheduledPosts": "Scheduled posts",
+  "noScheduledPosts": "No scheduled posts"
 }

@@ -41,12 +41,17 @@ class DraftStore {
   static const localPrefix = 'local:';
 
   /// The account's drafts, newest first: server drafts merged over the
-  /// local fallback rows. Failures degrade to the local list.
+  /// local fallback rows. Scheduled posts are excluded - the panel lists
+  /// them separately through [listScheduled]. Failures degrade to the local
+  /// list.
   Future<List<ComposerDraft>> list() async {
     final local = await dao.list(accountId);
     if (!draftsSupported) return local;
     try {
-      final server = await client.notes.draftsList(limit: 100);
+      final server = await client.notes.draftsList(
+        limit: 100,
+        scheduled: false,
+      );
       final drafts = [for (final draft in server) _fromServer(draft), ...local]
         ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       return drafts;
@@ -54,6 +59,23 @@ class DraftStore {
       if (error is MisskeyAuthenticationException) rethrow;
       logSilentFallback('draft_store.list', error);
       return local;
+    }
+  }
+
+  /// The account's server-side scheduled posts, newest first. Empty when
+  /// the instance has no `notes/drafts` endpoints: scheduling itself is
+  /// gated on the same probe, so there is nothing to manage.
+  Future<List<ComposerDraft>> listScheduled() async {
+    if (!draftsSupported) return const [];
+    try {
+      final server = await client.notes.draftsList(limit: 100, scheduled: true);
+      final drafts = [for (final draft in server) _fromServer(draft)]
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return drafts;
+    } catch (error) {
+      if (error is MisskeyAuthenticationException) rethrow;
+      logSilentFallback('draft_store.listScheduled', error);
+      return const [];
     }
   }
 
@@ -259,3 +281,13 @@ DraftStore draftStore(Ref ref) {
     accountId: active.id,
   );
 }
+
+/// The stored drafts, newest first, for the composer's avatar panel.
+@riverpod
+Future<List<ComposerDraft>> composerDrafts(Ref ref) =>
+    ref.watch(draftStoreProvider).list();
+
+/// The account's server-side scheduled posts for the avatar panel.
+@riverpod
+Future<List<ComposerDraft>> composerScheduledDrafts(Ref ref) =>
+    ref.watch(draftStoreProvider).listScheduled();

@@ -981,4 +981,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get emojiOther => '其他';
+
+  @override
+  String get drafts => '草稿';
+
+  @override
+  String get noDrafts => '没有已保存的草稿';
+
+  @override
+  String get draftsLoadFailed => '无法加载草稿';
+
+  @override
+  String get scheduledPosts => '定时发布';
+
+  @override
+  String get noScheduledPosts => '没有定时发布';
 }

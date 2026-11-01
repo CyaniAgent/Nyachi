@@ -444,5 +444,10 @@
   "reportUserHint": "通報理由を記入してください（必須）",
   "reportSent": "通報を送信しました",
   "removeReaction": "リアクションを外す",
-  "emojiOther": "その他"
+  "emojiOther": "その他",
+  "drafts": "下書き",
+  "noDrafts": "保存された下書きはありません",
+  "draftsLoadFailed": "下書きを読み込めませんでした",
+  "scheduledPosts": "予約投稿",
+  "noScheduledPosts": "予約投稿はありません"
 }

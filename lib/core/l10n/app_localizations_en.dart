@@ -1006,4 +1006,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emojiOther => 'Other';
+
+  @override
+  String get drafts => 'Drafts';
+
+  @override
+  String get noDrafts => 'No saved drafts';
+
+  @override
+  String get draftsLoadFailed => 'Could not load drafts';
+
+  @override
+  String get scheduledPosts => 'Scheduled posts';
+
+  @override
+  String get noScheduledPosts => 'No scheduled posts';
 }

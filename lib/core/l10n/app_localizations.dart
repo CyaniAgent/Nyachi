@@ -1959,6 +1959,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get emojiOther;
+
+  /// No description provided for @drafts.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get drafts;
+
+  /// No description provided for @noDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved drafts'**
+  String get noDrafts;
+
+  /// No description provided for @draftsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load drafts'**
+  String get draftsLoadFailed;
+
+  /// No description provided for @scheduledPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled posts'**
+  String get scheduledPosts;
+
+  /// No description provided for @noScheduledPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled posts'**
+  String get noScheduledPosts;
 }
 
 class _AppLocalizationsDelegate
