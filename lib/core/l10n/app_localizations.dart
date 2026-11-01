@@ -1534,6 +1534,24 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get preview;
 
+  /// No description provided for @editLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editLabel;
+
+  /// No description provided for @previewFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'The preview does not render attachments, polls or recipients.'**
+  String get previewFootnote;
+
+  /// No description provided for @previewNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to preview yet.'**
+  String get previewNothing;
+
   /// No description provided for @resetDraft.
   ///
   /// In en, this message translates to:

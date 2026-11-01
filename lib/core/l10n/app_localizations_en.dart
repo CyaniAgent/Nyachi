@@ -772,6 +772,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preview => 'Preview';
 
   @override
+  String get editLabel => 'Edit';
+
+  @override
+  String get previewFootnote =>
+      'The preview does not render attachments, polls or recipients.';
+
+  @override
+  String get previewNothing => 'Nothing to preview yet.';
+
+  @override
   String get resetDraft => 'Reset';
 
   @override

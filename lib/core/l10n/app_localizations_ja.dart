@@ -760,6 +760,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get preview => 'プレビュー';
 
   @override
+  String get editLabel => '編集';
+
+  @override
+  String get previewFootnote => 'プレビューでは添付・投票・宛先は表示されません。';
+
+  @override
+  String get previewNothing => 'プレビューする内容がありません。';
+
+  @override
   String get resetDraft => 'リセット';
 
   @override

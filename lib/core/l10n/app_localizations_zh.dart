@@ -760,6 +760,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get preview => '预览';
 
   @override
+  String get editLabel => '编辑';
+
+  @override
+  String get previewFootnote => '预览不会渲染附件、投票和收件人。';
+
+  @override
+  String get previewNothing => '暂无可预览的内容。';
+
+  @override
   String get resetDraft => '重置';
 
   @override

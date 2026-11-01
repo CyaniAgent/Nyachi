@@ -274,4 +274,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.check), findsOneWidget);
   });
+
+  testWidgets('the toolbar preview toggle swaps the editor for the preview', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester);
+    await tester.enterText(find.byType(TextField), 'hello preview');
+    await tester.pumpAndSettle();
+
+    // The preview switch left the overflow menu for the toolbar.
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.byType(SwitchListTile), findsNothing);
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.preview_outlined));
+    await tester.pumpAndSettle();
+
+    // Preview is a mode: the editor is replaced, not supplemented, and the
+    // footnote names what it does not render.
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('hello preview'), findsOneWidget);
+    expect(
+      find.text(
+        'The preview does not render attachments, polls or recipients.',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byIcon(Icons.edit_outlined));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+  });
 }

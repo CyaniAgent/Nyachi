@@ -160,38 +160,43 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (state.visibility ==
-                      NotesCreateRequestVisibility.specified)
-                    _RecipientChips(state: state, controller: controller),
-                  if (_hasCw)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: TextField(
-                        controller: _cw,
-                        autofocus: true,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        decoration: InputDecoration(
-                          hintText: l10n.contentWarningHint,
-                          isDense: true,
-                          border: const OutlineInputBorder(),
+                  // Preview is a mode, not an extra card: it replaces the
+                  // editor so what you see is what gets posted.
+                  if (state.showPreview)
+                    _PreviewCard(state: state)
+                  else ...[
+                    if (state.visibility ==
+                        NotesCreateRequestVisibility.specified)
+                      _RecipientChips(state: state, controller: controller),
+                    if (_hasCw)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: TextField(
+                          controller: _cw,
+                          autofocus: true,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          decoration: InputDecoration(
+                            hintText: l10n.contentWarningHint,
+                            isDense: true,
+                            border: const OutlineInputBorder(),
+                          ),
+                          onChanged: controller.setCw,
                         ),
-                        onChanged: controller.setCw,
                       ),
+                    TextField(
+                      controller: _text,
+                      minLines: widget.expandContent ? 10 : 4,
+                      maxLines: null,
+                      autofocus: !_hasCw,
+                      decoration: InputDecoration(
+                        hintText: l10n.composerHint,
+                        border: InputBorder.none,
+                      ),
+                      onChanged: controller.setText,
                     ),
-                  TextField(
-                    controller: _text,
-                    minLines: widget.expandContent ? 10 : 4,
-                    maxLines: null,
-                    autofocus: !_hasCw,
-                    decoration: InputDecoration(
-                      hintText: l10n.composerHint,
-                      border: InputBorder.none,
-                    ),
-                    onChanged: controller.setText,
-                  ),
-                  if (state.showPoll)
-                    _PollEditor(state: state, controller: controller),
-                  if (state.showPreview) _PreviewCard(state: state),
+                    if (state.showPoll)
+                      _PollEditor(state: state, controller: controller),
+                  ],
                   if (state.fileIds.isNotEmpty)
                     _AttachmentChips(state: state, controller: controller),
                   if (state.scheduledAt != null)
@@ -498,16 +503,6 @@ class _MoreMenu extends ConsumerWidget {
           },
           child: Text(l10n.saveDraftNow),
         ),
-        // The preview switch stays open on toggle, so it is a plain list tile
-        // rather than a menu button.
-        SwitchListTile(
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-          title: Text(l10n.preview),
-          secondary: const Icon(Icons.visibility_outlined),
-          value: state.showPreview,
-          onChanged: (_) => controller.togglePreview(),
-        ),
         if (ref.watch(instanceInfoProvider).value?.draftsSupported ?? false)
           MenuItemButton(
             leadingIcon: const Icon(Icons.schedule),
@@ -676,6 +671,16 @@ class _ComposerToolbar extends StatelessWidget {
         ),
         const Spacer(),
         IconButton(
+          tooltip: state.showPreview ? l10n.editLabel : l10n.preview,
+          onPressed: controller.togglePreview,
+          icon: Icon(
+            state.showPreview ? Icons.edit_outlined : Icons.preview_outlined,
+            color: state.showPreview
+                ? Theme.of(context).colorScheme.primary
+                : null,
+          ),
+        ),
+        IconButton(
           tooltip: l10n.insertEmoji,
           onPressed: () async {
             final shortcode = await showEmojiInsertSheet(context);
@@ -807,7 +812,7 @@ class _PollEditor extends StatelessWidget {
   }
 }
 
-/// Live preview of the note body.
+/// Live preview of the note body, shown as the composer's alternate mode.
 class _PreviewCard extends ConsumerWidget {
   const _PreviewCard({required this.state});
 
@@ -815,6 +820,7 @@ class _PreviewCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final catalog = ref.watch(emojiCatalogProvider).value ?? const [];
     final emojis = <String, String>{
       for (final emoji in catalog) emoji.name: emoji.url,
@@ -841,7 +847,24 @@ class _PreviewCard extends ConsumerWidget {
                 ),
               ),
             ),
-          NoteContent(text: state.text, emojis: emojis),
+          if (state.text.isEmpty)
+            Text(
+              l10n.previewNothing,
+              style: Theme.of(context).textTheme.bodySmall,
+            )
+          else
+            NoteContent(text: state.text, emojis: emojis),
+          // The preview renders text, emoji and CW only: name the gaps so the
+          // mode never claims to be the final note.
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              l10n.previewFootnote,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         ],
       ),
     );
