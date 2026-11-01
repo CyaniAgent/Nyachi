@@ -162,28 +162,39 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   });
 
-  testWidgets('the overflow menu exposes the character budget and all four '
-      'acceptance options', (tester) async {
-    tester.view.physicalSize = const Size(1000, 1200);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'the overflow menu keeps the budget and nests all five acceptance values',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    await _pumpComposer(tester);
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
+      await _pumpComposer(tester);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
 
-    expect(find.text('0 / 3000'), findsOneWidget);
-    expect(find.text('Reaction acceptance'), findsOneWidget);
-    expect(find.text('Any reactions'), findsOneWidget);
-    expect(find.text('Likes only'), findsOneWidget);
-    expect(find.text('Non-sensitive only'), findsOneWidget);
-    expect(find.text('Save draft'), findsOneWidget);
-    expect(find.text('Reset'), findsOneWidget);
-    // The schedule entry only appears once the server has been probed as
-    // supporting notes/drafts; this instance has not been.
-    expect(find.text('Schedule'), findsNothing);
-  });
+      expect(find.text('0 / 3000'), findsOneWidget);
+      expect(find.text('Save draft'), findsOneWidget);
+      expect(find.text('Reset'), findsOneWidget);
+      // The acceptance options are collapsed into a submenu, not flat.
+      expect(find.text('Reaction acceptance'), findsOneWidget);
+      expect(find.text('Likes only'), findsNothing);
+      // The schedule entry only appears once the server has been probed as
+      // supporting notes/drafts; this instance has not been.
+      expect(find.text('Schedule'), findsNothing);
+
+      await tester.tap(find.text('Reaction acceptance'));
+      await tester.pumpAndSettle();
+
+      // Every API value plus "any" is reachable from the submenu.
+      expect(find.text('Any reactions'), findsOneWidget);
+      expect(find.text('Likes only'), findsOneWidget);
+      expect(find.text('Likes only for remote'), findsOneWidget);
+      expect(find.text('Non-sensitive only'), findsOneWidget);
+      expect(find.text('Non-sensitive; remote likes only'), findsOneWidget);
+    },
+  );
 
   testWidgets('the schedule entry appears when the server supports drafts', (
     tester,
@@ -233,5 +244,34 @@ void main() {
     final avatar = tester.getRect(find.byType(NyachiAvatar));
     final visibility = tester.getRect(find.text('Public'));
     expect(visibility.left, greaterThan(avatar.right + 100));
+  });
+  testWidgets('picking the new remote-likes value reaches the post payload', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = await _pumpComposer(tester);
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reaction acceptance'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Likes only for remote'));
+    await tester.pumpAndSettle();
+
+    // The value survives into the state the sender maps to the API enum.
+    expect(
+      container.read(composerControllerProvider(null)).reactionAcceptance,
+      'likeOnlyForRemote',
+    );
+
+    // Reopening the menu marks only the selected row.
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reaction acceptance'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.check), findsOneWidget);
   });
 }

@@ -308,6 +308,7 @@
   "reactionAcceptance": "リアクション受け入れ",
   "acceptanceAny": "すべて許可",
   "acceptanceLikeOnly": "❤️のみ",
+  "acceptanceLikeOnlyForRemote": "リモートは❤️のみ",
   "acceptanceNonSensitive": "センシティブ以外",
   "acceptanceNonSensitiveLocalLike": "センシティブ以外（リモートは❤️のみ）",
   "saveDraftNow": "下書きに保存",

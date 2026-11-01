@@ -1498,6 +1498,12 @@ abstract class AppLocalizations {
   /// **'Likes only'**
   String get acceptanceLikeOnly;
 
+  /// No description provided for @acceptanceLikeOnlyForRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes only for remote'**
+  String get acceptanceLikeOnlyForRemote;
+
   /// No description provided for @acceptanceNonSensitive.
   ///
   /// In en, this message translates to:

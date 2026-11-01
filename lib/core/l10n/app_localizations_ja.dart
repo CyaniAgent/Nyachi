@@ -742,6 +742,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get acceptanceLikeOnly => '❤️のみ';
 
   @override
+  String get acceptanceLikeOnlyForRemote => 'リモートは❤️のみ';
+
+  @override
   String get acceptanceNonSensitive => 'センシティブ以外';
 
   @override

@@ -308,6 +308,7 @@
   "reactionAcceptance": "接受表情回应",
   "acceptanceAny": "不限制",
   "acceptanceLikeOnly": "仅限 ❤️",
+  "acceptanceLikeOnlyForRemote": "远端仅限 ❤️",
   "acceptanceNonSensitive": "仅限非敏感内容",
   "acceptanceNonSensitiveLocalLike": "非敏感；远端仅 ❤️",
   "saveDraftNow": "保存到草稿",

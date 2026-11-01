@@ -742,6 +742,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get acceptanceLikeOnly => '仅限 ❤️';
 
   @override
+  String get acceptanceLikeOnlyForRemote => '远端仅限 ❤️';
+
+  @override
   String get acceptanceNonSensitive => '仅限非敏感内容';
 
   @override

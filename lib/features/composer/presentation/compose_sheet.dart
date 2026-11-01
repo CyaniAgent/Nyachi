@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -410,8 +412,8 @@ class _ComposerHeader extends ConsumerWidget {
   }
 }
 
-/// Overflow menu: character budget, reaction acceptance, save draft, schedule,
-/// preview and reset.
+/// Overflow menu: character budget, save draft, preview, schedule, the
+/// reaction-acceptance submenu and reset.
 class _MoreMenu extends ConsumerWidget {
   const _MoreMenu({
     required this.replyId,
@@ -431,9 +433,12 @@ class _MoreMenu extends ConsumerWidget {
   final int limit;
   final VoidCallback onClearText;
 
+  /// Every API value the menu exposes: the l10n key paired with the stored
+  /// acceptance name (null means "any").
   static const _acceptanceOptions = <String, String?>{
     'acceptanceAny': null,
     'acceptanceLikeOnly': 'likeOnly',
+    'acceptanceLikeOnlyForRemote': 'likeOnlyForRemote',
     'acceptanceNonSensitive': 'nonSensitiveOnly',
     'acceptanceNonSensitiveLocalLike':
         'nonSensitiveOnlyForLocalLikeOnlyForRemote',
@@ -443,34 +448,91 @@ class _MoreMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    return PopupMenuButton<String>(
-      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-      onSelected: (value) async {
-        final acceptance = _acceptanceOptions[value];
-        if (acceptance != null || value == 'acceptanceAny') {
-          controller.setReactionAcceptance(acceptance);
-          return;
-        }
-        switch (value) {
-          case 'expand':
-            final navigator = Navigator.of(context);
-            navigator.pop();
-            await navigator.push<void>(
-              MaterialPageRoute<void>(
-                builder: (_) => ComposePage(replyId: replyId),
+    return MenuAnchor(
+      builder: (context, menuController, child) => IconButton(
+        tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+        icon: const Icon(Icons.more_vert),
+        onPressed: () => menuController.isOpen
+            ? menuController.close()
+            : menuController.open(),
+      ),
+      menuChildren: [
+        MenuItemButton(
+          onPressed: null,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  value: limit <= 0 ? 0 : (used / limit).clamp(0.0, 1.0),
+                  strokeWidth: 3,
+                ),
               ),
-            );
-          case 'saveDraft':
+              const SizedBox(width: 10),
+              Text(l10n.charLimit(used, limit)),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        if (showHandle)
+          MenuItemButton(
+            leadingIcon: const Icon(Icons.open_in_full),
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              navigator.pop();
+              await navigator.push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => ComposePage(replyId: replyId),
+                ),
+              );
+            },
+            child: Text(l10n.openFullComposer),
+          ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.save_outlined),
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
             await controller.saveDraftNow();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(l10n.draftSaved)));
-            }
-          case 'preview':
-            controller.togglePreview();
-          case 'schedule':
-            await _pickSchedule(context);
-          case 'reset':
+            messenger.showSnackBar(SnackBar(content: Text(l10n.draftSaved)));
+          },
+          child: Text(l10n.saveDraftNow),
+        ),
+        // The preview switch stays open on toggle, so it is a plain list tile
+        // rather than a menu button.
+        SwitchListTile(
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+          title: Text(l10n.preview),
+          secondary: const Icon(Icons.visibility_outlined),
+          value: state.showPreview,
+          onChanged: (_) => controller.togglePreview(),
+        ),
+        if (ref.watch(instanceInfoProvider).value?.draftsSupported ?? false)
+          MenuItemButton(
+            leadingIcon: const Icon(Icons.schedule),
+            onPressed: () => unawaited(_pickSchedule(context)),
+            child: Text(l10n.schedule),
+          ),
+        const Divider(height: 1),
+        SubmenuButton(
+          leadingIcon: const Icon(Icons.add_reaction_outlined),
+          menuChildren: [
+            for (final entry in _acceptanceOptions.entries)
+              MenuItemButton(
+                trailingIcon: state.reactionAcceptance == entry.value
+                    ? const Icon(Icons.check)
+                    : null,
+                onPressed: () => controller.setReactionAcceptance(entry.value),
+                child: Text(l10n.acceptanceLabel(entry.key)),
+              ),
+          ],
+          child: Text(l10n.reactionAcceptance),
+        ),
+        const Divider(height: 1),
+        MenuItemButton(
+          leadingIcon: Icon(Icons.restart_alt, color: theme.colorScheme.error),
+          onPressed: () async {
             final ok = await showDialog<bool>(
               context: context,
               builder: (dialogContext) => AlertDialog(
@@ -487,104 +549,13 @@ class _MoreMenu extends ConsumerWidget {
                 ],
               ),
             );
-            if (ok == true) {
-              await controller.reset();
-              onClearText();
-            }
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem<String>(
-          enabled: false,
-          child: Row(
-            children: [
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  value: limit <= 0 ? 0 : (used / limit).clamp(0.0, 1.0),
-                  strokeWidth: 3,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(l10n.charLimit(used, limit)),
-            ],
-          ),
-        ),
-        const PopupMenuDivider(),
-        if (showHandle)
-          PopupMenuItem<String>(
-            value: 'expand',
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.open_in_full),
-              title: Text(l10n.openFullComposer),
-            ),
-          ),
-        PopupMenuItem<String>(
-          value: 'saveDraft',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.save_outlined),
-            title: Text(l10n.saveDraftNow),
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'preview',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.visibility_outlined),
-            title: Text(l10n.preview),
-            trailing: Switch(
-              value: state.showPreview,
-              onChanged: (_) => controller.togglePreview(),
-            ),
-          ),
-        ),
-        if (ref.watch(instanceInfoProvider).value?.draftsSupported ?? false)
-          PopupMenuItem<String>(
-            value: 'schedule',
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.schedule),
-              title: Text(l10n.schedule),
-            ),
-          ),
-        const PopupMenuDivider(),
-        PopupMenuItem<String>(
-          enabled: false,
+            if (ok != true) return;
+            await controller.reset();
+            onClearText();
+          },
           child: Text(
-            l10n.reactionAcceptance,
-            style: theme.textTheme.bodySmall,
-          ),
-        ),
-        for (final entry in _acceptanceOptions.entries)
-          PopupMenuItem<String>(
-            value: entry.key,
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.acceptanceLabel(entry.key)),
-              trailing: state.reactionAcceptance == entry.value
-                  ? const Icon(Icons.check)
-                  : null,
-            ),
-          ),
-        const PopupMenuDivider(),
-        PopupMenuItem<String>(
-          value: 'reset',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.restart_alt, color: theme.colorScheme.error),
-            title: Text(
-              l10n.resetDraft,
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
+            l10n.resetDraft,
+            style: TextStyle(color: theme.colorScheme.error),
           ),
         ),
       ],
@@ -616,6 +587,7 @@ class _MoreMenu extends ConsumerWidget {
 extension _AcceptanceLabels on AppLocalizations {
   String acceptanceLabel(String key) => switch (key) {
     'acceptanceLikeOnly' => acceptanceLikeOnly,
+    'acceptanceLikeOnlyForRemote' => acceptanceLikeOnlyForRemote,
     'acceptanceNonSensitive' => acceptanceNonSensitive,
     'acceptanceNonSensitiveLocalLike' => acceptanceNonSensitiveLocalLike,
     _ => acceptanceAny,

@@ -52,18 +52,8 @@ final composerSenderProvider = Provider<ComposerSender>((ref) {
     scheduledAt,
   }) async {
     final client = ref.read(misskeyClientProvider);
-    final acceptance = _acceptanceFromName(reactionAcceptance);
-    final receivedAcceptance = switch (reactionAcceptance) {
-      null => null,
-      'likeOnly' => NotesDraftsCreateRequestReactionAcceptance.likeOnly,
-      'likeOnlyForRemote' =>
-        NotesDraftsCreateRequestReactionAcceptance.likeOnlyForRemote,
-      'nonSensitiveOnly' =>
-        NotesDraftsCreateRequestReactionAcceptance.nonSensitiveOnly,
-      _ =>
-        NotesDraftsCreateRequestReactionAcceptance
-            .nonSensitiveOnlyForLocalLikeOnlyForRemote,
-    };
+    final acceptance = _createAcceptance(reactionAcceptance);
+    final receivedAcceptance = _draftAcceptance(reactionAcceptance);
     // A scheduled post is parked in the server-side scheduled queue, which
     // only the drafts endpoints expose.
     if (scheduledAt != null) {
@@ -108,13 +98,34 @@ final composerSenderProvider = Provider<ComposerSender>((ref) {
   };
 });
 
-NotesCreateRequestReactionAcceptance? _acceptanceFromName(String? name) {
-  if (name == null) return null;
-  for (final option in NotesCreateRequestReactionAcceptance.values) {
-    if (option.name == name) return option;
-  }
-  return null;
-}
+/// Explicit name → enum mapping shared with the draft store: no unknown name
+/// is guessed into a value the user did not pick.
+NotesCreateRequestReactionAcceptance? _createAcceptance(
+  String? name,
+) => switch (name) {
+  null => null,
+  'likeOnly' => NotesCreateRequestReactionAcceptance.likeOnly,
+  'likeOnlyForRemote' => NotesCreateRequestReactionAcceptance.likeOnlyForRemote,
+  'nonSensitiveOnly' => NotesCreateRequestReactionAcceptance.nonSensitiveOnly,
+  'nonSensitiveOnlyForLocalLikeOnlyForRemote' =>
+    NotesCreateRequestReactionAcceptance
+        .nonSensitiveOnlyForLocalLikeOnlyForRemote,
+  _ => null,
+};
+
+NotesDraftsCreateRequestReactionAcceptance? _draftAcceptance(String? name) =>
+    switch (name) {
+      null => null,
+      'likeOnly' => NotesDraftsCreateRequestReactionAcceptance.likeOnly,
+      'likeOnlyForRemote' =>
+        NotesDraftsCreateRequestReactionAcceptance.likeOnlyForRemote,
+      'nonSensitiveOnly' =>
+        NotesDraftsCreateRequestReactionAcceptance.nonSensitiveOnly,
+      'nonSensitiveOnlyForLocalLikeOnlyForRemote' =>
+        NotesDraftsCreateRequestReactionAcceptance
+            .nonSensitiveOnlyForLocalLikeOnlyForRemote,
+      _ => null,
+    };
 
 NotesDraftsCreateRequestVisibility _draftVisibility(
   NotesCreateRequestVisibility visibility,

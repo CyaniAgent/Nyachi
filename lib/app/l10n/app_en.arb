@@ -316,6 +316,7 @@
   "reactionAcceptance": "Reaction acceptance",
   "acceptanceAny": "Any reactions",
   "acceptanceLikeOnly": "Likes only",
+  "acceptanceLikeOnlyForRemote": "Likes only for remote",
   "acceptanceNonSensitive": "Non-sensitive only",
   "acceptanceNonSensitiveLocalLike": "Non-sensitive; remote likes only",
   "saveDraftNow": "Save draft",

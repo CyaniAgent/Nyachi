@@ -753,6 +753,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get acceptanceLikeOnly => 'Likes only';
 
   @override
+  String get acceptanceLikeOnlyForRemote => 'Likes only for remote';
+
+  @override
   String get acceptanceNonSensitive => 'Non-sensitive only';
 
   @override
