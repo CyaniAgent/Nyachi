@@ -1630,6 +1630,12 @@ abstract class AppLocalizations {
   /// **'Announcements'**
   String get announcements;
 
+  /// Settings entry for the announcements published by the account's server, not by the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance announcements'**
+  String get instanceAnnouncements;
+
   /// No description provided for @noAnnouncements.
   ///
   /// In en, this message translates to:

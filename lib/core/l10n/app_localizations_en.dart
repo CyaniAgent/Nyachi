@@ -824,6 +824,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get announcements => 'Announcements';
 
   @override
+  String get instanceAnnouncements => 'Instance announcements';
+
+  @override
   String get noAnnouncements => 'No announcements';
 
   @override

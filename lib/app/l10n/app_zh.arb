@@ -375,6 +375,7 @@
   },
   "noResults": "没有结果",
   "announcements": "公告",
+  "instanceAnnouncements": "实例公告",
   "noAnnouncements": "暂无公告",
   "agreeAppTerms": "我已阅读并同意应用条款与隐私政策",
   "agreeInstanceTos": "我已阅读并同意该实例的服务条款",

@@ -67,16 +67,18 @@ flutter:
     - PRIVACY.md
 
 flutter_launcher_icons:
-  # Full icon (primaryContainer background + paw) for iOS, macOS, Windows.
+  # Full icon (primaryContainer background + paw) for iOS, macOS, Windows, web.
   image_path: "assets/brand/app_icon_full.png"
   # Adaptive Android icon: solid background color + centered paw in the
   # safe zone, so launcher masks never clip the paw.
   android: true
   ios: true
   remove_alpha_ios: true
+  # Same artwork as the desktop and mobile builds: the background is part of
+  # the brand mark, so the web tile is not a differently-shaped paw.
   web:
     generate: true
-    image_path: "assets/brand/app_icon_fg.png"
+    image_path: "assets/brand/app_icon_full.png"
     background_color: "#EADDFF"
     theme_color: "#EADDFF"
   windows:

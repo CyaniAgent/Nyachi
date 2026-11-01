@@ -375,6 +375,7 @@
   },
   "noResults": "結果なし",
   "announcements": "お知らせ",
+  "instanceAnnouncements": "インスタンスのお知らせ",
   "noAnnouncements": "お知らせはありません",
   "agreeAppTerms": "アプリの利用規約とプライバシーポリシーに同意します",
   "agreeInstanceTos": "このインスタンスの利用規約に同意します",

@@ -383,6 +383,10 @@
   },
   "noResults": "No results",
   "announcements": "Announcements",
+  "instanceAnnouncements": "Instance announcements",
+  "@instanceAnnouncements": {
+    "description": "Settings entry for the announcements published by the account's server, not by the app."
+  },
   "noAnnouncements": "No announcements",
   "agreeAppTerms": "I have read and agree to the app terms and privacy policy",
   "agreeInstanceTos": "I have read and agree to this instance's terms of service",

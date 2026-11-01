@@ -108,6 +108,20 @@ class AccountsSettingsPage extends ConsumerWidget {
             ),
             const Divider(height: 1),
           ],
+          // Instance announcements belong to the account's server, not to the
+          // app: they are read from the instance the active account lives on,
+          // so they sit with the account rather than on the About page.
+          ListTile(
+            leading: const Icon(Icons.campaign_outlined),
+            title: Text(l10n.instanceAnnouncements),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => const AnnouncementsPage(),
+              ),
+            ),
+          ),
+          const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.person_add_alt),
             title: Text(l10n.addAccount),
@@ -406,17 +420,6 @@ class AboutSettingsPage extends ConsumerWidget {
             ),
           ),
           _UpdateBanner(ref: ref),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.campaign_outlined),
-            title: Text(l10n.announcements),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push<void>(
-              MaterialPageRoute<void>(
-                builder: (_) => const AnnouncementsPage(),
-              ),
-            ),
-          ),
           const Divider(height: 1),
           const _LicensesTile(),
           const Divider(height: 1),

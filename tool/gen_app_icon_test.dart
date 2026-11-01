@@ -82,10 +82,17 @@ void main() {
     await _render(
       tester,
       const Key('full'),
-      (scheme) => ColoredBox(
-        color: scheme.primaryContainer,
-        child: Center(
-          child: Icon(Icons.pets, size: 560, color: scheme.onPrimaryContainer),
+      // Rounded corners: the baked background otherwise reads as a hard square
+      // beside every other app icon. The radius is 22% of the side, matching
+      // the squircle most launchers use. Android's adaptive icon is unaffected,
+      // since it composites the transparent foreground over its own mask.
+      (scheme) => ClipRRect(
+        borderRadius: BorderRadius.circular(_size * 0.22),
+        child: ColoredBox(
+          color: scheme.primaryContainer,
+          child: Center(
+            child: Icon(Icons.pets, size: 560, color: scheme.onPrimaryContainer),
+          ),
         ),
       ),
       'goldens/app_icon_full.png',

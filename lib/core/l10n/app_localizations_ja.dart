@@ -812,6 +812,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get announcements => 'お知らせ';
 
   @override
+  String get instanceAnnouncements => 'インスタンスのお知らせ';
+
+  @override
   String get noAnnouncements => 'お知らせはありません';
 
   @override
