@@ -13,10 +13,10 @@ import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/storage/storage_models.dart';
-import '../../../core/storage/storage_providers.dart';
 import '../../notes/application/note_detail_controller.dart';
 import '../../notes/application/note_list_controller.dart';
 import '../../notes/application/note_providers.dart';
+import 'draft_store.dart';
 
 part 'composer_controller.freezed.dart';
 part 'composer_controller.g.dart';
@@ -138,6 +138,10 @@ abstract class ComposerState with _$ComposerState {
     @Default(false) bool localOnly,
     @Default(false) bool restored,
     @Default(false) bool posting,
+
+    /// Id of the stored draft backing this content: a server draft id or a
+    /// `local:`-prefixed fallback row id; null until first persisted.
+    String? draftId,
     @Default(<String>[]) List<String> fileIds,
     @Default(false) bool showPoll,
     @Default(<String>['', '']) List<String> pollChoices,
@@ -157,41 +161,36 @@ class ComposerController extends _$ComposerController {
   var _dirty = false;
   var _disposed = false;
   late String? _replyId;
-  var _lastText = '';
-  String? _lastCw;
-  var _lastVisibility = NotesCreateRequestVisibility.public;
-  var _lastLocalOnly = false;
+
+  /// Captured in [build] so the dispose-persist can write without touching
+  /// `ref` or reading `state` inside a riverpod lifecycle callback.
+  late DraftStore? _store;
+  late String? _accountId;
+
+  /// The newest state this controller published, kept as a plain field so
+  /// the dispose-persist has content to write after `state` is gone.
+  ComposerState? _lastState;
 
   @override
   ComposerState build(String? replyId) {
     _replyId = replyId;
-    _lastText = '';
-    _lastCw = null;
-    _lastVisibility = NotesCreateRequestVisibility.public;
-    _lastLocalOnly = false;
     _disposed = false;
     _debounce?.cancel();
     _dirty = false;
-    ref.watch(activeAccountProvider)?.id;
-    final drafts = ref.read(draftDaoProvider);
+    // Captured up front: riverpod forbids `ref.read` inside lifecycle
+    // callbacks, and the dispose-persist needs both. An account switch
+    // re-runs this build through the watch below, refreshing both.
     final account = ref.read(activeAccountProvider);
+    _accountId = account?.id;
+    _store = account == null ? null : ref.read(draftStoreProvider);
+    ref.watch(activeAccountProvider)?.id;
     ref.onDispose(() {
       _disposed = true;
       _debounce?.cancel();
-      if (_dirty && account != null) {
-        unawaited(
-          drafts.save(
-            ComposerDraft(
-              accountId: account.id,
-              text: _lastText,
-              cw: _lastCw,
-              visibility: _lastVisibility.name,
-              localOnly: _lastLocalOnly,
-              replyId: _replyId,
-              updatedAt: DateTime.now(),
-            ),
-          ),
-        );
+      final snapshot = _lastState;
+      if (_dirty && snapshot != null) {
+        // `state` is unreadable here; the snapshot carries the content.
+        unawaited(_persist(snapshot: snapshot));
       }
     });
     unawaited(Future<void>.microtask(_restoreDraft));
@@ -218,23 +217,25 @@ class ComposerController extends _$ComposerController {
             .toList()
       : const [];
 
+  /// Restores the newest stored draft for this composer's context (same
+  /// replyId); other drafts stay reachable through the avatar panel.
   Future<void> _restoreDraft() async {
-    final active = ref.read(activeAccountProvider);
-    if (active == null) return;
-    final draft = await ref.read(draftDaoProvider).read(active.id);
-    if (_disposed || draft == null) return;
-    if (draft.replyId != _replyId) return;
+    final store = _store;
+    if (store == null) return;
+    final drafts = await store.list();
+    if (_disposed || drafts.isEmpty) return;
+    final draft = drafts
+        .where((candidate) => candidate.replyId == _replyId)
+        .firstOrNull;
+    if (draft == null) return;
     final visibility = _parseVisibility(draft.visibility);
     final pollChoices = _decodeStringList(draft.pollChoices);
-    _lastText = draft.text;
-    _lastCw = draft.cw;
-    _lastVisibility = visibility;
-    _lastLocalOnly = draft.localOnly;
     state = state.copyWith(
       text: draft.text,
       cw: draft.cw,
       visibility: visibility,
       localOnly: draft.localOnly,
+      draftId: draft.id,
       restored: true,
       showPoll: pollChoices != null,
       pollChoices: pollChoices ?? const ['', ''],
@@ -243,24 +244,23 @@ class ComposerController extends _$ComposerController {
       reactionAcceptance: draft.reactionAcceptance,
       visibleUserIds: _decodeStringList(draft.visibleUserIds) ?? const [],
       scheduledAt: draft.scheduledAt,
+      fileIds: draft.fileIds,
     );
   }
 
   void setText(String value) {
-    _lastText = value;
     state = state.copyWith(text: value, error: null);
     _scheduleSave();
   }
 
   void setCw(String? value) {
-    final cw = value == null || value.trim().isEmpty ? null : value;
-    _lastCw = cw;
-    state = state.copyWith(cw: cw);
+    state = state.copyWith(
+      cw: value == null || value.trim().isEmpty ? null : value,
+    );
     _scheduleSave();
   }
 
   void setVisibility(NotesCreateRequestVisibility value) {
-    _lastVisibility = value;
     state = state.copyWith(visibility: value);
     _scheduleSave();
   }
@@ -279,7 +279,6 @@ class ComposerController extends _$ComposerController {
   }
 
   void setLocalOnly(bool value) {
-    _lastLocalOnly = value;
     state = state.copyWith(localOnly: value);
     _scheduleSave();
   }
@@ -392,6 +391,7 @@ class ComposerController extends _$ComposerController {
   }
 
   void _scheduleSave() {
+    _lastState = state;
     _dirty = true;
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -399,44 +399,61 @@ class ComposerController extends _$ComposerController {
     });
   }
 
-  Future<void> _persist({bool force = false}) async {
-    final active = ref.read(activeAccountProvider);
-    if (active == null) return;
-    if (!_dirty && !force) return;
+  /// Writes the current content to the draft store.
+  ///
+  /// [snapshot] is passed by the dispose path: riverpod forbids reading
+  /// `state` inside a lifecycle callback, so the last known state is handed
+  /// in from the last build instead. Returns the id of the stored draft.
+  Future<String?> _persist({
+    bool force = false,
+    ComposerState? snapshot,
+  }) async {
+    final store = _store;
+    final accountId = _accountId;
+    final current = snapshot ?? (_disposed ? null : state);
+    if (store == null || accountId == null || current == null) return null;
+    if (!force && !_dirty) return current.draftId;
     _dirty = false;
     final draft = ComposerDraft(
-      accountId: active.id,
-      text: state.text,
-      cw: state.cw,
-      visibility: state.visibility.name,
-      localOnly: state.localOnly,
+      id: current.draftId,
+      accountId: accountId,
+      text: current.text,
+      cw: current.cw,
+      visibility: current.visibility.name,
+      localOnly: current.localOnly,
       replyId: _replyId,
       updatedAt: DateTime.now(),
-      pollChoices: state.showPoll ? _encodeStringList(state.pollChoices) : null,
-      pollMultiple: state.pollMultiple,
-      pollExpiresAt: state.pollExpiresAt,
-      reactionAcceptance: state.reactionAcceptance,
-      visibleUserIds: state.visibleUserIds.isEmpty
+      fileIds: current.fileIds,
+      pollChoices: current.showPoll
+          ? _encodeStringList(current.pollChoices)
+          : null,
+      pollMultiple: current.pollMultiple,
+      pollExpiresAt: current.pollExpiresAt,
+      reactionAcceptance: current.reactionAcceptance,
+      visibleUserIds: current.visibleUserIds.isEmpty
           ? null
-          : _encodeStringList(state.visibleUserIds),
-      scheduledAt: state.scheduledAt,
+          : _encodeStringList(current.visibleUserIds),
+      scheduledAt: current.scheduledAt,
     );
-    await ref.read(draftDaoProvider).save(draft);
+    final id = await store.save(draft);
+    if (!_disposed) {
+      _lastState = state.copyWith(draftId: id);
+      state = _lastState!;
+    }
+    return id;
   }
 
   Future<void> deleteDraft() async {
-    final active = ref.read(activeAccountProvider);
-    if (active == null) return;
     _debounce?.cancel();
     _dirty = false;
-    await ref.read(draftDaoProvider).deleteDraft(active.id);
-    _lastText = '';
-    _lastCw = null;
-    _lastLocalOnly = false;
+    final id = state.draftId;
+    if (id != null) await _store?.delete(id);
+    if (_disposed) return;
     state = state.copyWith(
       text: '',
       cw: null,
       localOnly: false,
+      draftId: null,
       restored: false,
       error: null,
     );
@@ -466,7 +483,10 @@ class ComposerController extends _$ComposerController {
         scheduledAt: scheduled,
       );
       _dirty = false;
-      await ref.read(draftDaoProvider).deleteDraft(active.id);
+      final draftId = state.draftId;
+      if (draftId != null) {
+        await _store?.delete(draftId);
+      }
       ref.invalidate(noteListControllerProvider);
       final replyId = _replyId;
       if (replyId != null) {

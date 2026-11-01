@@ -67,7 +67,7 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(prefs),
         accountDaoProvider.overrideWithValue(accountDao ?? db.accountDao),
         cacheDaoProvider.overrideWithValue(db.cacheDao),
-        draftDaoProvider.overrideWithValue(db.draftDao),
+        localDraftsDaoProvider.overrideWithValue(db.localDraftsDao),
         tokenStoreProvider.overrideWithValue(tokens),
       ],
     );
@@ -105,9 +105,10 @@ void main() {
       await container.read(cacheDaoProvider).write(first.id, 'k', 'v1');
       await container.read(cacheDaoProvider).write(second.id, 'k', 'v2');
       await container
-          .read(draftDaoProvider)
+          .read(localDraftsDaoProvider)
           .save(
             ComposerDraft(
+              id: 'local:d1',
               accountId: first.id,
               text: 'a',
               visibility: 'public',
@@ -128,7 +129,10 @@ void main() {
         (await container.read(cacheDaoProvider).read(second.id, 'k'))?.payload,
         'v2',
       );
-      expect(await container.read(draftDaoProvider).read(first.id), isNull);
+      expect(
+        await container.read(localDraftsDaoProvider).list(first.id),
+        isEmpty,
+      );
       expect(
         (await container.read(accountDaoProvider).all()).map((a) => a.id),
         [second.id],

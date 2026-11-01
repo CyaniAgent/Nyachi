@@ -172,7 +172,7 @@ void main() {
       await database.cacheDao.write('account', 'meta.scheduledNotes', '1');
 
       expect(
-        (await _repository(database).readCache())?.scheduledNotesSupported,
+        (await _repository(database).readCache())?.draftsSupported,
         isTrue,
       );
     },
@@ -184,7 +184,7 @@ void main() {
       await database.cacheDao.write('account', 'meta', jsonEncode(_metaMap()));
 
       expect(
-        (await _repository(database).readCache())?.scheduledNotesSupported,
+        (await _repository(database).readCache())?.draftsSupported,
         isFalse,
       );
     },

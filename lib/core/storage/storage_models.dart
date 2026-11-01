@@ -21,6 +21,9 @@ abstract class LocalAccount with _$LocalAccount {
 @freezed
 abstract class ComposerDraft with _$ComposerDraft {
   const factory ComposerDraft({
+    /// Server draft id for server-side drafts; `local:`-prefixed UUID for
+    /// rows in the local fallback table; null for drafts not yet stored.
+    String? id,
     required String accountId,
     required String text,
     String? cw,
@@ -28,6 +31,11 @@ abstract class ComposerDraft with _$ComposerDraft {
     @Default(false) bool localOnly,
     String? replyId,
     required DateTime updatedAt,
+
+    /// Drive file ids attached to the draft. Server drafts only: uploading
+    /// a file already requires connectivity, so local fallback rows can
+    /// never carry one.
+    @Default(<String>[]) List<String> fileIds,
 
     /// JSON list of poll choices; null when the draft has no poll.
     String? pollChoices,

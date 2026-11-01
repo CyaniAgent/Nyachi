@@ -23,7 +23,7 @@ class InstanceInfo {
     required this.themeColor,
     required this.maxNoteTextLength,
     this.urlPreviewEnabled = false,
-    this.scheduledNotesSupported = false,
+    this.draftsSupported = false,
     this.version,
   });
 
@@ -34,24 +34,20 @@ class InstanceInfo {
   /// Whether the server renders URL previews (`enableUrlPreview` in meta).
   final bool urlPreviewEnabled;
 
-  /// Whether `notes/drafts/*` exists, i.e. scheduled posts can be queued on
-  /// the server. Probed once and cached, because meta has no flag for it.
-  final bool scheduledNotesSupported;
+  /// Whether `notes/drafts/*` exists, i.e. server-side drafts and scheduled
+  /// posts work. Probed once and cached, because meta has no flag for it.
+  final bool draftsSupported;
 
   /// Server version string, kept for diagnostics.
   final String? version;
 
-  InstanceInfo copyWith({
-    bool? urlPreviewEnabled,
-    bool? scheduledNotesSupported,
-  }) {
+  InstanceInfo copyWith({bool? urlPreviewEnabled, bool? draftsSupported}) {
     return InstanceInfo(
       name: name,
       themeColor: themeColor,
       maxNoteTextLength: maxNoteTextLength,
       urlPreviewEnabled: urlPreviewEnabled ?? this.urlPreviewEnabled,
-      scheduledNotesSupported:
-          scheduledNotesSupported ?? this.scheduledNotesSupported,
+      draftsSupported: draftsSupported ?? this.draftsSupported,
       version: version,
     );
   }
@@ -88,7 +84,7 @@ class InstanceRepository {
     final info = _fromJson(row.payload);
     if (info == null) return null;
     final probe = await cache.read(accountId, _probeKey);
-    return info.copyWith(scheduledNotesSupported: probe?.payload == '1');
+    return info.copyWith(draftsSupported: probe?.payload == '1');
   }
 
   /// Fetches metadata from the server and rewrites the cache.
@@ -113,7 +109,7 @@ class InstanceRepository {
         supported ? '1' : '0',
         updatedAt: DateTime.now(),
       );
-      return info.copyWith(scheduledNotesSupported: supported);
+      return info.copyWith(draftsSupported: supported);
     } catch (e) {
       if (e is MisskeyAuthenticationException) rethrow;
       logSilentFallback('instance_repository.refresh', e);

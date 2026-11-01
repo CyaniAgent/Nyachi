@@ -212,9 +212,7 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                             : note.myReaction == null
                             ? () => _pickReaction(note)
                             : () => _toggleReaction(note, note.myReaction!),
-                        onLongPress: _busy
-                            ? null
-                            : () => _pickReaction(note),
+                        onLongPress: _busy ? null : () => _pickReaction(note),
                       ),
                       _NoteAction(
                         icon: Icons.article_outlined,
@@ -338,15 +336,12 @@ class _NoteCardState extends ConsumerState<NoteCard> {
   /// Builds the shareable link on the note's origin instance; `url`/`uri`
   /// already are absolute for remote notes.
   Future<void> _copyLink(Note note) async {
-    final host =
-        note.user.host ?? ref.read(activeAccountProvider)?.host ?? '';
-    final link =
-        note.url ?? note.uri ?? 'https://$host/notes/${note.id}';
+    final host = note.user.host ?? ref.read(activeAccountProvider)?.host ?? '';
+    final link = note.url ?? note.uri ?? 'https://$host/notes/${note.id}';
     await Clipboard.setData(ClipboardData(text: link));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.linkCopied)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.l10n.linkCopied)));
   }
 
   Future<void> _toggleFavorite(Note note) async {

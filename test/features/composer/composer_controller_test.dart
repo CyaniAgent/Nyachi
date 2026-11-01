@@ -3,11 +3,13 @@
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/composer/application/composer_controller.dart';
+import 'package:nyachi/features/composer/application/draft_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -41,6 +43,16 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(preferences),
         appDatabaseProvider.overrideWithValue(database),
         activeAccountProvider.overrideWithValue(account),
+        // The local fallback store: no server drafts round-trip in these
+        // tests, so the network client is never reached.
+        draftStoreProvider.overrideWith(
+          (ref) => DraftStore(
+            client: MisskeyClient.fromHost('https://example.invalid'),
+            dao: database.localDraftsDao,
+            draftsSupported: false,
+            accountId: account.id,
+          ),
+        ),
         composerSenderProvider.overrideWithValue(
           sender ??
               ({
@@ -62,7 +74,7 @@ void main() {
     );
   }
 
-  test('autosaves and restores one draft per account', () async {
+  test('autosaves and restores the newest draft for the context', () async {
     final first = container();
     final firstSub = first.listen(composerControllerProvider(null), (_, _) {});
     first.read(composerControllerProvider(null).notifier).setText('draft body');
@@ -70,8 +82,8 @@ void main() {
     firstSub.close();
     first.dispose();
 
-    final saved = await database.draftDao.read(account.id);
-    expect(saved?.text, 'draft body');
+    final saved = await database.localDraftsDao.list(account.id);
+    expect(saved.single.text, 'draft body');
 
     final second = container();
     final provider = composerControllerProvider(null);
@@ -113,7 +125,7 @@ void main() {
     final ok = await controller.post();
     expect(ok, isTrue);
     expect(sent, isTrue);
-    expect(await database.draftDao.read(account.id), isNull);
+    expect(await database.localDraftsDao.list(account.id), isEmpty);
     sub.close();
     scope.dispose();
   });
@@ -126,6 +138,9 @@ void main() {
     controller.setText('x' * 3001);
     expect(controller.canPost(), isFalse);
     expect(await controller.post(), isFalse);
+    // Let the draft debounce settle so dispose has nothing left to flush
+    // against a database the teardown is about to close.
+    await Future<void>.delayed(const Duration(milliseconds: 650));
     sub.close();
     scope.dispose();
   });

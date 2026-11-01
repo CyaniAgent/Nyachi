@@ -68,7 +68,7 @@ ids (`compose_sheet.dart:914-917`).
 gauge, expand-to-full-page (sheet mode only, `compose_sheet.dart:450-457`),
 save draft, preview toggle with an inline `Switch`
 (`compose_sheet.dart:530-541`), schedule (gated on the
-`scheduledNotesSupported` instance probe,
+`draftsSupported` instance probe, renamed from `scheduledNotesSupported` in W2.1,
 `compose_sheet.dart:542-551`, `lib/core/network/instance_repository.dart:121-130`),
 then the reaction acceptance options flat in the menu
 (`_acceptanceOptions` map `compose_sheet.dart:429-434`, group rendered at
@@ -132,8 +132,10 @@ or `notes/drafts/create` (`composer_controller.dart:39-107`).
 - Drafts: blank drafts must not exist — nothing is persisted without
   substantive content (text, attachments, or a poll with choices). Drafts
   become a multi-entry list (independent id primary key) including separate
-  reply drafts, and drafts include attachments (fileIds). The draft list lives
-  in the composer header avatar panel.
+  reply drafts. Storage is hybrid: the server's `notes/drafts` queue when the
+  instance supports it (drafts and attachments included), the local Drift table
+  otherwise (50 per account, no attachments). The draft list lives in the
+  composer header avatar panel.
 - Avatar panel: the composer header avatar opens a panel with the drafts list,
   the scheduled posts list, and switching between accounts on the same
   instance.
@@ -152,18 +154,33 @@ or `notes/drafts/create` (`composer_controller.dart:39-107`).
 
 ## Design
 
-1. **Draft model.** Replace the single-slot `Drafts` table with a new Drift
-   table keyed by an independent `id` (UUID or auto-increment), columns:
-   `accountId`, `replyId` (nullable — reply drafts are their own entries),
-   `text`, `cw`, `visibility`, `localOnly`, `reactionAcceptance`,
-   `scheduledAt`, `fileIds` (JSON list), poll choices (JSON list) +
-   `pollMultiple` + `pollExpiresAt`, `updatedAt`. A draft row is written only
-   when `hasSubstantiveContent` holds: trimmed text non-empty, or ≥1 fileId,
-   or a poll with ≥2 non-empty choices. Anything else leaves no row and clears
-   the pending debounce. Delete on successful post (normal and scheduled
-   sends). Orphan sweep on startup removes rows whose account no longer
-   exists. Migration from the old single-slot table drops and starts fresh —
-   drafts are disposable, no data carries over.
+1. **Draft model (hybrid: server-primary, local fallback).** Drafts live in the
+   server's `notes/drafts` queue when the instance probe passes
+   (`InstanceInfo.draftsSupported`, probed via `notes/drafts/count`); the local
+   Drift table is the fallback for instances without the endpoints or while
+   offline. `DraftStore`
+   (`lib/features/composer/application/draft_store.dart`) owns the routing and
+   merges both sources into one newest-first list for the avatar panel.
+   - **Local fallback table** `LocalDrafts` replaces the single-slot `Drafts`
+     table (schema v2→v3, drop-and-recreate — drafts are disposable):
+     independent `id` primary key, `accountId`, `replyId` (nullable — reply
+     drafts are their own entries), `body`, `cw`, `visibility`, `localOnly`,
+     `reactionAcceptance`, `scheduledAt`, `fileIds` (JSON), poll choices (JSON)
+     + `pollMultiple` + `pollExpiresAt`, `visibleUserIds` (JSON), `updatedAt`.
+     Capped at 50 rows per account, oldest pruned.
+   - **Substantive-content gate.** A draft is stored only when
+     `hasSubstantiveContent` holds: trimmed text non-empty, or ≥1 fileId, or a
+     poll with ≥2 non-empty choices. Blank content deletes the stored row
+     instead — blank drafts never exist. Deleted on successful post (normal and
+     scheduled sends).
+   - **Attachments are server-only.** Uploading a file already requires
+     connectivity, so a locally written draft can never carry a fileId; local
+     rows store none. No offline "attachments dropped" state can arise.
+   - **Id namespace.** Server draft ids are opaque server strings; local rows
+     prefix their UUID with `local:` so deletes route to the right store.
+   - The server's own 999-draft cap is enforced server-side: `draftsCreate`
+     surfaces the error as-is, never worked around locally.
+   - Account deletion clears the account's local rows via `deleteAccount`.
 2. **Avatar panel.** The header avatar (`compose_sheet.dart:344`) becomes a
    tappable entry that opens a panel with three sections:
    - *Drafts list*: one row per draft (snippet, visibility icon, updated time);
@@ -172,7 +189,7 @@ or `notes/drafts/create` (`composer_controller.dart:39-107`).
      state); swipe or trailing button deletes.
    - *Scheduled posts list*: server-side, via the existing `notes/drafts`
      endpoints (list + delete), shown only when the instance probe
-     (`scheduledNotesSupported`) is positive.
+     (`draftsSupported`) is positive.
    - *Same-instance account switcher*: reuses the account switching logic of
      the settings account page, filtered to the active host, without forcing
      navigation away from the composer.
@@ -256,7 +273,7 @@ or `notes/drafts/create` (`composer_controller.dart:39-107`).
   `#` (trends) and `:` (catalog emoji).
 - The paperclip menu offers "Pick local file" and "Pick from drive"; picking
   one existing drive file adds its fileId without an upload request.
-- With `scheduledNotesSupported` probed true, the avatar panel lists scheduled
+- With `draftsSupported` probed true, the avatar panel lists scheduled
   posts and deleting one removes it server-side; probed false, the section is
   absent.
 - Composer requests continue to go through the shared API client (no
@@ -266,6 +283,9 @@ or `notes/drafts/create` (`composer_controller.dart:39-107`).
 
 - Should the drive picker also allow creating a folder inline, or is
   navigation-only acceptable for the first cut?
-- Draft retention: propose keeping the most recent 50 drafts per account with
-  the oldest pruned — needs maintainer confirmation of the limit (and whether
-  reply drafts count against it).
+
+## Resolved
+
+- Draft retention: local fallback keeps the most recent 50 drafts per account
+  (oldest pruned), reply drafts included in that count. Server drafts are
+  capped by the server at 999.

@@ -86,23 +86,17 @@ class MisskeyNoteRepository implements NoteRepository {
   @override
   Future<({bool isFavorited, bool isMutedThread})> state(String noteId) async {
     final state = await client.notes.state(noteId: noteId);
-    return (
-      isFavorited: state.isFavorited,
-      isMutedThread: state.isMutedThread,
-    );
+    return (isFavorited: state.isFavorited, isMutedThread: state.isMutedThread);
   }
 
   @override
-  Future<void> setThreadMuted(String noteId, {required bool muted}) =>
-      muted
-          ? client.notes.threadMutingCreate(noteId: noteId)
-          : client.notes.threadMutingDelete(noteId: noteId);
+  Future<void> setThreadMuted(String noteId, {required bool muted}) => muted
+      ? client.notes.threadMutingCreate(noteId: noteId)
+      : client.notes.threadMutingDelete(noteId: noteId);
 
   @override
-  Future<void> reportUser({
-    required String userId,
-    required String comment,
-  }) => client.users.reportAbuse(userId: userId, comment: comment);
+  Future<void> reportUser({required String userId, required String comment}) =>
+      client.users.reportAbuse(userId: userId, comment: comment);
 
   @override
   Future<String?> userMemo(String userId) async {
@@ -111,10 +105,8 @@ class MisskeyNoteRepository implements NoteRepository {
   }
 
   @override
-  Future<void> updateMemo({
-    required String userId,
-    required String memo,
-  }) => client.users.updateMemo(userId: userId, memo: memo);
+  Future<void> updateMemo({required String userId, required String memo}) =>
+      client.users.updateMemo(userId: userId, memo: memo);
 
   Future<Note> _refresh(String noteId) async {
     final note = await client.notes.show(noteId: noteId);

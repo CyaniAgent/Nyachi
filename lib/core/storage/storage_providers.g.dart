@@ -132,46 +132,46 @@ final class CacheDaoProvider
 
 String _$cacheDaoHash() => r'cb76662c58085408c1f9bf2e1a283380999fa6a2';
 
-@ProviderFor(draftDao)
-final draftDaoProvider = DraftDaoProvider._();
+@ProviderFor(localDraftsDao)
+final localDraftsDaoProvider = LocalDraftsDaoProvider._();
 
-final class DraftDaoProvider
-    extends $FunctionalProvider<DraftDao, DraftDao, DraftDao>
-    with $Provider<DraftDao> {
-  DraftDaoProvider._()
+final class LocalDraftsDaoProvider
+    extends $FunctionalProvider<LocalDraftsDao, LocalDraftsDao, LocalDraftsDao>
+    with $Provider<LocalDraftsDao> {
+  LocalDraftsDaoProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'draftDaoProvider',
+        name: r'localDraftsDaoProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$draftDaoHash();
+  String debugGetCreateSourceHash() => _$localDraftsDaoHash();
 
   @$internal
   @override
-  $ProviderElement<DraftDao> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<LocalDraftsDao> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  DraftDao create(Ref ref) {
-    return draftDao(ref);
+  LocalDraftsDao create(Ref ref) {
+    return localDraftsDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DraftDao value) {
+  Override overrideWithValue(LocalDraftsDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DraftDao>(value),
+      providerOverride: $SyncValueProvider<LocalDraftsDao>(value),
     );
   }
 }
 
-String _$draftDaoHash() => r'a83b6b7596e67a7ec61cdb53fb168cfa366e74cb';
+String _$localDraftsDaoHash() => r'4792f34be62a4f16bec41e0befc773cd6ab6258f';
 
 @ProviderFor(tokenStore)
 final tokenStoreProvider = TokenStoreProvider._();

@@ -539,8 +539,7 @@ class _MoreMenu extends ConsumerWidget {
             ),
           ),
         ),
-        if (ref.watch(instanceInfoProvider).value?.scheduledNotesSupported ??
-            false)
+        if (ref.watch(instanceInfoProvider).value?.draftsSupported ?? false)
           PopupMenuItem<String>(
             value: 'schedule',
             child: ListTile(

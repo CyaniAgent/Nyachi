@@ -79,9 +79,8 @@ void main() {
   testWidgets('the overflow menu lists the real entries without delete', (
     tester,
   ) async {
-    when(
-      () => repository.state('n1'),
-    ).thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
+    when(() => repository.state('n1'))
+        .thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
 
     await pumpCard(tester, note: makeNote('n1'), account: account());
     await tester.tap(find.byIcon(Icons.more_horiz));
@@ -96,9 +95,8 @@ void main() {
   });
 
   testWidgets('own notes offer delete in the menu', (tester) async {
-    when(
-      () => repository.state('n1'),
-    ).thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
+    when(() => repository.state('n1'))
+        .thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
 
     await pumpCard(
       tester,
@@ -125,9 +123,8 @@ void main() {
         return null;
       },
     );
-    when(
-      () => repository.state('n1'),
-    ).thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
+    when(() => repository.state('n1'))
+        .thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
 
     await pumpCard(tester, note: makeNote('n1'), account: account());
     await tester.tap(find.byIcon(Icons.more_horiz));
@@ -140,9 +137,8 @@ void main() {
   });
 
   testWidgets('favorite in the menu calls the repository', (tester) async {
-    when(
-      () => repository.state('n1'),
-    ).thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
+    when(() => repository.state('n1'))
+        .thenAnswer((_) async => (isFavorited: false, isMutedThread: false));
     when(() => repository.favorite('n1')).thenAnswer((_) async {});
 
     await pumpCard(tester, note: makeNote('n1'), account: account());
@@ -158,9 +154,8 @@ void main() {
   testWidgets('a reacted note turns the button into remove-reaction', (
     tester,
   ) async {
-    when(
-      () => repository.unreact('n1'),
-    ).thenAnswer((_) async => makeNote('n1'));
+    when(() => repository.unreact('n1'))
+        .thenAnswer((_) async => makeNote('n1'));
     final note = makeNote('n1').copyWith(myReaction: '🎉');
 
     await pumpCard(tester, note: note, account: account());

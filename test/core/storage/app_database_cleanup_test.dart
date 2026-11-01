@@ -32,16 +32,18 @@ void main() {
       await database.accountDao.upsert(account('b'));
       await database.cacheDao.write('a', 'timeline:home', '[1]');
       await database.cacheDao.write('b', 'timeline:home', '[2]');
-      await database.draftDao.save(
+      await database.localDraftsDao.save(
         ComposerDraft(
+          id: 'local:a1',
           accountId: 'a',
           text: 'a-draft',
           visibility: 'public',
           updatedAt: DateTime(2026),
         ),
       );
-      await database.draftDao.save(
+      await database.localDraftsDao.save(
         ComposerDraft(
+          id: 'local:b1',
           accountId: 'b',
           text: 'b-draft',
           visibility: 'public',
@@ -52,7 +54,7 @@ void main() {
       // Mirrors SessionController.removeAccount's four-way cleanup chain.
       await database.accountDao.deleteAccount('a');
       await database.cacheDao.deleteAccount('a');
-      await database.draftDao.deleteDraft('a');
+      await database.localDraftsDao.deleteAccount('a');
 
       expect(await database.accountDao.byId('a'), isNull);
       expect(await database.accountDao.byId('b'), isNotNull);
@@ -61,8 +63,8 @@ void main() {
         (await database.cacheDao.read('b', 'timeline:home'))?.payload,
         '[2]',
       );
-      expect(await database.draftDao.read('a'), isNull);
-      expect((await database.draftDao.read('b'))?.text, 'b-draft');
+      expect(await database.localDraftsDao.list('a'), isEmpty);
+      expect((await database.localDraftsDao.list('b')).single.text, 'b-draft');
     },
   );
 

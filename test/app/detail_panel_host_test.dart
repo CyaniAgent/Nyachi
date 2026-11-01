@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/app/detail_panel/detail_location.dart';
 import 'package:nyachi/app/detail_panel/open_detail.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
@@ -13,6 +14,7 @@ import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/composer/application/composer_controller.dart';
+import 'package:nyachi/features/composer/application/draft_store.dart';
 import 'package:nyachi/features/shell/presentation/root_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -71,6 +73,14 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(preferences),
           appDatabaseProvider.overrideWithValue(database),
           activeAccountProvider.overrideWithValue(account),
+          draftStoreProvider.overrideWith(
+            (ref) => DraftStore(
+              client: MisskeyClient.fromHost('https://example.invalid'),
+              dao: database.localDraftsDao,
+              draftsSupported: false,
+              accountId: account.id,
+            ),
+          ),
           composerSenderProvider.overrideWithValue(
             ({
               required text,
@@ -162,6 +172,14 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(preferences),
           appDatabaseProvider.overrideWithValue(database),
           activeAccountProvider.overrideWithValue(account),
+          draftStoreProvider.overrideWith(
+            (ref) => DraftStore(
+              client: MisskeyClient.fromHost('https://example.invalid'),
+              dao: database.localDraftsDao,
+              draftsSupported: false,
+              accountId: account.id,
+            ),
+          ),
           composerSenderProvider.overrideWithValue(
             ({
               required text,

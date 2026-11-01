@@ -33,7 +33,8 @@ AccountDao accountDao(Ref ref) => ref.watch(appDatabaseProvider).accountDao;
 CacheDao cacheDao(Ref ref) => ref.watch(appDatabaseProvider).cacheDao;
 
 @Riverpod(keepAlive: true)
-DraftDao draftDao(Ref ref) => ref.watch(appDatabaseProvider).draftDao;
+LocalDraftsDao localDraftsDao(Ref ref) =>
+    ref.watch(appDatabaseProvider).localDraftsDao;
 
 @Riverpod(keepAlive: true)
 TokenStore tokenStore(Ref ref) => SecureTokenStore();

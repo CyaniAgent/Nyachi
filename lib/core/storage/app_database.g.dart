@@ -846,11 +846,21 @@ class CacheEntriesCompanion extends UpdateCompanion<CacheEntry> {
   }
 }
 
-class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
+class $LocalDraftsTable extends LocalDrafts
+    with TableInfo<$LocalDraftsTable, LocalDraft> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $DraftsTable(this.attachedDatabase, [this._alias]);
+  $LocalDraftsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _accountIdMeta = const VerificationMeta(
     'accountId',
   );
@@ -862,6 +872,17 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _replyIdMeta = const VerificationMeta(
+    'replyId',
+  );
+  @override
+  late final GeneratedColumn<String> replyId = GeneratedColumn<String>(
+    'reply_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _bodyMeta = const VerificationMeta('body');
   @override
   late final GeneratedColumn<String> body = GeneratedColumn<String>(
@@ -869,7 +890,8 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _cwMeta = const VerificationMeta('cw');
   @override
@@ -906,27 +928,38 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _replyIdMeta = const VerificationMeta(
-    'replyId',
+  static const VerificationMeta _reactionAcceptanceMeta =
+      const VerificationMeta('reactionAcceptance');
+  @override
+  late final GeneratedColumn<String> reactionAcceptance =
+      GeneratedColumn<String>(
+        'reaction_acceptance',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _scheduledAtMeta = const VerificationMeta(
+    'scheduledAt',
   );
   @override
-  late final GeneratedColumn<String> replyId = GeneratedColumn<String>(
-    'reply_id',
+  late final GeneratedColumn<DateTime> scheduledAt = GeneratedColumn<DateTime>(
+    'scheduled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fileIdsMeta = const VerificationMeta(
+    'fileIds',
+  );
+  @override
+  late final GeneratedColumn<String> fileIds = GeneratedColumn<String>(
+    'file_ids',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
   );
   static const VerificationMeta _pollChoicesMeta = const VerificationMeta(
     'pollChoices',
@@ -966,17 +999,6 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
-  static const VerificationMeta _reactionAcceptanceMeta =
-      const VerificationMeta('reactionAcceptance');
-  @override
-  late final GeneratedColumn<String> reactionAcceptance =
-      GeneratedColumn<String>(
-        'reaction_acceptance',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      );
   static const VerificationMeta _visibleUserIdsMeta = const VerificationMeta(
     'visibleUserIds',
   );
@@ -988,45 +1010,52 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _scheduledAtMeta = const VerificationMeta(
-    'scheduledAt',
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
   );
   @override
-  late final GeneratedColumn<DateTime> scheduledAt = GeneratedColumn<DateTime>(
-    'scheduled_at',
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
     aliasedName,
-    true,
+    false,
     type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
   );
   @override
   List<GeneratedColumn> get $columns => [
+    id,
     accountId,
+    replyId,
     body,
     cw,
     visibility,
     localOnly,
-    replyId,
-    updatedAt,
+    reactionAcceptance,
+    scheduledAt,
+    fileIds,
     pollChoices,
     pollMultiple,
     pollExpiresAt,
-    reactionAcceptance,
     visibleUserIds,
-    scheduledAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'drafts';
+  static const String $name = 'local_drafts';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Draft> instance, {
+    Insertable<LocalDraft> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
     if (data.containsKey('account_id')) {
       context.handle(
         _accountIdMeta,
@@ -1035,13 +1064,17 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
     } else if (isInserting) {
       context.missing(_accountIdMeta);
     }
+    if (data.containsKey('reply_id')) {
+      context.handle(
+        _replyIdMeta,
+        replyId.isAcceptableOrUnknown(data['reply_id']!, _replyIdMeta),
+      );
+    }
     if (data.containsKey('body')) {
       context.handle(
         _bodyMeta,
         body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
       );
-    } else if (isInserting) {
-      context.missing(_bodyMeta);
     }
     if (data.containsKey('cw')) {
       context.handle(_cwMeta, cw.isAcceptableOrUnknown(data['cw']!, _cwMeta));
@@ -1060,19 +1093,29 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
         localOnly.isAcceptableOrUnknown(data['local_only']!, _localOnlyMeta),
       );
     }
-    if (data.containsKey('reply_id')) {
+    if (data.containsKey('reaction_acceptance')) {
       context.handle(
-        _replyIdMeta,
-        replyId.isAcceptableOrUnknown(data['reply_id']!, _replyIdMeta),
+        _reactionAcceptanceMeta,
+        reactionAcceptance.isAcceptableOrUnknown(
+          data['reaction_acceptance']!,
+          _reactionAcceptanceMeta,
+        ),
       );
     }
-    if (data.containsKey('updated_at')) {
+    if (data.containsKey('scheduled_at')) {
       context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+        _scheduledAtMeta,
+        scheduledAt.isAcceptableOrUnknown(
+          data['scheduled_at']!,
+          _scheduledAtMeta,
+        ),
       );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('file_ids')) {
+      context.handle(
+        _fileIdsMeta,
+        fileIds.isAcceptableOrUnknown(data['file_ids']!, _fileIdsMeta),
+      );
     }
     if (data.containsKey('poll_choices')) {
       context.handle(
@@ -1101,15 +1144,6 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
         ),
       );
     }
-    if (data.containsKey('reaction_acceptance')) {
-      context.handle(
-        _reactionAcceptanceMeta,
-        reactionAcceptance.isAcceptableOrUnknown(
-          data['reaction_acceptance']!,
-          _reactionAcceptanceMeta,
-        ),
-      );
-    }
     if (data.containsKey('visible_user_ids')) {
       context.handle(
         _visibleUserIdsMeta,
@@ -1119,28 +1153,35 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
         ),
       );
     }
-    if (data.containsKey('scheduled_at')) {
+    if (data.containsKey('updated_at')) {
       context.handle(
-        _scheduledAtMeta,
-        scheduledAt.isAcceptableOrUnknown(
-          data['scheduled_at']!,
-          _scheduledAtMeta,
-        ),
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
     }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {accountId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Draft map(Map<String, dynamic> data, {String? tablePrefix}) {
+  LocalDraft map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Draft(
+    return LocalDraft(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
       accountId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
       )!,
+      replyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reply_id'],
+      ),
       body: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}body'],
@@ -1157,14 +1198,18 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
         DriftSqlType.bool,
         data['${effectivePrefix}local_only'],
       )!,
-      replyId: attachedDatabase.typeMapping.read(
+      reactionAcceptance: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}reply_id'],
+        data['${effectivePrefix}reaction_acceptance'],
       ),
-      updatedAt: attachedDatabase.typeMapping.read(
+      scheduledAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+        data['${effectivePrefix}scheduled_at'],
+      ),
+      fileIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_ids'],
+      ),
       pollChoices: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}poll_choices'],
@@ -1177,74 +1222,85 @@ class $DraftsTable extends Drafts with TableInfo<$DraftsTable, Draft> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}poll_expires_at'],
       ),
-      reactionAcceptance: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}reaction_acceptance'],
-      ),
       visibleUserIds: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}visible_user_ids'],
       ),
-      scheduledAt: attachedDatabase.typeMapping.read(
+      updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
-        data['${effectivePrefix}scheduled_at'],
-      ),
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
   @override
-  $DraftsTable createAlias(String alias) {
-    return $DraftsTable(attachedDatabase, alias);
+  $LocalDraftsTable createAlias(String alias) {
+    return $LocalDraftsTable(attachedDatabase, alias);
   }
 }
 
-class Draft extends DataClass implements Insertable<Draft> {
+class LocalDraft extends DataClass implements Insertable<LocalDraft> {
+  final String id;
   final String accountId;
+  final String? replyId;
   final String body;
   final String? cw;
   final String visibility;
   final bool localOnly;
-  final String? replyId;
-  final DateTime updatedAt;
+  final String? reactionAcceptance;
+  final DateTime? scheduledAt;
+
+  /// JSON list of drive file ids; null when the draft has no attachments.
+  final String? fileIds;
 
   /// JSON list of poll choices; null when the draft has no poll.
   final String? pollChoices;
   final bool pollMultiple;
   final DateTime? pollExpiresAt;
-  final String? reactionAcceptance;
 
   /// JSON list of user ids for the `specified` (direct message) visibility.
   final String? visibleUserIds;
-  final DateTime? scheduledAt;
-  const Draft({
+  final DateTime updatedAt;
+  const LocalDraft({
+    required this.id,
     required this.accountId,
+    this.replyId,
     required this.body,
     this.cw,
     required this.visibility,
     required this.localOnly,
-    this.replyId,
-    required this.updatedAt,
+    this.reactionAcceptance,
+    this.scheduledAt,
+    this.fileIds,
     this.pollChoices,
     required this.pollMultiple,
     this.pollExpiresAt,
-    this.reactionAcceptance,
     this.visibleUserIds,
-    this.scheduledAt,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
     map['account_id'] = Variable<String>(accountId);
+    if (!nullToAbsent || replyId != null) {
+      map['reply_id'] = Variable<String>(replyId);
+    }
     map['body'] = Variable<String>(body);
     if (!nullToAbsent || cw != null) {
       map['cw'] = Variable<String>(cw);
     }
     map['visibility'] = Variable<String>(visibility);
     map['local_only'] = Variable<bool>(localOnly);
-    if (!nullToAbsent || replyId != null) {
-      map['reply_id'] = Variable<String>(replyId);
+    if (!nullToAbsent || reactionAcceptance != null) {
+      map['reaction_acceptance'] = Variable<String>(reactionAcceptance);
     }
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || scheduledAt != null) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt);
+    }
+    if (!nullToAbsent || fileIds != null) {
+      map['file_ids'] = Variable<String>(fileIds);
+    }
     if (!nullToAbsent || pollChoices != null) {
       map['poll_choices'] = Variable<String>(pollChoices);
     }
@@ -1252,29 +1308,33 @@ class Draft extends DataClass implements Insertable<Draft> {
     if (!nullToAbsent || pollExpiresAt != null) {
       map['poll_expires_at'] = Variable<DateTime>(pollExpiresAt);
     }
-    if (!nullToAbsent || reactionAcceptance != null) {
-      map['reaction_acceptance'] = Variable<String>(reactionAcceptance);
-    }
     if (!nullToAbsent || visibleUserIds != null) {
       map['visible_user_ids'] = Variable<String>(visibleUserIds);
     }
-    if (!nullToAbsent || scheduledAt != null) {
-      map['scheduled_at'] = Variable<DateTime>(scheduledAt);
-    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
-  DraftsCompanion toCompanion(bool nullToAbsent) {
-    return DraftsCompanion(
+  LocalDraftsCompanion toCompanion(bool nullToAbsent) {
+    return LocalDraftsCompanion(
+      id: Value(id),
       accountId: Value(accountId),
+      replyId: replyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(replyId),
       body: Value(body),
       cw: cw == null && nullToAbsent ? const Value.absent() : Value(cw),
       visibility: Value(visibility),
       localOnly: Value(localOnly),
-      replyId: replyId == null && nullToAbsent
+      reactionAcceptance: reactionAcceptance == null && nullToAbsent
           ? const Value.absent()
-          : Value(replyId),
-      updatedAt: Value(updatedAt),
+          : Value(reactionAcceptance),
+      scheduledAt: scheduledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduledAt),
+      fileIds: fileIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fileIds),
       pollChoices: pollChoices == null && nullToAbsent
           ? const Value.absent()
           : Value(pollChoices),
@@ -1282,107 +1342,117 @@ class Draft extends DataClass implements Insertable<Draft> {
       pollExpiresAt: pollExpiresAt == null && nullToAbsent
           ? const Value.absent()
           : Value(pollExpiresAt),
-      reactionAcceptance: reactionAcceptance == null && nullToAbsent
-          ? const Value.absent()
-          : Value(reactionAcceptance),
       visibleUserIds: visibleUserIds == null && nullToAbsent
           ? const Value.absent()
           : Value(visibleUserIds),
-      scheduledAt: scheduledAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(scheduledAt),
+      updatedAt: Value(updatedAt),
     );
   }
 
-  factory Draft.fromJson(
+  factory LocalDraft.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Draft(
+    return LocalDraft(
+      id: serializer.fromJson<String>(json['id']),
       accountId: serializer.fromJson<String>(json['accountId']),
+      replyId: serializer.fromJson<String?>(json['replyId']),
       body: serializer.fromJson<String>(json['body']),
       cw: serializer.fromJson<String?>(json['cw']),
       visibility: serializer.fromJson<String>(json['visibility']),
       localOnly: serializer.fromJson<bool>(json['localOnly']),
-      replyId: serializer.fromJson<String?>(json['replyId']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      pollChoices: serializer.fromJson<String?>(json['pollChoices']),
-      pollMultiple: serializer.fromJson<bool>(json['pollMultiple']),
-      pollExpiresAt: serializer.fromJson<DateTime?>(json['pollExpiresAt']),
       reactionAcceptance: serializer.fromJson<String?>(
         json['reactionAcceptance'],
       ),
-      visibleUserIds: serializer.fromJson<String?>(json['visibleUserIds']),
       scheduledAt: serializer.fromJson<DateTime?>(json['scheduledAt']),
+      fileIds: serializer.fromJson<String?>(json['fileIds']),
+      pollChoices: serializer.fromJson<String?>(json['pollChoices']),
+      pollMultiple: serializer.fromJson<bool>(json['pollMultiple']),
+      pollExpiresAt: serializer.fromJson<DateTime?>(json['pollExpiresAt']),
+      visibleUserIds: serializer.fromJson<String?>(json['visibleUserIds']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
       'accountId': serializer.toJson<String>(accountId),
+      'replyId': serializer.toJson<String?>(replyId),
       'body': serializer.toJson<String>(body),
       'cw': serializer.toJson<String?>(cw),
       'visibility': serializer.toJson<String>(visibility),
       'localOnly': serializer.toJson<bool>(localOnly),
-      'replyId': serializer.toJson<String?>(replyId),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'reactionAcceptance': serializer.toJson<String?>(reactionAcceptance),
+      'scheduledAt': serializer.toJson<DateTime?>(scheduledAt),
+      'fileIds': serializer.toJson<String?>(fileIds),
       'pollChoices': serializer.toJson<String?>(pollChoices),
       'pollMultiple': serializer.toJson<bool>(pollMultiple),
       'pollExpiresAt': serializer.toJson<DateTime?>(pollExpiresAt),
-      'reactionAcceptance': serializer.toJson<String?>(reactionAcceptance),
       'visibleUserIds': serializer.toJson<String?>(visibleUserIds),
-      'scheduledAt': serializer.toJson<DateTime?>(scheduledAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
-  Draft copyWith({
+  LocalDraft copyWith({
+    String? id,
     String? accountId,
+    Value<String?> replyId = const Value.absent(),
     String? body,
     Value<String?> cw = const Value.absent(),
     String? visibility,
     bool? localOnly,
-    Value<String?> replyId = const Value.absent(),
-    DateTime? updatedAt,
+    Value<String?> reactionAcceptance = const Value.absent(),
+    Value<DateTime?> scheduledAt = const Value.absent(),
+    Value<String?> fileIds = const Value.absent(),
     Value<String?> pollChoices = const Value.absent(),
     bool? pollMultiple,
     Value<DateTime?> pollExpiresAt = const Value.absent(),
-    Value<String?> reactionAcceptance = const Value.absent(),
     Value<String?> visibleUserIds = const Value.absent(),
-    Value<DateTime?> scheduledAt = const Value.absent(),
-  }) => Draft(
+    DateTime? updatedAt,
+  }) => LocalDraft(
+    id: id ?? this.id,
     accountId: accountId ?? this.accountId,
+    replyId: replyId.present ? replyId.value : this.replyId,
     body: body ?? this.body,
     cw: cw.present ? cw.value : this.cw,
     visibility: visibility ?? this.visibility,
     localOnly: localOnly ?? this.localOnly,
-    replyId: replyId.present ? replyId.value : this.replyId,
-    updatedAt: updatedAt ?? this.updatedAt,
+    reactionAcceptance: reactionAcceptance.present
+        ? reactionAcceptance.value
+        : this.reactionAcceptance,
+    scheduledAt: scheduledAt.present ? scheduledAt.value : this.scheduledAt,
+    fileIds: fileIds.present ? fileIds.value : this.fileIds,
     pollChoices: pollChoices.present ? pollChoices.value : this.pollChoices,
     pollMultiple: pollMultiple ?? this.pollMultiple,
     pollExpiresAt: pollExpiresAt.present
         ? pollExpiresAt.value
         : this.pollExpiresAt,
-    reactionAcceptance: reactionAcceptance.present
-        ? reactionAcceptance.value
-        : this.reactionAcceptance,
     visibleUserIds: visibleUserIds.present
         ? visibleUserIds.value
         : this.visibleUserIds,
-    scheduledAt: scheduledAt.present ? scheduledAt.value : this.scheduledAt,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
-  Draft copyWithCompanion(DraftsCompanion data) {
-    return Draft(
+  LocalDraft copyWithCompanion(LocalDraftsCompanion data) {
+    return LocalDraft(
+      id: data.id.present ? data.id.value : this.id,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      replyId: data.replyId.present ? data.replyId.value : this.replyId,
       body: data.body.present ? data.body.value : this.body,
       cw: data.cw.present ? data.cw.value : this.cw,
       visibility: data.visibility.present
           ? data.visibility.value
           : this.visibility,
       localOnly: data.localOnly.present ? data.localOnly.value : this.localOnly,
-      replyId: data.replyId.present ? data.replyId.value : this.replyId,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      reactionAcceptance: data.reactionAcceptance.present
+          ? data.reactionAcceptance.value
+          : this.reactionAcceptance,
+      scheduledAt: data.scheduledAt.present
+          ? data.scheduledAt.value
+          : this.scheduledAt,
+      fileIds: data.fileIds.present ? data.fileIds.value : this.fileIds,
       pollChoices: data.pollChoices.present
           ? data.pollChoices.value
           : this.pollChoices,
@@ -1392,187 +1462,202 @@ class Draft extends DataClass implements Insertable<Draft> {
       pollExpiresAt: data.pollExpiresAt.present
           ? data.pollExpiresAt.value
           : this.pollExpiresAt,
-      reactionAcceptance: data.reactionAcceptance.present
-          ? data.reactionAcceptance.value
-          : this.reactionAcceptance,
       visibleUserIds: data.visibleUserIds.present
           ? data.visibleUserIds.value
           : this.visibleUserIds,
-      scheduledAt: data.scheduledAt.present
-          ? data.scheduledAt.value
-          : this.scheduledAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('Draft(')
+    return (StringBuffer('LocalDraft(')
+          ..write('id: $id, ')
           ..write('accountId: $accountId, ')
+          ..write('replyId: $replyId, ')
           ..write('body: $body, ')
           ..write('cw: $cw, ')
           ..write('visibility: $visibility, ')
           ..write('localOnly: $localOnly, ')
-          ..write('replyId: $replyId, ')
-          ..write('updatedAt: $updatedAt, ')
+          ..write('reactionAcceptance: $reactionAcceptance, ')
+          ..write('scheduledAt: $scheduledAt, ')
+          ..write('fileIds: $fileIds, ')
           ..write('pollChoices: $pollChoices, ')
           ..write('pollMultiple: $pollMultiple, ')
           ..write('pollExpiresAt: $pollExpiresAt, ')
-          ..write('reactionAcceptance: $reactionAcceptance, ')
           ..write('visibleUserIds: $visibleUserIds, ')
-          ..write('scheduledAt: $scheduledAt')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
+    id,
     accountId,
+    replyId,
     body,
     cw,
     visibility,
     localOnly,
-    replyId,
-    updatedAt,
+    reactionAcceptance,
+    scheduledAt,
+    fileIds,
     pollChoices,
     pollMultiple,
     pollExpiresAt,
-    reactionAcceptance,
     visibleUserIds,
-    scheduledAt,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Draft &&
+      (other is LocalDraft &&
+          other.id == this.id &&
           other.accountId == this.accountId &&
+          other.replyId == this.replyId &&
           other.body == this.body &&
           other.cw == this.cw &&
           other.visibility == this.visibility &&
           other.localOnly == this.localOnly &&
-          other.replyId == this.replyId &&
-          other.updatedAt == this.updatedAt &&
+          other.reactionAcceptance == this.reactionAcceptance &&
+          other.scheduledAt == this.scheduledAt &&
+          other.fileIds == this.fileIds &&
           other.pollChoices == this.pollChoices &&
           other.pollMultiple == this.pollMultiple &&
           other.pollExpiresAt == this.pollExpiresAt &&
-          other.reactionAcceptance == this.reactionAcceptance &&
           other.visibleUserIds == this.visibleUserIds &&
-          other.scheduledAt == this.scheduledAt);
+          other.updatedAt == this.updatedAt);
 }
 
-class DraftsCompanion extends UpdateCompanion<Draft> {
+class LocalDraftsCompanion extends UpdateCompanion<LocalDraft> {
+  final Value<String> id;
   final Value<String> accountId;
+  final Value<String?> replyId;
   final Value<String> body;
   final Value<String?> cw;
   final Value<String> visibility;
   final Value<bool> localOnly;
-  final Value<String?> replyId;
-  final Value<DateTime> updatedAt;
+  final Value<String?> reactionAcceptance;
+  final Value<DateTime?> scheduledAt;
+  final Value<String?> fileIds;
   final Value<String?> pollChoices;
   final Value<bool> pollMultiple;
   final Value<DateTime?> pollExpiresAt;
-  final Value<String?> reactionAcceptance;
   final Value<String?> visibleUserIds;
-  final Value<DateTime?> scheduledAt;
+  final Value<DateTime> updatedAt;
   final Value<int> rowid;
-  const DraftsCompanion({
+  const LocalDraftsCompanion({
+    this.id = const Value.absent(),
     this.accountId = const Value.absent(),
+    this.replyId = const Value.absent(),
     this.body = const Value.absent(),
     this.cw = const Value.absent(),
     this.visibility = const Value.absent(),
     this.localOnly = const Value.absent(),
-    this.replyId = const Value.absent(),
-    this.updatedAt = const Value.absent(),
+    this.reactionAcceptance = const Value.absent(),
+    this.scheduledAt = const Value.absent(),
+    this.fileIds = const Value.absent(),
     this.pollChoices = const Value.absent(),
     this.pollMultiple = const Value.absent(),
     this.pollExpiresAt = const Value.absent(),
-    this.reactionAcceptance = const Value.absent(),
     this.visibleUserIds = const Value.absent(),
-    this.scheduledAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  DraftsCompanion.insert({
+  LocalDraftsCompanion.insert({
+    required String id,
     required String accountId,
-    required String body,
+    this.replyId = const Value.absent(),
+    this.body = const Value.absent(),
     this.cw = const Value.absent(),
     required String visibility,
     this.localOnly = const Value.absent(),
-    this.replyId = const Value.absent(),
-    required DateTime updatedAt,
+    this.reactionAcceptance = const Value.absent(),
+    this.scheduledAt = const Value.absent(),
+    this.fileIds = const Value.absent(),
     this.pollChoices = const Value.absent(),
     this.pollMultiple = const Value.absent(),
     this.pollExpiresAt = const Value.absent(),
-    this.reactionAcceptance = const Value.absent(),
     this.visibleUserIds = const Value.absent(),
-    this.scheduledAt = const Value.absent(),
+    required DateTime updatedAt,
     this.rowid = const Value.absent(),
-  }) : accountId = Value(accountId),
-       body = Value(body),
+  }) : id = Value(id),
+       accountId = Value(accountId),
        visibility = Value(visibility),
        updatedAt = Value(updatedAt);
-  static Insertable<Draft> custom({
+  static Insertable<LocalDraft> custom({
+    Expression<String>? id,
     Expression<String>? accountId,
+    Expression<String>? replyId,
     Expression<String>? body,
     Expression<String>? cw,
     Expression<String>? visibility,
     Expression<bool>? localOnly,
-    Expression<String>? replyId,
-    Expression<DateTime>? updatedAt,
+    Expression<String>? reactionAcceptance,
+    Expression<DateTime>? scheduledAt,
+    Expression<String>? fileIds,
     Expression<String>? pollChoices,
     Expression<bool>? pollMultiple,
     Expression<DateTime>? pollExpiresAt,
-    Expression<String>? reactionAcceptance,
     Expression<String>? visibleUserIds,
-    Expression<DateTime>? scheduledAt,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (id != null) 'id': id,
       if (accountId != null) 'account_id': accountId,
+      if (replyId != null) 'reply_id': replyId,
       if (body != null) 'body': body,
       if (cw != null) 'cw': cw,
       if (visibility != null) 'visibility': visibility,
       if (localOnly != null) 'local_only': localOnly,
-      if (replyId != null) 'reply_id': replyId,
-      if (updatedAt != null) 'updated_at': updatedAt,
+      if (reactionAcceptance != null) 'reaction_acceptance': reactionAcceptance,
+      if (scheduledAt != null) 'scheduled_at': scheduledAt,
+      if (fileIds != null) 'file_ids': fileIds,
       if (pollChoices != null) 'poll_choices': pollChoices,
       if (pollMultiple != null) 'poll_multiple': pollMultiple,
       if (pollExpiresAt != null) 'poll_expires_at': pollExpiresAt,
-      if (reactionAcceptance != null) 'reaction_acceptance': reactionAcceptance,
       if (visibleUserIds != null) 'visible_user_ids': visibleUserIds,
-      if (scheduledAt != null) 'scheduled_at': scheduledAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  DraftsCompanion copyWith({
+  LocalDraftsCompanion copyWith({
+    Value<String>? id,
     Value<String>? accountId,
+    Value<String?>? replyId,
     Value<String>? body,
     Value<String?>? cw,
     Value<String>? visibility,
     Value<bool>? localOnly,
-    Value<String?>? replyId,
-    Value<DateTime>? updatedAt,
+    Value<String?>? reactionAcceptance,
+    Value<DateTime?>? scheduledAt,
+    Value<String?>? fileIds,
     Value<String?>? pollChoices,
     Value<bool>? pollMultiple,
     Value<DateTime?>? pollExpiresAt,
-    Value<String?>? reactionAcceptance,
     Value<String?>? visibleUserIds,
-    Value<DateTime?>? scheduledAt,
+    Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
-    return DraftsCompanion(
+    return LocalDraftsCompanion(
+      id: id ?? this.id,
       accountId: accountId ?? this.accountId,
+      replyId: replyId ?? this.replyId,
       body: body ?? this.body,
       cw: cw ?? this.cw,
       visibility: visibility ?? this.visibility,
       localOnly: localOnly ?? this.localOnly,
-      replyId: replyId ?? this.replyId,
-      updatedAt: updatedAt ?? this.updatedAt,
+      reactionAcceptance: reactionAcceptance ?? this.reactionAcceptance,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
+      fileIds: fileIds ?? this.fileIds,
       pollChoices: pollChoices ?? this.pollChoices,
       pollMultiple: pollMultiple ?? this.pollMultiple,
       pollExpiresAt: pollExpiresAt ?? this.pollExpiresAt,
-      reactionAcceptance: reactionAcceptance ?? this.reactionAcceptance,
       visibleUserIds: visibleUserIds ?? this.visibleUserIds,
-      scheduledAt: scheduledAt ?? this.scheduledAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1580,8 +1665,14 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (replyId.present) {
+      map['reply_id'] = Variable<String>(replyId.value);
     }
     if (body.present) {
       map['body'] = Variable<String>(body.value);
@@ -1595,11 +1686,14 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
     if (localOnly.present) {
       map['local_only'] = Variable<bool>(localOnly.value);
     }
-    if (replyId.present) {
-      map['reply_id'] = Variable<String>(replyId.value);
+    if (reactionAcceptance.present) {
+      map['reaction_acceptance'] = Variable<String>(reactionAcceptance.value);
     }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    if (scheduledAt.present) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt.value);
+    }
+    if (fileIds.present) {
+      map['file_ids'] = Variable<String>(fileIds.value);
     }
     if (pollChoices.present) {
       map['poll_choices'] = Variable<String>(pollChoices.value);
@@ -1610,14 +1704,11 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
     if (pollExpiresAt.present) {
       map['poll_expires_at'] = Variable<DateTime>(pollExpiresAt.value);
     }
-    if (reactionAcceptance.present) {
-      map['reaction_acceptance'] = Variable<String>(reactionAcceptance.value);
-    }
     if (visibleUserIds.present) {
       map['visible_user_ids'] = Variable<String>(visibleUserIds.value);
     }
-    if (scheduledAt.present) {
-      map['scheduled_at'] = Variable<DateTime>(scheduledAt.value);
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1627,20 +1718,22 @@ class DraftsCompanion extends UpdateCompanion<Draft> {
 
   @override
   String toString() {
-    return (StringBuffer('DraftsCompanion(')
+    return (StringBuffer('LocalDraftsCompanion(')
+          ..write('id: $id, ')
           ..write('accountId: $accountId, ')
+          ..write('replyId: $replyId, ')
           ..write('body: $body, ')
           ..write('cw: $cw, ')
           ..write('visibility: $visibility, ')
           ..write('localOnly: $localOnly, ')
-          ..write('replyId: $replyId, ')
-          ..write('updatedAt: $updatedAt, ')
+          ..write('reactionAcceptance: $reactionAcceptance, ')
+          ..write('scheduledAt: $scheduledAt, ')
+          ..write('fileIds: $fileIds, ')
           ..write('pollChoices: $pollChoices, ')
           ..write('pollMultiple: $pollMultiple, ')
           ..write('pollExpiresAt: $pollExpiresAt, ')
-          ..write('reactionAcceptance: $reactionAcceptance, ')
           ..write('visibleUserIds: $visibleUserIds, ')
-          ..write('scheduledAt: $scheduledAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1652,10 +1745,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $AccountsTable accounts = $AccountsTable(this);
   late final $CacheEntriesTable cacheEntries = $CacheEntriesTable(this);
-  late final $DraftsTable drafts = $DraftsTable(this);
+  late final $LocalDraftsTable localDrafts = $LocalDraftsTable(this);
   late final AccountDao accountDao = AccountDao(this as AppDatabase);
   late final CacheDao cacheDao = CacheDao(this as AppDatabase);
-  late final DraftDao draftDao = DraftDao(this as AppDatabase);
+  late final LocalDraftsDao localDraftsDao = LocalDraftsDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1663,7 +1758,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     accounts,
     cacheEntries,
-    drafts,
+    localDrafts,
   ];
 }
 
@@ -2119,50 +2214,66 @@ typedef $$CacheEntriesTableProcessedTableManager =
       CacheEntry,
       PrefetchHooks Function()
     >;
-typedef $$DraftsTableCreateCompanionBuilder = DraftsCompanion Function({
-  required String accountId,
-  required String body,
-  Value<String?> cw,
-  required String visibility,
-  Value<bool> localOnly,
-  Value<String?> replyId,
-  required DateTime updatedAt,
-  Value<String?> pollChoices,
-  Value<bool> pollMultiple,
-  Value<DateTime?> pollExpiresAt,
-  Value<String?> reactionAcceptance,
-  Value<String?> visibleUserIds,
-  Value<DateTime?> scheduledAt,
-  Value<int> rowid,
-});
-typedef $$DraftsTableUpdateCompanionBuilder = DraftsCompanion Function({
-  Value<String> accountId,
-  Value<String> body,
-  Value<String?> cw,
-  Value<String> visibility,
-  Value<bool> localOnly,
-  Value<String?> replyId,
-  Value<DateTime> updatedAt,
-  Value<String?> pollChoices,
-  Value<bool> pollMultiple,
-  Value<DateTime?> pollExpiresAt,
-  Value<String?> reactionAcceptance,
-  Value<String?> visibleUserIds,
-  Value<DateTime?> scheduledAt,
-  Value<int> rowid,
-});
+typedef $$LocalDraftsTableCreateCompanionBuilder =
+    LocalDraftsCompanion Function({
+      required String id,
+      required String accountId,
+      Value<String?> replyId,
+      Value<String> body,
+      Value<String?> cw,
+      required String visibility,
+      Value<bool> localOnly,
+      Value<String?> reactionAcceptance,
+      Value<DateTime?> scheduledAt,
+      Value<String?> fileIds,
+      Value<String?> pollChoices,
+      Value<bool> pollMultiple,
+      Value<DateTime?> pollExpiresAt,
+      Value<String?> visibleUserIds,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LocalDraftsTableUpdateCompanionBuilder =
+    LocalDraftsCompanion Function({
+      Value<String> id,
+      Value<String> accountId,
+      Value<String?> replyId,
+      Value<String> body,
+      Value<String?> cw,
+      Value<String> visibility,
+      Value<bool> localOnly,
+      Value<String?> reactionAcceptance,
+      Value<DateTime?> scheduledAt,
+      Value<String?> fileIds,
+      Value<String?> pollChoices,
+      Value<bool> pollMultiple,
+      Value<DateTime?> pollExpiresAt,
+      Value<String?> visibleUserIds,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
 
-class $$DraftsTableFilterComposer
-    extends Composer<_$AppDatabase, $DraftsTable> {
-  $$DraftsTableFilterComposer({
+class $$LocalDraftsTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalDraftsTable> {
+  $$LocalDraftsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get accountId => $composableBuilder(
     column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get replyId => $composableBuilder(
+    column: $table.replyId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2186,13 +2297,18 @@ class $$DraftsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get replyId => $composableBuilder(
-    column: $table.replyId,
+  ColumnFilters<String> get reactionAcceptance => $composableBuilder(
+    column: $table.reactionAcceptance,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
+  ColumnFilters<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileIds => $composableBuilder(
+    column: $table.fileIds,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2211,33 +2327,38 @@ class $$DraftsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get reactionAcceptance => $composableBuilder(
-    column: $table.reactionAcceptance,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<String> get visibleUserIds => $composableBuilder(
     column: $table.visibleUserIds,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get scheduledAt => $composableBuilder(
-    column: $table.scheduledAt,
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
 
-class $$DraftsTableOrderingComposer
-    extends Composer<_$AppDatabase, $DraftsTable> {
-  $$DraftsTableOrderingComposer({
+class $$LocalDraftsTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalDraftsTable> {
+  $$LocalDraftsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get accountId => $composableBuilder(
     column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get replyId => $composableBuilder(
+    column: $table.replyId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2261,13 +2382,18 @@ class $$DraftsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get replyId => $composableBuilder(
-    column: $table.replyId,
+  ColumnOrderings<String> get reactionAcceptance => $composableBuilder(
+    column: $table.reactionAcceptance,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
+  ColumnOrderings<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileIds => $composableBuilder(
+    column: $table.fileIds,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2286,33 +2412,34 @@ class $$DraftsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get reactionAcceptance => $composableBuilder(
-    column: $table.reactionAcceptance,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<String> get visibleUserIds => $composableBuilder(
     column: $table.visibleUserIds,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get scheduledAt => $composableBuilder(
-    column: $table.scheduledAt,
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
 }
 
-class $$DraftsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $DraftsTable> {
-  $$DraftsTableAnnotationComposer({
+class $$LocalDraftsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalDraftsTable> {
+  $$LocalDraftsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get replyId =>
+      $composableBuilder(column: $table.replyId, builder: (column) => column);
 
   GeneratedColumn<String> get body =>
       $composableBuilder(column: $table.body, builder: (column) => column);
@@ -2328,11 +2455,18 @@ class $$DraftsTableAnnotationComposer
   GeneratedColumn<bool> get localOnly =>
       $composableBuilder(column: $table.localOnly, builder: (column) => column);
 
-  GeneratedColumn<String> get replyId =>
-      $composableBuilder(column: $table.replyId, builder: (column) => column);
+  GeneratedColumn<String> get reactionAcceptance => $composableBuilder(
+    column: $table.reactionAcceptance,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fileIds =>
+      $composableBuilder(column: $table.fileIds, builder: (column) => column);
 
   GeneratedColumn<String> get pollChoices => $composableBuilder(
     column: $table.pollChoices,
@@ -2349,117 +2483,121 @@ class $$DraftsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get reactionAcceptance => $composableBuilder(
-    column: $table.reactionAcceptance,
-    builder: (column) => column,
-  );
-
   GeneratedColumn<String> get visibleUserIds => $composableBuilder(
     column: $table.visibleUserIds,
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get scheduledAt => $composableBuilder(
-    column: $table.scheduledAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
-class $$DraftsTableTableManager
+class $$LocalDraftsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $DraftsTable,
-          Draft,
-          $$DraftsTableFilterComposer,
-          $$DraftsTableOrderingComposer,
-          $$DraftsTableAnnotationComposer,
-          $$DraftsTableCreateCompanionBuilder,
-          $$DraftsTableUpdateCompanionBuilder,
-          (Draft, BaseReferences<_$AppDatabase, $DraftsTable, Draft>),
-          Draft,
+          $LocalDraftsTable,
+          LocalDraft,
+          $$LocalDraftsTableFilterComposer,
+          $$LocalDraftsTableOrderingComposer,
+          $$LocalDraftsTableAnnotationComposer,
+          $$LocalDraftsTableCreateCompanionBuilder,
+          $$LocalDraftsTableUpdateCompanionBuilder,
+          (
+            LocalDraft,
+            BaseReferences<_$AppDatabase, $LocalDraftsTable, LocalDraft>,
+          ),
+          LocalDraft,
           PrefetchHooks Function()
         > {
-  $$DraftsTableTableManager(_$AppDatabase db, $DraftsTable table)
+  $$LocalDraftsTableTableManager(_$AppDatabase db, $LocalDraftsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$DraftsTableFilterComposer($db: db, $table: table),
+              $$LocalDraftsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$DraftsTableOrderingComposer($db: db, $table: table),
+              $$LocalDraftsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$DraftsTableAnnotationComposer($db: db, $table: table),
+              $$LocalDraftsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String> id = const Value.absent(),
                 Value<String> accountId = const Value.absent(),
+                Value<String?> replyId = const Value.absent(),
                 Value<String> body = const Value.absent(),
                 Value<String?> cw = const Value.absent(),
                 Value<String> visibility = const Value.absent(),
                 Value<bool> localOnly = const Value.absent(),
-                Value<String?> replyId = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<String?> reactionAcceptance = const Value.absent(),
+                Value<DateTime?> scheduledAt = const Value.absent(),
+                Value<String?> fileIds = const Value.absent(),
                 Value<String?> pollChoices = const Value.absent(),
                 Value<bool> pollMultiple = const Value.absent(),
                 Value<DateTime?> pollExpiresAt = const Value.absent(),
-                Value<String?> reactionAcceptance = const Value.absent(),
                 Value<String?> visibleUserIds = const Value.absent(),
-                Value<DateTime?> scheduledAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => DraftsCompanion(
+              }) => LocalDraftsCompanion(
+                id: id,
                 accountId: accountId,
+                replyId: replyId,
                 body: body,
                 cw: cw,
                 visibility: visibility,
                 localOnly: localOnly,
-                replyId: replyId,
-                updatedAt: updatedAt,
+                reactionAcceptance: reactionAcceptance,
+                scheduledAt: scheduledAt,
+                fileIds: fileIds,
                 pollChoices: pollChoices,
                 pollMultiple: pollMultiple,
                 pollExpiresAt: pollExpiresAt,
-                reactionAcceptance: reactionAcceptance,
                 visibleUserIds: visibleUserIds,
-                scheduledAt: scheduledAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
+                required String id,
                 required String accountId,
-                required String body,
+                Value<String?> replyId = const Value.absent(),
+                Value<String> body = const Value.absent(),
                 Value<String?> cw = const Value.absent(),
                 required String visibility,
                 Value<bool> localOnly = const Value.absent(),
-                Value<String?> replyId = const Value.absent(),
-                required DateTime updatedAt,
+                Value<String?> reactionAcceptance = const Value.absent(),
+                Value<DateTime?> scheduledAt = const Value.absent(),
+                Value<String?> fileIds = const Value.absent(),
                 Value<String?> pollChoices = const Value.absent(),
                 Value<bool> pollMultiple = const Value.absent(),
                 Value<DateTime?> pollExpiresAt = const Value.absent(),
-                Value<String?> reactionAcceptance = const Value.absent(),
                 Value<String?> visibleUserIds = const Value.absent(),
-                Value<DateTime?> scheduledAt = const Value.absent(),
+                required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
-              }) => DraftsCompanion.insert(
+              }) => LocalDraftsCompanion.insert(
+                id: id,
                 accountId: accountId,
+                replyId: replyId,
                 body: body,
                 cw: cw,
                 visibility: visibility,
                 localOnly: localOnly,
-                replyId: replyId,
-                updatedAt: updatedAt,
+                reactionAcceptance: reactionAcceptance,
+                scheduledAt: scheduledAt,
+                fileIds: fileIds,
                 pollChoices: pollChoices,
                 pollMultiple: pollMultiple,
                 pollExpiresAt: pollExpiresAt,
-                reactionAcceptance: reactionAcceptance,
                 visibleUserIds: visibleUserIds,
-                scheduledAt: scheduledAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$DraftsTable, Draft>(table),
-                  BaseReferences<_$AppDatabase, $DraftsTable, Draft>(
+                  e.readTable<$LocalDraftsTable, LocalDraft>(table),
+                  BaseReferences<_$AppDatabase, $LocalDraftsTable, LocalDraft>(
                     db,
                     table,
                     e,
@@ -2472,18 +2610,21 @@ class $$DraftsTableTableManager
       );
 }
 
-typedef $$DraftsTableProcessedTableManager =
+typedef $$LocalDraftsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $DraftsTable,
-      Draft,
-      $$DraftsTableFilterComposer,
-      $$DraftsTableOrderingComposer,
-      $$DraftsTableAnnotationComposer,
-      $$DraftsTableCreateCompanionBuilder,
-      $$DraftsTableUpdateCompanionBuilder,
-      (Draft, BaseReferences<_$AppDatabase, $DraftsTable, Draft>),
-      Draft,
+      $LocalDraftsTable,
+      LocalDraft,
+      $$LocalDraftsTableFilterComposer,
+      $$LocalDraftsTableOrderingComposer,
+      $$LocalDraftsTableAnnotationComposer,
+      $$LocalDraftsTableCreateCompanionBuilder,
+      $$LocalDraftsTableUpdateCompanionBuilder,
+      (
+        LocalDraft,
+        BaseReferences<_$AppDatabase, $LocalDraftsTable, LocalDraft>,
+      ),
+      LocalDraft,
       PrefetchHooks Function()
     >;
 
@@ -2494,8 +2635,8 @@ class $AppDatabaseManager {
       $$AccountsTableTableManager(_db, _db.accounts);
   $$CacheEntriesTableTableManager get cacheEntries =>
       $$CacheEntriesTableTableManager(_db, _db.cacheEntries);
-  $$DraftsTableTableManager get drafts =>
-      $$DraftsTableTableManager(_db, _db.drafts);
+  $$LocalDraftsTableTableManager get localDrafts =>
+      $$LocalDraftsTableTableManager(_db, _db.localDrafts);
 }
 
 mixin _$AccountDaoMixin on DatabaseAccessor<AppDatabase> {
@@ -2522,14 +2663,14 @@ class CacheDaoManager {
       $$CacheEntriesTableTableManager(_db.attachedDatabase, _db.cacheEntries);
 }
 
-mixin _$DraftDaoMixin on DatabaseAccessor<AppDatabase> {
-  $DraftsTable get drafts => attachedDatabase.drafts;
-  DraftDaoManager get managers => DraftDaoManager(this);
+mixin _$LocalDraftsDaoMixin on DatabaseAccessor<AppDatabase> {
+  $LocalDraftsTable get localDrafts => attachedDatabase.localDrafts;
+  LocalDraftsDaoManager get managers => LocalDraftsDaoManager(this);
 }
 
-class DraftDaoManager {
-  final _$DraftDaoMixin _db;
-  DraftDaoManager(this._db);
-  $$DraftsTableTableManager get drafts =>
-      $$DraftsTableTableManager(_db.attachedDatabase, _db.drafts);
+class LocalDraftsDaoManager {
+  final _$LocalDraftsDaoMixin _db;
+  LocalDraftsDaoManager(this._db);
+  $$LocalDraftsTableTableManager get localDrafts =>
+      $$LocalDraftsTableTableManager(_db.attachedDatabase, _db.localDrafts);
 }

@@ -66,8 +66,9 @@ void main() {
 
   test('removing account data clears cache and draft', () async {
     await database.cacheDao.write('a', 'notifications', '[]');
-    await database.draftDao.save(
+    await database.localDraftsDao.save(
       ComposerDraft(
+        id: 'local:a1',
         accountId: 'a',
         text: 'hello',
         visibility: 'public',
@@ -76,9 +77,9 @@ void main() {
     );
 
     await database.cacheDao.deleteAccount('a');
-    await database.draftDao.deleteDraft('a');
+    await database.localDraftsDao.deleteAccount('a');
 
     expect(await database.cacheDao.read('a', 'notifications'), isNull);
-    expect(await database.draftDao.read('a'), isNull);
+    expect(await database.localDraftsDao.list('a'), isEmpty);
   });
 }

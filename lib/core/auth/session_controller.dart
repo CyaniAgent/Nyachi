@@ -76,7 +76,7 @@ class SessionController extends _$SessionController {
 
   CacheDao get _cache => ref.read(cacheDaoProvider);
 
-  DraftDao get _drafts => ref.read(draftDaoProvider);
+  LocalDraftsDao get _drafts => ref.read(localDraftsDaoProvider);
 
   TokenStore get _tokens => ref.read(tokenStoreProvider);
 
@@ -167,7 +167,7 @@ class SessionController extends _$SessionController {
     final wasActive = state.active?.id == id;
     await _tokens.delete(id);
     await _cache.deleteAccount(id);
-    await _drafts.deleteDraft(id);
+    await _drafts.deleteAccount(id);
     await _accounts.deleteAccount(id);
     final remaining = await _accounts.all();
     if (!wasActive) {

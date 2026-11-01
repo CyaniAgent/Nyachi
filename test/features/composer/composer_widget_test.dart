@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/network/instance_repository.dart';
@@ -11,16 +12,17 @@ import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/composer/application/composer_controller.dart';
+import 'package:nyachi/features/composer/application/draft_store.dart';
 import 'package:nyachi/features/composer/presentation/compose_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Pumps [ComposerBody] in a page-like surface with a fake account and sender.
 ///
-/// [scheduledNotes] mirrors `InstanceInfo.scheduledNotesSupported`, which gates
+/// [draftsSupported] mirrors `InstanceInfo.draftsSupported`, which gates
 /// the schedule entry in the overflow menu.
 Future<ProviderContainer> _pumpComposer(
   WidgetTester tester, {
-  bool scheduledNotes = false,
+  bool draftsSupported = false,
 }) async {
   final database = AppDatabase(NativeDatabase.memory());
   addTearDown(database.close);
@@ -39,6 +41,16 @@ Future<ProviderContainer> _pumpComposer(
       sharedPreferencesProvider.overrideWithValue(preferences),
       appDatabaseProvider.overrideWithValue(database),
       activeAccountProvider.overrideWithValue(account),
+      // Local-only draft store: the widget tests exercise the composer UI,
+      // never the server drafts round-trip, so the network client is unused.
+      draftStoreProvider.overrideWith(
+        (ref) => DraftStore(
+          client: MisskeyClient.fromHost('https://example.invalid'),
+          dao: database.localDraftsDao,
+          draftsSupported: false,
+          accountId: account.id,
+        ),
+      ),
       composerSenderProvider.overrideWithValue(
         ({
           required text,
@@ -60,7 +72,7 @@ Future<ProviderContainer> _pumpComposer(
           name: 'Example',
           themeColor: '#123456',
           maxNoteTextLength: 3000,
-          scheduledNotesSupported: scheduledNotes,
+          draftsSupported: draftsSupported,
         ),
       ),
     ],
@@ -180,7 +192,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await _pumpComposer(tester, scheduledNotes: true);
+    await _pumpComposer(tester, draftsSupported: true);
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 

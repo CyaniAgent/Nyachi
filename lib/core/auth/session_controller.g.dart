@@ -44,7 +44,7 @@ final class SessionControllerProvider
   }
 }
 
-String _$sessionControllerHash() => r'42585b8531a5e052d4bae60c00f18cf5f3cd8ff3';
+String _$sessionControllerHash() => r'5308f31b8a89636f093ee536cb05ec26c64837cb';
 
 /// A single process-wide session with one active account.
 

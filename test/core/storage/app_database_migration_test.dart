@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 
-/// Stands in for a future schema bump: one version above the shipped schema
-/// against a database file created at the current version, which forces the
-/// onUpgrade path to run.
+/// Stands in for a newer build: one version above the shipped schema against
+/// a database file created at the current version, which forces the onUpgrade
+/// path to run with no matching per-version migration.
 class _FutureSchemaDatabase extends AppDatabase {
   _FutureSchemaDatabase(super.executor);
 
@@ -28,7 +28,7 @@ void main() {
     tempDir.deleteSync(recursive: true);
   });
 
-  test('schema bump rebuilds local tables instead of crashing', () async {
+  test('a forward bump with no migration preserves existing data', () async {
     final file = File('${tempDir.path}/db.sqlite');
     final first = AppDatabase(NativeDatabase(file));
     await first.accountDao.upsert(
@@ -45,11 +45,10 @@ void main() {
     await first.close();
 
     final second = _FutureSchemaDatabase(NativeDatabase(file));
+    // Per-version migrations never wipe data on an unmapped forward bump.
     final accounts = await second.accountDao.all();
-    expect(accounts, isEmpty);
-
-    await second.cacheDao.write('a1', 'timeline:home', '[2]');
-    expect((await second.cacheDao.read('a1', 'timeline:home'))?.payload, '[2]');
+    expect(accounts.map((a) => a.id), ['a1']);
+    expect((await second.cacheDao.read('a1', 'timeline:home'))?.payload, '[1]');
     await second.close();
   });
 

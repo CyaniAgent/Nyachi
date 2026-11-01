@@ -300,7 +300,12 @@ as DateTime,
 /// @nodoc
 mixin _$ComposerDraft {
 
- String get accountId; String get text; String? get cw; String get visibility; bool get localOnly; String? get replyId; DateTime get updatedAt;/// JSON list of poll choices; null when the draft has no poll.
+/// Server draft id for server-side drafts; `local:`-prefixed UUID for
+/// rows in the local fallback table; null for drafts not yet stored.
+ String? get id; String get accountId; String get text; String? get cw; String get visibility; bool get localOnly; String? get replyId; DateTime get updatedAt;/// Drive file ids attached to the draft. Server drafts only: uploading
+/// a file already requires connectivity, so local fallback rows can
+/// never carry one.
+ List<String> get fileIds;/// JSON list of poll choices; null when the draft has no poll.
  String? get pollChoices; bool get pollMultiple; DateTime? get pollExpiresAt; String? get reactionAcceptance;/// JSON list of user ids for the `specified` visibility.
  String? get visibleUserIds; DateTime? get scheduledAt;
 /// Create a copy of ComposerDraft
@@ -314,20 +319,20 @@ $ComposerDraftCopyWith<ComposerDraft> get copyWith => _$ComposerDraftCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as ComposerDraft;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ComposerDraft&&(identical(other.accountId, _this.accountId) || other.accountId == _this.accountId)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.cw, _this.cw) || other.cw == _this.cw)&&(identical(other.visibility, _this.visibility) || other.visibility == _this.visibility)&&(identical(other.localOnly, _this.localOnly) || other.localOnly == _this.localOnly)&&(identical(other.replyId, _this.replyId) || other.replyId == _this.replyId)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.pollChoices, _this.pollChoices) || other.pollChoices == _this.pollChoices)&&(identical(other.pollMultiple, _this.pollMultiple) || other.pollMultiple == _this.pollMultiple)&&(identical(other.pollExpiresAt, _this.pollExpiresAt) || other.pollExpiresAt == _this.pollExpiresAt)&&(identical(other.reactionAcceptance, _this.reactionAcceptance) || other.reactionAcceptance == _this.reactionAcceptance)&&(identical(other.visibleUserIds, _this.visibleUserIds) || other.visibleUserIds == _this.visibleUserIds)&&(identical(other.scheduledAt, _this.scheduledAt) || other.scheduledAt == _this.scheduledAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ComposerDraft&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.accountId, _this.accountId) || other.accountId == _this.accountId)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.cw, _this.cw) || other.cw == _this.cw)&&(identical(other.visibility, _this.visibility) || other.visibility == _this.visibility)&&(identical(other.localOnly, _this.localOnly) || other.localOnly == _this.localOnly)&&(identical(other.replyId, _this.replyId) || other.replyId == _this.replyId)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&const DeepCollectionEquality().equals(other.fileIds, _this.fileIds)&&(identical(other.pollChoices, _this.pollChoices) || other.pollChoices == _this.pollChoices)&&(identical(other.pollMultiple, _this.pollMultiple) || other.pollMultiple == _this.pollMultiple)&&(identical(other.pollExpiresAt, _this.pollExpiresAt) || other.pollExpiresAt == _this.pollExpiresAt)&&(identical(other.reactionAcceptance, _this.reactionAcceptance) || other.reactionAcceptance == _this.reactionAcceptance)&&(identical(other.visibleUserIds, _this.visibleUserIds) || other.visibleUserIds == _this.visibleUserIds)&&(identical(other.scheduledAt, _this.scheduledAt) || other.scheduledAt == _this.scheduledAt));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ComposerDraft;
-  return Object.hash(runtimeType,_this.accountId,_this.text,_this.cw,_this.visibility,_this.localOnly,_this.replyId,_this.updatedAt,_this.pollChoices,_this.pollMultiple,_this.pollExpiresAt,_this.reactionAcceptance,_this.visibleUserIds,_this.scheduledAt);
+  return Object.hash(runtimeType,_this.id,_this.accountId,_this.text,_this.cw,_this.visibility,_this.localOnly,_this.replyId,_this.updatedAt,const DeepCollectionEquality().hash(_this.fileIds),_this.pollChoices,_this.pollMultiple,_this.pollExpiresAt,_this.reactionAcceptance,_this.visibleUserIds,_this.scheduledAt);
 }
 
 @override
 String toString() {
   final _this = this as ComposerDraft;
-  return 'ComposerDraft(accountId: ${_this.accountId}, text: ${_this.text}, cw: ${_this.cw}, visibility: ${_this.visibility}, localOnly: ${_this.localOnly}, replyId: ${_this.replyId}, updatedAt: ${_this.updatedAt}, pollChoices: ${_this.pollChoices}, pollMultiple: ${_this.pollMultiple}, pollExpiresAt: ${_this.pollExpiresAt}, reactionAcceptance: ${_this.reactionAcceptance}, visibleUserIds: ${_this.visibleUserIds}, scheduledAt: ${_this.scheduledAt})';
+  return 'ComposerDraft(id: ${_this.id}, accountId: ${_this.accountId}, text: ${_this.text}, cw: ${_this.cw}, visibility: ${_this.visibility}, localOnly: ${_this.localOnly}, replyId: ${_this.replyId}, updatedAt: ${_this.updatedAt}, fileIds: ${_this.fileIds}, pollChoices: ${_this.pollChoices}, pollMultiple: ${_this.pollMultiple}, pollExpiresAt: ${_this.pollExpiresAt}, reactionAcceptance: ${_this.reactionAcceptance}, visibleUserIds: ${_this.visibleUserIds}, scheduledAt: ${_this.scheduledAt})';
 }
 
 
@@ -338,7 +343,7 @@ abstract mixin class $ComposerDraftCopyWith<$Res>  {
   factory $ComposerDraftCopyWith(ComposerDraft value, $Res Function(ComposerDraft) _then) = _$ComposerDraftCopyWithImpl;
 @useResult
 $Res call({
- String accountId, String text, String? cw, String visibility, bool localOnly, String? replyId, DateTime updatedAt, String? pollChoices, bool pollMultiple, DateTime? pollExpiresAt, String? reactionAcceptance, String? visibleUserIds, DateTime? scheduledAt
+ String? id, String accountId, String text, String? cw, String visibility, bool localOnly, String? replyId, DateTime updatedAt, List<String> fileIds, String? pollChoices, bool pollMultiple, DateTime? pollExpiresAt, String? reactionAcceptance, String? visibleUserIds, DateTime? scheduledAt
 });
 
 
@@ -355,16 +360,18 @@ class _$ComposerDraftCopyWithImpl<$Res>
 
 /// Create a copy of ComposerDraft
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? accountId = null,Object? text = null,Object? cw = freezed,Object? visibility = null,Object? localOnly = null,Object? replyId = freezed,Object? updatedAt = null,Object? pollChoices = freezed,Object? pollMultiple = null,Object? pollExpiresAt = freezed,Object? reactionAcceptance = freezed,Object? visibleUserIds = freezed,Object? scheduledAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? accountId = null,Object? text = null,Object? cw = freezed,Object? visibility = null,Object? localOnly = null,Object? replyId = freezed,Object? updatedAt = null,Object? fileIds = null,Object? pollChoices = freezed,Object? pollMultiple = null,Object? pollExpiresAt = freezed,Object? reactionAcceptance = freezed,Object? visibleUserIds = freezed,Object? scheduledAt = freezed,}) {
   return _then(ComposerDraft(
-accountId: null == accountId ? _self.accountId : accountId // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,accountId: null == accountId ? _self.accountId : accountId // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,cw: freezed == cw ? _self.cw : cw // ignore: cast_nullable_to_non_nullable
 as String?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,localOnly: null == localOnly ? _self.localOnly : localOnly // ignore: cast_nullable_to_non_nullable
 as bool,replyId: freezed == replyId ? _self.replyId : replyId // ignore: cast_nullable_to_non_nullable
 as String?,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,pollChoices: freezed == pollChoices ? _self.pollChoices : pollChoices // ignore: cast_nullable_to_non_nullable
+as DateTime,fileIds: null == fileIds ? _self.fileIds : fileIds // ignore: cast_nullable_to_non_nullable
+as List<String>,pollChoices: freezed == pollChoices ? _self.pollChoices : pollChoices // ignore: cast_nullable_to_non_nullable
 as String?,pollMultiple: null == pollMultiple ? _self.pollMultiple : pollMultiple // ignore: cast_nullable_to_non_nullable
 as bool,pollExpiresAt: freezed == pollExpiresAt ? _self.pollExpiresAt : pollExpiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,reactionAcceptance: freezed == reactionAcceptance ? _self.reactionAcceptance : reactionAcceptance // ignore: cast_nullable_to_non_nullable
@@ -455,10 +462,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String accountId,  String text,  String? cw,  String visibility,  bool localOnly,  String? replyId,  DateTime updatedAt,  String? pollChoices,  bool pollMultiple,  DateTime? pollExpiresAt,  String? reactionAcceptance,  String? visibleUserIds,  DateTime? scheduledAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  String accountId,  String text,  String? cw,  String visibility,  bool localOnly,  String? replyId,  DateTime updatedAt,  List<String> fileIds,  String? pollChoices,  bool pollMultiple,  DateTime? pollExpiresAt,  String? reactionAcceptance,  String? visibleUserIds,  DateTime? scheduledAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ComposerDraft() when $default != null:
-return $default(_that.accountId,_that.text,_that.cw,_that.visibility,_that.localOnly,_that.replyId,_that.updatedAt,_that.pollChoices,_that.pollMultiple,_that.pollExpiresAt,_that.reactionAcceptance,_that.visibleUserIds,_that.scheduledAt);case _:
+return $default(_that.id,_that.accountId,_that.text,_that.cw,_that.visibility,_that.localOnly,_that.replyId,_that.updatedAt,_that.fileIds,_that.pollChoices,_that.pollMultiple,_that.pollExpiresAt,_that.reactionAcceptance,_that.visibleUserIds,_that.scheduledAt);case _:
   return orElse();
 
 }
@@ -476,10 +483,10 @@ return $default(_that.accountId,_that.text,_that.cw,_that.visibility,_that.local
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String accountId,  String text,  String? cw,  String visibility,  bool localOnly,  String? replyId,  DateTime updatedAt,  String? pollChoices,  bool pollMultiple,  DateTime? pollExpiresAt,  String? reactionAcceptance,  String? visibleUserIds,  DateTime? scheduledAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  String accountId,  String text,  String? cw,  String visibility,  bool localOnly,  String? replyId,  DateTime updatedAt,  List<String> fileIds,  String? pollChoices,  bool pollMultiple,  DateTime? pollExpiresAt,  String? reactionAcceptance,  String? visibleUserIds,  DateTime? scheduledAt)  $default,) {final _that = this;
 switch (_that) {
 case _ComposerDraft():
-return $default(_that.accountId,_that.text,_that.cw,_that.visibility,_that.localOnly,_that.replyId,_that.updatedAt,_that.pollChoices,_that.pollMultiple,_that.pollExpiresAt,_that.reactionAcceptance,_that.visibleUserIds,_that.scheduledAt);case _:
+return $default(_that.id,_that.accountId,_that.text,_that.cw,_that.visibility,_that.localOnly,_that.replyId,_that.updatedAt,_that.fileIds,_that.pollChoices,_that.pollMultiple,_that.pollExpiresAt,_that.reactionAcceptance,_that.visibleUserIds,_that.scheduledAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -496,10 +503,10 @@ return $default(_that.accountId,_that.text,_that.cw,_that.visibility,_that.local
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String accountId,  String text,  String? cw,  String visibility,  bool localOnly,  String? replyId,  DateTime updatedAt,  String? pollChoices,  bool pollMultiple,  DateTime? pollExpiresAt,  String? reactionAcceptance,  String? visibleUserIds,  DateTime? scheduledAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  String accountId,  String text,  String? cw,  String visibility,  bool localOnly,  String? replyId,  DateTime updatedAt,  List<String> fileIds,  String? pollChoices,  bool pollMultiple,  DateTime? pollExpiresAt,  String? reactionAcceptance,  String? visibleUserIds,  DateTime? scheduledAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ComposerDraft() when $default != null:
-return $default(_that.accountId,_that.text,_that.cw,_that.visibility,_that.localOnly,_that.replyId,_that.updatedAt,_that.pollChoices,_that.pollMultiple,_that.pollExpiresAt,_that.reactionAcceptance,_that.visibleUserIds,_that.scheduledAt);case _:
+return $default(_that.id,_that.accountId,_that.text,_that.cw,_that.visibility,_that.localOnly,_that.replyId,_that.updatedAt,_that.fileIds,_that.pollChoices,_that.pollMultiple,_that.pollExpiresAt,_that.reactionAcceptance,_that.visibleUserIds,_that.scheduledAt);case _:
   return null;
 
 }
@@ -511,9 +518,12 @@ return $default(_that.accountId,_that.text,_that.cw,_that.visibility,_that.local
 
 
 class _ComposerDraft implements ComposerDraft {
-  const _ComposerDraft({required this.accountId, required this.text, this.cw, required this.visibility, this.localOnly = false, this.replyId, required this.updatedAt, this.pollChoices, this.pollMultiple = false, this.pollExpiresAt, this.reactionAcceptance, this.visibleUserIds, this.scheduledAt});
+  const _ComposerDraft({this.id, required this.accountId, required this.text, this.cw, required this.visibility, this.localOnly = false, this.replyId, required this.updatedAt,  List<String> fileIds = const <String>[], this.pollChoices, this.pollMultiple = false, this.pollExpiresAt, this.reactionAcceptance, this.visibleUserIds, this.scheduledAt}): _fileIds = fileIds;
   
 
+/// Server draft id for server-side drafts; `local:`-prefixed UUID for
+/// rows in the local fallback table; null for drafts not yet stored.
+@override final  String? id;
 @override final  String accountId;
 @override final  String text;
 @override final  String? cw;
@@ -521,6 +531,19 @@ class _ComposerDraft implements ComposerDraft {
 @override@JsonKey() final  bool localOnly;
 @override final  String? replyId;
 @override final  DateTime updatedAt;
+/// Drive file ids attached to the draft. Server drafts only: uploading
+/// a file already requires connectivity, so local fallback rows can
+/// never carry one.
+ final  List<String> _fileIds;
+/// Drive file ids attached to the draft. Server drafts only: uploading
+/// a file already requires connectivity, so local fallback rows can
+/// never carry one.
+@override@JsonKey() List<String> get fileIds {
+  if (_fileIds is EqualUnmodifiableListView) return _fileIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_fileIds);
+}
+
 /// JSON list of poll choices; null when the draft has no poll.
 @override final  String? pollChoices;
 @override@JsonKey() final  bool pollMultiple;
@@ -540,18 +563,18 @@ _$ComposerDraftCopyWith<_ComposerDraft> get copyWith => __$ComposerDraftCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ComposerDraft&&(identical(other.accountId, accountId) || other.accountId == accountId)&&(identical(other.text, text) || other.text == text)&&(identical(other.cw, cw) || other.cw == cw)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.localOnly, localOnly) || other.localOnly == localOnly)&&(identical(other.replyId, replyId) || other.replyId == replyId)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.pollChoices, pollChoices) || other.pollChoices == pollChoices)&&(identical(other.pollMultiple, pollMultiple) || other.pollMultiple == pollMultiple)&&(identical(other.pollExpiresAt, pollExpiresAt) || other.pollExpiresAt == pollExpiresAt)&&(identical(other.reactionAcceptance, reactionAcceptance) || other.reactionAcceptance == reactionAcceptance)&&(identical(other.visibleUserIds, visibleUserIds) || other.visibleUserIds == visibleUserIds)&&(identical(other.scheduledAt, scheduledAt) || other.scheduledAt == scheduledAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ComposerDraft&&(identical(other.id, id) || other.id == id)&&(identical(other.accountId, accountId) || other.accountId == accountId)&&(identical(other.text, text) || other.text == text)&&(identical(other.cw, cw) || other.cw == cw)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.localOnly, localOnly) || other.localOnly == localOnly)&&(identical(other.replyId, replyId) || other.replyId == replyId)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.fileIds, _fileIds)&&(identical(other.pollChoices, pollChoices) || other.pollChoices == pollChoices)&&(identical(other.pollMultiple, pollMultiple) || other.pollMultiple == pollMultiple)&&(identical(other.pollExpiresAt, pollExpiresAt) || other.pollExpiresAt == pollExpiresAt)&&(identical(other.reactionAcceptance, reactionAcceptance) || other.reactionAcceptance == reactionAcceptance)&&(identical(other.visibleUserIds, visibleUserIds) || other.visibleUserIds == visibleUserIds)&&(identical(other.scheduledAt, scheduledAt) || other.scheduledAt == scheduledAt));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,accountId,text,cw,visibility,localOnly,replyId,updatedAt,pollChoices,pollMultiple,pollExpiresAt,reactionAcceptance,visibleUserIds,scheduledAt);
+    return Object.hash(runtimeType,id,accountId,text,cw,visibility,localOnly,replyId,updatedAt,const DeepCollectionEquality().hash(_fileIds),pollChoices,pollMultiple,pollExpiresAt,reactionAcceptance,visibleUserIds,scheduledAt);
 }
 
 @override
 String toString() {
-    return 'ComposerDraft(accountId: $accountId, text: $text, cw: $cw, visibility: $visibility, localOnly: $localOnly, replyId: $replyId, updatedAt: $updatedAt, pollChoices: $pollChoices, pollMultiple: $pollMultiple, pollExpiresAt: $pollExpiresAt, reactionAcceptance: $reactionAcceptance, visibleUserIds: $visibleUserIds, scheduledAt: $scheduledAt)';
+    return 'ComposerDraft(id: $id, accountId: $accountId, text: $text, cw: $cw, visibility: $visibility, localOnly: $localOnly, replyId: $replyId, updatedAt: $updatedAt, fileIds: $fileIds, pollChoices: $pollChoices, pollMultiple: $pollMultiple, pollExpiresAt: $pollExpiresAt, reactionAcceptance: $reactionAcceptance, visibleUserIds: $visibleUserIds, scheduledAt: $scheduledAt)';
 }
 
 
@@ -562,7 +585,7 @@ abstract mixin class _$ComposerDraftCopyWith<$Res> implements $ComposerDraftCopy
   factory _$ComposerDraftCopyWith(_ComposerDraft value, $Res Function(_ComposerDraft) _then) = __$ComposerDraftCopyWithImpl;
 @override @useResult
 $Res call({
- String accountId, String text, String? cw, String visibility, bool localOnly, String? replyId, DateTime updatedAt, String? pollChoices, bool pollMultiple, DateTime? pollExpiresAt, String? reactionAcceptance, String? visibleUserIds, DateTime? scheduledAt
+ String? id, String accountId, String text, String? cw, String visibility, bool localOnly, String? replyId, DateTime updatedAt, List<String> fileIds, String? pollChoices, bool pollMultiple, DateTime? pollExpiresAt, String? reactionAcceptance, String? visibleUserIds, DateTime? scheduledAt
 });
 
 
@@ -579,16 +602,18 @@ class __$ComposerDraftCopyWithImpl<$Res>
 
 /// Create a copy of ComposerDraft
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? accountId = null,Object? text = null,Object? cw = freezed,Object? visibility = null,Object? localOnly = null,Object? replyId = freezed,Object? updatedAt = null,Object? pollChoices = freezed,Object? pollMultiple = null,Object? pollExpiresAt = freezed,Object? reactionAcceptance = freezed,Object? visibleUserIds = freezed,Object? scheduledAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? accountId = null,Object? text = null,Object? cw = freezed,Object? visibility = null,Object? localOnly = null,Object? replyId = freezed,Object? updatedAt = null,Object? fileIds = null,Object? pollChoices = freezed,Object? pollMultiple = null,Object? pollExpiresAt = freezed,Object? reactionAcceptance = freezed,Object? visibleUserIds = freezed,Object? scheduledAt = freezed,}) {
   return _then(_ComposerDraft(
-accountId: null == accountId ? _self.accountId : accountId // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,accountId: null == accountId ? _self.accountId : accountId // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,cw: freezed == cw ? _self.cw : cw // ignore: cast_nullable_to_non_nullable
 as String?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,localOnly: null == localOnly ? _self.localOnly : localOnly // ignore: cast_nullable_to_non_nullable
 as bool,replyId: freezed == replyId ? _self.replyId : replyId // ignore: cast_nullable_to_non_nullable
 as String?,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,pollChoices: freezed == pollChoices ? _self.pollChoices : pollChoices // ignore: cast_nullable_to_non_nullable
+as DateTime,fileIds: null == fileIds ? _self._fileIds : fileIds // ignore: cast_nullable_to_non_nullable
+as List<String>,pollChoices: freezed == pollChoices ? _self.pollChoices : pollChoices // ignore: cast_nullable_to_non_nullable
 as String?,pollMultiple: null == pollMultiple ? _self.pollMultiple : pollMultiple // ignore: cast_nullable_to_non_nullable
 as bool,pollExpiresAt: freezed == pollExpiresAt ? _self.pollExpiresAt : pollExpiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,reactionAcceptance: freezed == reactionAcceptance ? _self.reactionAcceptance : reactionAcceptance // ignore: cast_nullable_to_non_nullable
