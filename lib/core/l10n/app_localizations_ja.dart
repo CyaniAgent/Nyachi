@@ -897,4 +897,39 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get updateFailed => 'アップデートを確認できませんでした';
+
+  @override
+  String get cacheManagement => 'キャッシュ管理';
+
+  @override
+  String get cacheManagementSubtitle => 'インスタンス情報・絵文字カタログ・通知のローカルキャッシュ';
+
+  @override
+  String get cacheKindInstanceMeta => 'インスタンス情報';
+
+  @override
+  String get cacheKindEmojiCatalog => '絵文字カタログ';
+
+  @override
+  String get cacheKindNotifications => '通知';
+
+  @override
+  String cacheEntryCount(int count) {
+    return '$count 件';
+  }
+
+  @override
+  String get clearCache => '消去';
+
+  @override
+  String get clearAllCaches => 'すべてのキャッシュを消去';
+
+  @override
+  String get cacheCleared => 'キャッシュを消去しました';
+
+  @override
+  String get cacheClearConfirm => 'このキャッシュを消去しますか？必要なときに自動的に再取得されます。';
+
+  @override
+  String get cacheClearAllConfirm => 'すべてのキャッシュを消去しますか？必要なときに自動的に再取得されます。';
 }

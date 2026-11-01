@@ -9,6 +9,7 @@ import '../../features/composer/presentation/compose_page.dart';
 import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
+import '../../features/settings/presentation/cache_page.dart';
 import '../../features/settings/presentation/licenses_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/tags/presentation/tag_timeline_page.dart';
@@ -51,6 +52,8 @@ sealed class DetailLocation {
         const SettingsNavigationLocation(),
       'settings' when segments.length == 2 && segments[1] == 'appearance' =>
         const SettingsAppearanceLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'cache' =>
+        const SettingsCacheLocation(),
       'settings' when segments.length == 2 && segments[1] == 'about' =>
         const SettingsAboutLocation(),
       'add-account' when segments.length == 1 => const AddAccountLocation(),
@@ -195,6 +198,16 @@ class SettingsAboutLocation extends DetailLocation {
 
   @override
   Widget build(BuildContext context) => const AboutSettingsPage();
+}
+
+class SettingsCacheLocation extends DetailLocation {
+  const SettingsCacheLocation();
+
+  @override
+  String get location => '/settings/cache';
+
+  @override
+  Widget build(BuildContext context) => const CacheSettingsPage();
 }
 
 class DriveDetailLocation extends DetailLocation {

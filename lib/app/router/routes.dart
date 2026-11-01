@@ -14,6 +14,7 @@ import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/oobe/presentation/oobe_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
+import '../../features/settings/presentation/cache_page.dart';
 import '../../features/settings/presentation/licenses_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/shell/presentation/app_shell.dart';
@@ -295,6 +296,23 @@ class SettingsLicensesRoute extends GoRouteData with $SettingsLicensesRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const LicensesPage();
+  }
+}
+
+@TypedGoRoute<SettingsCacheRoute>(path: '/settings/cache')
+class SettingsCacheRoute extends GoRouteData with $SettingsCacheRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsCacheRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const CacheSettingsPage();
   }
 }
 

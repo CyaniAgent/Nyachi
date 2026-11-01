@@ -421,5 +421,23 @@
     }
   },
   "updateOpen": "Open release",
-  "updateFailed": "Could not check for updates"
+  "updateFailed": "Could not check for updates",
+  "cacheManagement": "Cache management",
+  "cacheManagementSubtitle": "Cached instance info, emoji catalogue and notifications",
+  "cacheKindInstanceMeta": "Instance info",
+  "cacheKindEmojiCatalog": "Emoji catalogue",
+  "cacheKindNotifications": "Notifications",
+  "cacheEntryCount": "{count, plural, =1{1 entry} other{{count} entries}}",
+  "@cacheEntryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearCache": "Clear",
+  "clearAllCaches": "Clear all caches",
+  "cacheCleared": "Cache cleared",
+  "cacheClearConfirm": "Clear this cache? It will be refetched when needed.",
+  "cacheClearAllConfirm": "Clear all caches? They will be refetched when needed."
 }

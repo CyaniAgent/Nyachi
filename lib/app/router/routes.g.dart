@@ -23,6 +23,7 @@ List<RouteBase> get $appRoutes => [
   $settingsNavigationRoute,
   $settingsAppearanceRoute,
   $settingsLicensesRoute,
+  $settingsCacheRoute,
   $settingsAboutRoute,
   $appShellRouteData,
 ];
@@ -473,6 +474,34 @@ mixin $SettingsLicensesRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/settings/licenses');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsCacheRoute => GoRouteData.$route(
+  path: '/settings/cache',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsCacheRoute.$parentNavigatorKey,
+  factory: $SettingsCacheRoute._fromState,
+);
+
+mixin $SettingsCacheRoute on GoRouteData {
+  static SettingsCacheRoute _fromState(GoRouterState state) =>
+      const SettingsCacheRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/cache');
 
   @override
   void go(BuildContext context) => context.go(location);

@@ -209,6 +209,34 @@ class CacheDao extends DatabaseAccessor<AppDatabase> with _$CacheDaoMixin {
       cacheEntries,
     )..where((t) => t.accountId.equals(accountId))).go();
   }
+
+  /// Per-key aggregated row count and payload byte size, across accounts.
+  Future<List<({String key, int entries, int bytes})>> statsByKey() {
+    return customSelect(
+          'SELECT cache_key, COUNT(*) AS entries, '
+          'COALESCE(SUM(LENGTH(CAST(payload AS BLOB))), 0) AS bytes '
+          'FROM cache_entries GROUP BY cache_key',
+          readsFrom: {cacheEntries},
+        )
+        .map(
+          (row) => (
+            key: row.read<String>('cache_key'),
+            entries: row.read<int>('entries'),
+            bytes: row.read<int>('bytes'),
+          ),
+        )
+        .get();
+  }
+
+  /// Deletes every entry stored under any of [keys], for all accounts.
+  Future<void> deleteKeys(Iterable<String> keys) {
+    final keyList = keys.toList();
+    if (keyList.isEmpty) return Future.value();
+    return (delete(cacheEntries)..where((t) => t.cacheKey.isIn(keyList))).go();
+  }
+
+  /// Deletes every cache entry regardless of kind.
+  Future<void> deleteAllEntries() => delete(cacheEntries).go();
 }
 
 @DriftAccessor(tables: [Drafts])

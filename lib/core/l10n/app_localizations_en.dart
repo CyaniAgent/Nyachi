@@ -911,4 +911,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateFailed => 'Could not check for updates';
+
+  @override
+  String get cacheManagement => 'Cache management';
+
+  @override
+  String get cacheManagementSubtitle =>
+      'Cached instance info, emoji catalogue and notifications';
+
+  @override
+  String get cacheKindInstanceMeta => 'Instance info';
+
+  @override
+  String get cacheKindEmojiCatalog => 'Emoji catalogue';
+
+  @override
+  String get cacheKindNotifications => 'Notifications';
+
+  @override
+  String cacheEntryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clearCache => 'Clear';
+
+  @override
+  String get clearAllCaches => 'Clear all caches';
+
+  @override
+  String get cacheCleared => 'Cache cleared';
+
+  @override
+  String get cacheClearConfirm =>
+      'Clear this cache? It will be refetched when needed.';
+
+  @override
+  String get cacheClearAllConfirm =>
+      'Clear all caches? They will be refetched when needed.';
 }

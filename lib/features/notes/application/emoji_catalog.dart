@@ -6,6 +6,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/auth/session_controller.dart';
+import '../../../core/cache/cache_manager.dart';
 import '../../../core/network/client_provider.dart';
 import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/storage_providers.dart';
@@ -28,7 +29,7 @@ Future<List<EmojiSimple>> emojiCatalog(Ref ref) async {
   if (active == null) return const [];
   final client = ref.watch(misskeyClientProvider);
   final cache = ref.watch(cacheDaoProvider);
-  const key = 'emoji';
+  const key = CacheManager.emojiCatalogKey;
   try {
     final response = await client.emoji.list();
     await cache.write(active.id, key, jsonEncode(response.toJson()));

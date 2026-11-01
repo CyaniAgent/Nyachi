@@ -402,5 +402,23 @@
   "oobeNext": "次へ",
   "updateAvailable": "新しいバージョン {version} があります",
   "updateOpen": "リリースページを開く",
-  "updateFailed": "アップデートを確認できませんでした"
+  "updateFailed": "アップデートを確認できませんでした",
+  "cacheManagement": "キャッシュ管理",
+  "cacheManagementSubtitle": "インスタンス情報・絵文字カタログ・通知のローカルキャッシュ",
+  "cacheKindInstanceMeta": "インスタンス情報",
+  "cacheKindEmojiCatalog": "絵文字カタログ",
+  "cacheKindNotifications": "通知",
+  "cacheEntryCount": "{count} 件",
+  "@cacheEntryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearCache": "消去",
+  "clearAllCaches": "すべてのキャッシュを消去",
+  "cacheCleared": "キャッシュを消去しました",
+  "cacheClearConfirm": "このキャッシュを消去しますか？必要なときに自動的に再取得されます。",
+  "cacheClearAllConfirm": "すべてのキャッシュを消去しますか？必要なときに自動的に再取得されます。"
 }

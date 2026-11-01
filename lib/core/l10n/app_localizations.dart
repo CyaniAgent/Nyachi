@@ -1797,6 +1797,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not check for updates'**
   String get updateFailed;
+
+  /// No description provided for @cacheManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache management'**
+  String get cacheManagement;
+
+  /// No description provided for @cacheManagementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached instance info, emoji catalogue and notifications'**
+  String get cacheManagementSubtitle;
+
+  /// No description provided for @cacheKindInstanceMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance info'**
+  String get cacheKindInstanceMeta;
+
+  /// No description provided for @cacheKindEmojiCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji catalogue'**
+  String get cacheKindEmojiCatalog;
+
+  /// No description provided for @cacheKindNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get cacheKindNotifications;
+
+  /// No description provided for @cacheEntryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 entry} other{{count} entries}}'**
+  String cacheEntryCount(int count);
+
+  /// No description provided for @clearCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearCache;
+
+  /// No description provided for @clearAllCaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all caches'**
+  String get clearAllCaches;
+
+  /// No description provided for @cacheCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache cleared'**
+  String get cacheCleared;
+
+  /// No description provided for @cacheClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear this cache? It will be refetched when needed.'**
+  String get cacheClearConfirm;
+
+  /// No description provided for @cacheClearAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all caches? They will be refetched when needed.'**
+  String get cacheClearAllConfirm;
 }
 
 class _AppLocalizationsDelegate

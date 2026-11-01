@@ -402,5 +402,23 @@
   "oobeNext": "下一步",
   "updateAvailable": "发现新版本 {version}",
   "updateOpen": "打开发布页",
-  "updateFailed": "无法检查更新"
+  "updateFailed": "无法检查更新",
+  "cacheManagement": "缓存管理",
+  "cacheManagementSubtitle": "实例信息、表情目录与通知的本地缓存",
+  "cacheKindInstanceMeta": "实例信息",
+  "cacheKindEmojiCatalog": "表情目录",
+  "cacheKindNotifications": "通知",
+  "cacheEntryCount": "{count} 条记录",
+  "@cacheEntryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearCache": "清除",
+  "clearAllCaches": "清除全部缓存",
+  "cacheCleared": "缓存已清除",
+  "cacheClearConfirm": "要清除该缓存吗？需要时会自动重新拉取。",
+  "cacheClearAllConfirm": "要清除全部缓存吗？需要时会自动重新拉取。"
 }

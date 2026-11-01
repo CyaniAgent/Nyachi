@@ -60,6 +60,13 @@ class SettingsPage extends ConsumerWidget {
           ),
           const Divider(height: 1),
           _SettingsTile(
+            icon: Icons.cleaning_services_outlined,
+            title: l10n.cacheManagement,
+            subtitle: l10n.cacheManagementSubtitle,
+            onTap: () => openDetail(context, const SettingsCacheLocation()),
+          ),
+          const Divider(height: 1),
+          _SettingsTile(
             icon: Icons.info_outline,
             title: l10n.about,
             subtitle: l10n.appVersion(

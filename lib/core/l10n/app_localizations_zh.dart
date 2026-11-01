@@ -896,4 +896,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get updateFailed => '无法检查更新';
+
+  @override
+  String get cacheManagement => '缓存管理';
+
+  @override
+  String get cacheManagementSubtitle => '实例信息、表情目录与通知的本地缓存';
+
+  @override
+  String get cacheKindInstanceMeta => '实例信息';
+
+  @override
+  String get cacheKindEmojiCatalog => '表情目录';
+
+  @override
+  String get cacheKindNotifications => '通知';
+
+  @override
+  String cacheEntryCount(int count) {
+    return '$count 条记录';
+  }
+
+  @override
+  String get clearCache => '清除';
+
+  @override
+  String get clearAllCaches => '清除全部缓存';
+
+  @override
+  String get cacheCleared => '缓存已清除';
+
+  @override
+  String get cacheClearConfirm => '要清除该缓存吗？需要时会自动重新拉取。';
+
+  @override
+  String get cacheClearAllConfirm => '要清除全部缓存吗？需要时会自动重新拉取。';
 }

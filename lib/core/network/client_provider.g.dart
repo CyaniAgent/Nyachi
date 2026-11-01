@@ -48,4 +48,4 @@ final class MisskeyClientProvider
   }
 }
 
-String _$misskeyClientHash() => r'a39c7601eef2a82496f83163a8f84518acc11135';
+String _$misskeyClientHash() => r'6a1176796b19b3d07d5744bf4695247058ac3dfd';

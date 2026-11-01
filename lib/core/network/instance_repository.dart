@@ -8,6 +8,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../auth/session_controller.dart';
+import '../cache/cache_manager.dart';
 import '../storage/app_database.dart';
 import '../storage/storage_providers.dart';
 import 'client_provider.dart';
@@ -67,8 +68,10 @@ class InstanceRepository {
   final CacheDao cache;
   final String accountId;
 
-  static const _cacheKey = 'meta';
-  static const _probeKey = 'meta.scheduledNotes';
+  // Canonical keys live on [CacheManager] so settings-side bulk clears can
+  // never drift from what this repository writes.
+  static const _cacheKey = CacheManager.instanceMetaKey;
+  static const _probeKey = CacheManager.instanceMetaProbeKey;
 
   /// Instance metadata barely changes, so the cache never expires: it is
   /// served immediately and refreshed in the background by [refresh].

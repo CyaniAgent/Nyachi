@@ -17,6 +17,7 @@ documents instead of chat history.
 | [settings.md](settings.md) | Personal settings: profile, privacy, notifications, email, security, drive |
 | [push.md](push.md) | Push notifications (web push first) and resident/background operation |
 | [streams.md](streams.md) | Realtime streams and scroll-position-stable pagination for chat and every feed |
+| [cache.md](cache.md) | Unified cache manager and the settings page that shows and clears managed caches |
 
 ## Confirmed decisions
 
@@ -46,6 +47,8 @@ documents instead of chat history.
 - Push: web push + in-app realtime first; a self-hosted gateway for all
   platforms is a later, optional (possibly sponsor-gated) service.
 - Resident: desktop tray + Android foreground service.
+- Caches: one `CacheManager` owns the canonical cache keys and bulk
+  clearing; settings can show sizes and clear per kind or everything.
 
 ## Roadmap
 

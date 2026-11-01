@@ -9,6 +9,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/auth/session_controller.dart';
+import '../../../core/cache/cache_manager.dart';
 import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
 import '../../../core/network/silent_fallback.dart';
@@ -30,7 +31,7 @@ class MisskeyNotificationRepository implements NotificationRepository {
   final CacheDao cache;
   final String accountId;
 
-  static const _cacheKey = 'notifications';
+  static const _cacheKey = CacheManager.notificationsKey;
 
   @override
   Future<NotificationPage> fetchPage({String? untilId}) async {
