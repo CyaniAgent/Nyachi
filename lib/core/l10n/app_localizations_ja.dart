@@ -592,7 +592,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get detailBreakpoint => '詳細パネルのブレークポイント';
 
   @override
-  String get removeReaction => 'リアクションを取り消す';
+  String get removeReaction => 'リアクションを外す';
 
   @override
   String removeReactionConfirm(String reaction) {

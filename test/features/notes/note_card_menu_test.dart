@@ -154,4 +154,22 @@ void main() {
 
     verify(() => repository.favorite('n1')).called(1);
   });
+
+  testWidgets('a reacted note turns the button into remove-reaction', (
+    tester,
+  ) async {
+    when(
+      () => repository.unreact('n1'),
+    ).thenAnswer((_) async => makeNote('n1'));
+    final note = makeNote('n1').copyWith(myReaction: '🎉');
+
+    await pumpCard(tester, note: note, account: account());
+    expect(find.byIcon(Icons.heart_broken_outlined), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.heart_broken_outlined));
+    await tester.pump();
+    await tester.pump();
+
+    verify(() => repository.unreact('n1')).called(1);
+  });
 }

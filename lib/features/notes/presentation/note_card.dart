@@ -200,10 +200,21 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                         onTap: _busy ? null : () => _renote(note),
                       ),
                       _NoteAction(
-                        icon: Icons.add_reaction_outlined,
+                        icon: note.myReaction == null
+                            ? Icons.add_reaction_outlined
+                            : Icons.heart_broken_outlined,
                         value: note.reactionCount,
-                        label: context.l10n.react,
-                        onTap: _busy ? null : () => _pickReaction(note),
+                        label: note.myReaction == null
+                            ? context.l10n.react
+                            : context.l10n.removeReaction,
+                        onTap: _busy
+                            ? null
+                            : note.myReaction == null
+                            ? () => _pickReaction(note)
+                            : () => _toggleReaction(note, note.myReaction!),
+                        onLongPress: _busy
+                            ? null
+                            : () => _pickReaction(note),
                       ),
                       _NoteAction(
                         icon: Icons.article_outlined,
@@ -556,12 +567,14 @@ class _NoteAction extends StatelessWidget {
     required this.value,
     required this.label,
     required this.onTap,
+    this.onLongPress,
   });
 
   final IconData icon;
   final num value;
   final String label;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -570,6 +583,7 @@ class _NoteAction extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(

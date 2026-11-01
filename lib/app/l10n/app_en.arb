@@ -463,5 +463,6 @@
     }
   },
   "reportUserHint": "Describe the reason (required)",
-  "reportSent": "Report sent"
+  "reportSent": "Report sent",
+  "removeReaction": "Remove reaction"
 }
