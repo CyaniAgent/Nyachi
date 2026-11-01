@@ -42,6 +42,15 @@ Baka
   `git diff --exit-code` guard fail on every run and blocked releases.
 - `dynamic_color` was registered for Windows but not for Linux or macOS, so
   following the system palette did nothing on those platforms.
+- The app reported a hard-coded "Version 0.1.0+1", which had drifted from the
+  real build version. It now reads the version the build actually carries, and
+  the About page offers the newest published release when one is newer.
+- The app icon baked a hard square background; it now has rounded corners. The
+  web icon used a different artwork from the desktop and mobile builds and now
+  matches them.
+- Instance announcements sat on the About page beside the app's own version and
+  licences, though they come from the account's server; the entry moved to the
+  accounts page.
 
 ## [2.0.0-beta.8] - 2026-10-31
 
