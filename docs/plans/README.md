@@ -16,6 +16,7 @@ documents instead of chat history.
 | [emoji-picker.md](emoji-picker.md) | Custom emoji grouping (sticky headers) for the reaction picker and insert sheet |
 | [settings.md](settings.md) | Personal settings: profile, privacy, notifications, email, security, drive |
 | [push.md](push.md) | Push notifications (web push first) and resident/background operation |
+| [streams.md](streams.md) | Realtime streams and scroll-position-stable pagination for chat and every feed |
 
 ## Confirmed decisions
 
@@ -50,7 +51,8 @@ documents instead of chat history.
 
 1. Correctness wave (shipped): back navigation (2.0.0-beta.9); composer
    drafts, header layout, poll coexistence.
-2. Reading wave: note thread view and actions; emoji grouping.
+2. Reading wave: note thread view and actions; emoji grouping; chat scroll
+   fix, feed auto-load, notification/chat streams.
 3. Writing wave: autocomplete; unified upload entry with drive picker; live
    preview; avatar panel (drafts / scheduled / same-instance switcher).
 4. Settings wave: the six personal-settings domains.
