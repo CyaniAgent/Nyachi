@@ -44,6 +44,50 @@ class SettingsPage extends ConsumerWidget {
 
           const Divider(height: 1),
           _SettingsTile(
+            icon: Icons.person_outline,
+            title: l10n.editProfile,
+            subtitle: l10n.profile,
+            onTap: () => openDetail(context, const SettingsProfileLocation()),
+          ),
+          const Divider(height: 1),
+          _SettingsTile(
+            icon: Icons.lock_outline,
+            title: l10n.privacy,
+            subtitle: l10n.mutedUsers,
+            onTap: () => openDetail(context, const SettingsPrivacyLocation()),
+          ),
+          const Divider(height: 1),
+          _SettingsTile(
+            icon: Icons.notifications_outlined,
+            title: l10n.notificationSettings,
+            subtitle: l10n.notifyAll,
+            onTap: () =>
+                openDetail(context, const SettingsNotificationLocation()),
+          ),
+          const Divider(height: 1),
+          _SettingsTile(
+            icon: Icons.mail_outline,
+            title: l10n.emailSettings,
+            subtitle: l10n.emailAddress,
+            onTap: () => openDetail(context, const SettingsEmailLocation()),
+          ),
+          const Divider(height: 1),
+          _SettingsTile(
+            icon: Icons.shield_outlined,
+            title: l10n.security,
+            subtitle: l10n.twoFactor,
+            onTap: () => openDetail(context, const SettingsSecurityLocation()),
+          ),
+          const Divider(height: 1),
+          _SettingsTile(
+            icon: Icons.cloud_outlined,
+            title: l10n.driveSpace,
+            subtitle: l10n.openDrive,
+            onTap: () => openDetail(context, const SettingsDriveLocation()),
+          ),
+
+          const Divider(height: 1),
+          _SettingsTile(
             icon: Icons.tune,
             title: l10n.navigation,
             subtitle: l10n.visibleTabs,

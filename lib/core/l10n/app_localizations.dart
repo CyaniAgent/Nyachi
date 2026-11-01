@@ -394,6 +394,396 @@ abstract class AppLocalizations {
   /// **'Compose'**
   String get compose;
 
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get displayName;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// No description provided for @birthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Birthday'**
+  String get birthday;
+
+  /// No description provided for @accountTypeBot.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is a bot'**
+  String get accountTypeBot;
+
+  /// No description provided for @accountTypeCat.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is a cat'**
+  String get accountTypeCat;
+
+  /// No description provided for @profileFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile fields'**
+  String get profileFields;
+
+  /// No description provided for @addField.
+  ///
+  /// In en, this message translates to:
+  /// **'Add field'**
+  String get addField;
+
+  /// No description provided for @fieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get fieldName;
+
+  /// No description provided for @fieldValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get fieldValue;
+
+  /// No description provided for @changeAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Change avatar'**
+  String get changeAvatar;
+
+  /// No description provided for @changeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Change banner'**
+  String get changeBanner;
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saved;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @newNoteDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'New note defaults'**
+  String get newNoteDefaults;
+
+  /// No description provided for @defaultLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local only by default'**
+  String get defaultLocalOnly;
+
+  /// No description provided for @defaultLocalOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New notes stay on this instance unless changed'**
+  String get defaultLocalOnlyHint;
+
+  /// No description provided for @mutedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted users'**
+  String get mutedUsers;
+
+  /// No description provided for @noMutedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No muted users'**
+  String get noMutedUsers;
+
+  /// No description provided for @unmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get unmute;
+
+  /// No description provided for @blockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get blockedUsers;
+
+  /// No description provided for @noBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked users'**
+  String get noBlockedUsers;
+
+  /// No description provided for @unblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblock;
+
+  /// No description provided for @notificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationSettings;
+
+  /// No description provided for @notifyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get notifyAll;
+
+  /// No description provided for @notifyNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal only'**
+  String get notifyNormal;
+
+  /// No description provided for @notifyNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get notifyNone;
+
+  /// No description provided for @notifyEventNote.
+  ///
+  /// In en, this message translates to:
+  /// **'New note'**
+  String get notifyEventNote;
+
+  /// No description provided for @notifyEventFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'New follower'**
+  String get notifyEventFollow;
+
+  /// No description provided for @notifyEventMention.
+  ///
+  /// In en, this message translates to:
+  /// **'Mention'**
+  String get notifyEventMention;
+
+  /// No description provided for @notifyEventReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get notifyEventReply;
+
+  /// No description provided for @notifyEventRenote.
+  ///
+  /// In en, this message translates to:
+  /// **'Renote'**
+  String get notifyEventRenote;
+
+  /// No description provided for @notifyEventQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote'**
+  String get notifyEventQuote;
+
+  /// No description provided for @notifyEventReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaction'**
+  String get notifyEventReaction;
+
+  /// No description provided for @notifyEventPollEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll ended'**
+  String get notifyEventPollEnded;
+
+  /// No description provided for @notifyEventReceiveFollowRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow request received'**
+  String get notifyEventReceiveFollowRequest;
+
+  /// No description provided for @notifyEventFollowRequestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow request accepted'**
+  String get notifyEventFollowRequestAccepted;
+
+  /// No description provided for @notifyEventRoleAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Role assigned'**
+  String get notifyEventRoleAssigned;
+
+  /// No description provided for @notifyEventChatRoomInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat room invitation'**
+  String get notifyEventChatRoomInvitation;
+
+  /// No description provided for @notifyEventAchievement.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement'**
+  String get notifyEventAchievement;
+
+  /// No description provided for @notifyEventApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App notification'**
+  String get notifyEventApp;
+
+  /// No description provided for @emailSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailSettings;
+
+  /// No description provided for @currentEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Current email'**
+  String get currentEmail;
+
+  /// No description provided for @emailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get emailAddress;
+
+  /// No description provided for @emailUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This address cannot be used'**
+  String get emailUnavailable;
+
+  /// No description provided for @emailPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Misskey asks for your current password to change the email.'**
+  String get emailPasswordHint;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The new passwords do not match'**
+  String get passwordMismatch;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePassword;
+
+  /// No description provided for @security.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get security;
+
+  /// No description provided for @twoFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication'**
+  String get twoFactor;
+
+  /// No description provided for @twoFactorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Require a code from your authenticator app'**
+  String get twoFactorHint;
+
+  /// No description provided for @twoFactorPasswordPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get twoFactorPasswordPrompt;
+
+  /// No description provided for @twoFactorTokenPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code'**
+  String get twoFactorTokenPrompt;
+
+  /// No description provided for @twoFactorSecretHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this secret to your authenticator app if you cannot scan it.'**
+  String get twoFactorSecretHint;
+
+  /// No description provided for @signinHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in history'**
+  String get signinHistory;
+
+  /// No description provided for @noSigninHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No sign-in records'**
+  String get noSigninHistory;
+
+  /// No description provided for @signinSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get signinSuccess;
+
+  /// No description provided for @signinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get signinFailed;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @driveSpaceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage usage is not available'**
+  String get driveSpaceUnavailable;
+
+  /// No description provided for @openDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Open drive'**
+  String get openDrive;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:

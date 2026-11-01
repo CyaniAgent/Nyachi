@@ -167,6 +167,204 @@ class AppLocalizationsEn extends AppLocalizations {
   String get compose => 'Compose';
 
   @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get displayName => 'Display name';
+
+  @override
+  String get bio => 'Bio';
+
+  @override
+  String get location => 'Location';
+
+  @override
+  String get birthday => 'Birthday';
+
+  @override
+  String get accountTypeBot => 'This account is a bot';
+
+  @override
+  String get accountTypeCat => 'This account is a cat';
+
+  @override
+  String get profileFields => 'Profile fields';
+
+  @override
+  String get addField => 'Add field';
+
+  @override
+  String get fieldName => 'Label';
+
+  @override
+  String get fieldValue => 'Content';
+
+  @override
+  String get changeAvatar => 'Change avatar';
+
+  @override
+  String get changeBanner => 'Change banner';
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get newNoteDefaults => 'New note defaults';
+
+  @override
+  String get defaultLocalOnly => 'Local only by default';
+
+  @override
+  String get defaultLocalOnlyHint =>
+      'New notes stay on this instance unless changed';
+
+  @override
+  String get mutedUsers => 'Muted users';
+
+  @override
+  String get noMutedUsers => 'No muted users';
+
+  @override
+  String get unmute => 'Unmute';
+
+  @override
+  String get blockedUsers => 'Blocked users';
+
+  @override
+  String get noBlockedUsers => 'No blocked users';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get notificationSettings => 'Notifications';
+
+  @override
+  String get notifyAll => 'All';
+
+  @override
+  String get notifyNormal => 'Normal only';
+
+  @override
+  String get notifyNone => 'Off';
+
+  @override
+  String get notifyEventNote => 'New note';
+
+  @override
+  String get notifyEventFollow => 'New follower';
+
+  @override
+  String get notifyEventMention => 'Mention';
+
+  @override
+  String get notifyEventReply => 'Reply';
+
+  @override
+  String get notifyEventRenote => 'Renote';
+
+  @override
+  String get notifyEventQuote => 'Quote';
+
+  @override
+  String get notifyEventReaction => 'Reaction';
+
+  @override
+  String get notifyEventPollEnded => 'Poll ended';
+
+  @override
+  String get notifyEventReceiveFollowRequest => 'Follow request received';
+
+  @override
+  String get notifyEventFollowRequestAccepted => 'Follow request accepted';
+
+  @override
+  String get notifyEventRoleAssigned => 'Role assigned';
+
+  @override
+  String get notifyEventChatRoomInvitation => 'Chat room invitation';
+
+  @override
+  String get notifyEventAchievement => 'Achievement';
+
+  @override
+  String get notifyEventApp => 'App notification';
+
+  @override
+  String get emailSettings => 'Email';
+
+  @override
+  String get currentEmail => 'Current email';
+
+  @override
+  String get emailAddress => 'Email address';
+
+  @override
+  String get emailUnavailable => 'This address cannot be used';
+
+  @override
+  String get emailPasswordHint =>
+      'Misskey asks for your current password to change the email.';
+
+  @override
+  String get currentPassword => 'Current password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmPassword => 'Confirm new password';
+
+  @override
+  String get passwordMismatch => 'The new passwords do not match';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get security => 'Security';
+
+  @override
+  String get twoFactor => 'Two-factor authentication';
+
+  @override
+  String get twoFactorHint => 'Require a code from your authenticator app';
+
+  @override
+  String get twoFactorPasswordPrompt => 'Enter your password';
+
+  @override
+  String get twoFactorTokenPrompt => 'Enter the 6-digit code';
+
+  @override
+  String get twoFactorSecretHint =>
+      'Add this secret to your authenticator app if you cannot scan it.';
+
+  @override
+  String get signinHistory => 'Sign-in history';
+
+  @override
+  String get noSigninHistory => 'No sign-in records';
+
+  @override
+  String get signinSuccess => 'Succeeded';
+
+  @override
+  String get signinFailed => 'Failed';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get driveSpaceUnavailable => 'Storage usage is not available';
+
+  @override
+  String get openDrive => 'Open drive';
+
+  @override
   String get settings => 'Settings';
 
   @override

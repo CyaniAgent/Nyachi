@@ -159,6 +159,201 @@ class AppLocalizationsJa extends AppLocalizations {
   String get compose => '投稿';
 
   @override
+  String get editProfile => 'プロフィールを編集';
+
+  @override
+  String get displayName => '表示名';
+
+  @override
+  String get bio => '自己紹介';
+
+  @override
+  String get location => '場所';
+
+  @override
+  String get birthday => '誕生日';
+
+  @override
+  String get accountTypeBot => 'このアカウントはボットです';
+
+  @override
+  String get accountTypeCat => 'このアカウントは猫です';
+
+  @override
+  String get profileFields => 'プロフィール欄';
+
+  @override
+  String get addField => '欄を追加';
+
+  @override
+  String get fieldName => '項目名';
+
+  @override
+  String get fieldValue => '内容';
+
+  @override
+  String get changeAvatar => 'アイコンを変更';
+
+  @override
+  String get changeBanner => 'バナーを変更';
+
+  @override
+  String get saved => '保存しました';
+
+  @override
+  String get privacy => 'プライバシー';
+
+  @override
+  String get newNoteDefaults => '新規投稿の既定値';
+
+  @override
+  String get defaultLocalOnly => '既定でローカルのみ';
+
+  @override
+  String get defaultLocalOnlyHint => '新しい投稿はこのサーバー内だけに公開されます';
+
+  @override
+  String get mutedUsers => 'ミュートしたユーザー';
+
+  @override
+  String get noMutedUsers => 'ミュートしたユーザーはいません';
+
+  @override
+  String get unmute => 'ミュート解除';
+
+  @override
+  String get blockedUsers => 'ブロックしたユーザー';
+
+  @override
+  String get noBlockedUsers => 'ブロックしたユーザーはいません';
+
+  @override
+  String get unblock => 'ブロック解除';
+
+  @override
+  String get notificationSettings => '通知';
+
+  @override
+  String get notifyAll => 'すべて';
+
+  @override
+  String get notifyNormal => '通常のみ';
+
+  @override
+  String get notifyNone => 'オフ';
+
+  @override
+  String get notifyEventNote => '新しい投稿';
+
+  @override
+  String get notifyEventFollow => '新しいフォロワー';
+
+  @override
+  String get notifyEventMention => 'メンション';
+
+  @override
+  String get notifyEventReply => '返信';
+
+  @override
+  String get notifyEventRenote => 'リノート';
+
+  @override
+  String get notifyEventQuote => '引用';
+
+  @override
+  String get notifyEventReaction => 'リアクション';
+
+  @override
+  String get notifyEventPollEnded => 'アンケート終了';
+
+  @override
+  String get notifyEventReceiveFollowRequest => 'フォローリクエスト受信';
+
+  @override
+  String get notifyEventFollowRequestAccepted => 'フォローリクエスト承認';
+
+  @override
+  String get notifyEventRoleAssigned => 'ロール付与';
+
+  @override
+  String get notifyEventChatRoomInvitation => 'チャットルームへの招待';
+
+  @override
+  String get notifyEventAchievement => '実績';
+
+  @override
+  String get notifyEventApp => 'アプリからの通知';
+
+  @override
+  String get emailSettings => 'メールアドレス';
+
+  @override
+  String get currentEmail => '現在のメールアドレス';
+
+  @override
+  String get emailAddress => 'メールアドレス';
+
+  @override
+  String get emailUnavailable => 'このアドレスは使用できません';
+
+  @override
+  String get emailPasswordHint => 'メールアドレスの変更には現在のパスワードが必要です。';
+
+  @override
+  String get currentPassword => '現在のパスワード';
+
+  @override
+  String get newPassword => '新しいパスワード';
+
+  @override
+  String get confirmPassword => '新しいパスワード（確認）';
+
+  @override
+  String get passwordMismatch => '新しいパスワードが一致しません';
+
+  @override
+  String get changePassword => 'パスワードを変更';
+
+  @override
+  String get security => 'セキュリティ';
+
+  @override
+  String get twoFactor => '二段階認証';
+
+  @override
+  String get twoFactorHint => '認証アプリのコードを要求します';
+
+  @override
+  String get twoFactorPasswordPrompt => 'パスワードを入力してください';
+
+  @override
+  String get twoFactorTokenPrompt => '6桁のコードを入力してください';
+
+  @override
+  String get twoFactorSecretHint => '読み取れない場合は、このシークレットを認証アプリに追加してください。';
+
+  @override
+  String get signinHistory => 'ログイン履歴';
+
+  @override
+  String get noSigninHistory => 'ログイン履歴はありません';
+
+  @override
+  String get signinSuccess => '成功';
+
+  @override
+  String get signinFailed => '失敗';
+
+  @override
+  String get copy => 'コピー';
+
+  @override
+  String get driveSpaceUnavailable => 'ストレージ使用量を取得できません';
+
+  @override
+  String get openDrive => 'ドライブを開く';
+
+  @override
   String get settings => '設定';
 
   @override

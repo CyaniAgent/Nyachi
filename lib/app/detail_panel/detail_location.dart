@@ -10,6 +10,12 @@ import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
 import '../../features/settings/presentation/cache_page.dart';
+import '../../features/settings/presentation/drive_settings_page.dart';
+import '../../features/settings/presentation/email_settings_page.dart';
+import '../../features/settings/presentation/notification_settings_page.dart';
+import '../../features/settings/presentation/privacy_settings_page.dart';
+import '../../features/settings/presentation/profile_edit_page.dart';
+import '../../features/settings/presentation/security_settings_page.dart';
 import '../../features/settings/presentation/licenses_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/tags/presentation/tag_timeline_page.dart';
@@ -56,6 +62,18 @@ sealed class DetailLocation {
         const SettingsCacheLocation(),
       'settings' when segments.length == 2 && segments[1] == 'about' =>
         const SettingsAboutLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'profile' =>
+        const SettingsProfileLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'privacy' =>
+        const SettingsPrivacyLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'notifications' =>
+        const SettingsNotificationLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'email' =>
+        const SettingsEmailLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'security' =>
+        const SettingsSecurityLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'drive-settings' =>
+        const SettingsDriveLocation(),
       'add-account' when segments.length == 1 => const AddAccountLocation(),
       _ => null,
     };
@@ -228,6 +246,66 @@ class SettingsLicensesLocation extends DetailLocation {
 
   @override
   Widget build(BuildContext context) => const LicensesPage();
+}
+
+class SettingsProfileLocation extends DetailLocation {
+  const SettingsProfileLocation();
+
+  @override
+  String get location => '/settings/profile';
+
+  @override
+  Widget build(BuildContext context) => const ProfileEditPage();
+}
+
+class SettingsPrivacyLocation extends DetailLocation {
+  const SettingsPrivacyLocation();
+
+  @override
+  String get location => '/settings/privacy';
+
+  @override
+  Widget build(BuildContext context) => const PrivacySettingsPage();
+}
+
+class SettingsNotificationLocation extends DetailLocation {
+  const SettingsNotificationLocation();
+
+  @override
+  String get location => '/settings/notifications';
+
+  @override
+  Widget build(BuildContext context) => const NotificationSettingsPage();
+}
+
+class SettingsEmailLocation extends DetailLocation {
+  const SettingsEmailLocation();
+
+  @override
+  String get location => '/settings/email';
+
+  @override
+  Widget build(BuildContext context) => const EmailSettingsPage();
+}
+
+class SettingsSecurityLocation extends DetailLocation {
+  const SettingsSecurityLocation();
+
+  @override
+  String get location => '/settings/security';
+
+  @override
+  Widget build(BuildContext context) => const SecuritySettingsPage();
+}
+
+class SettingsDriveLocation extends DetailLocation {
+  const SettingsDriveLocation();
+
+  @override
+  String get location => '/settings/drive-settings';
+
+  @override
+  Widget build(BuildContext context) => const DriveSettingsPage();
 }
 
 class AddAccountLocation extends DetailLocation {

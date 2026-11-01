@@ -16,6 +16,7 @@ import '../../../core/storage/storage_models.dart';
 import '../../notes/application/note_detail_controller.dart';
 import '../../notes/application/note_list_controller.dart';
 import '../../notes/application/note_providers.dart';
+import '../../settings/application/app_settings.dart';
 import 'draft_store.dart';
 
 part 'composer_controller.freezed.dart';
@@ -139,6 +140,15 @@ NotesDraftsCreateRequestVisibility _draftVisibility(
     NotesDraftsCreateRequestVisibility.specified,
 };
 
+/// Parses a stored visibility name back into the enum; unknown values fall
+/// back to public so a corrupt setting never blocks posting.
+NotesCreateRequestVisibility _visibilityByName(String name) => switch (name) {
+  'home' => NotesCreateRequestVisibility.home,
+  'followers' => NotesCreateRequestVisibility.followers,
+  'specified' => NotesCreateRequestVisibility.specified,
+  _ => NotesCreateRequestVisibility.public,
+};
+
 @freezed
 abstract class ComposerState with _$ComposerState {
   const factory ComposerState({
@@ -213,7 +223,14 @@ class ComposerController extends _$ComposerController {
         unawaited(_persist(snapshot: snapshot));
       }
     });
-    final initial = ComposerState(replyId: replyId);
+    // A fresh composer starts from the user's saved defaults; a reply still
+    // overrides visibility per the reply flow below.
+    final settings = ref.read(settingsControllerProvider);
+    final initial = ComposerState(
+      replyId: replyId,
+      visibility: _visibilityByName(settings.defaultVisibility),
+      localOnly: settings.defaultLocalOnly,
+    );
     _lastState = initial;
     unawaited(Future<void>.microtask(_restoreDraft));
     return initial;

@@ -159,6 +159,201 @@ class AppLocalizationsZh extends AppLocalizations {
   String get compose => '发帖';
 
   @override
+  String get editProfile => '编辑个人资料';
+
+  @override
+  String get displayName => '显示名称';
+
+  @override
+  String get bio => '简介';
+
+  @override
+  String get location => '所在地';
+
+  @override
+  String get birthday => '生日';
+
+  @override
+  String get accountTypeBot => '此账号是机器人';
+
+  @override
+  String get accountTypeCat => '此账号是猫';
+
+  @override
+  String get profileFields => '资料栏位';
+
+  @override
+  String get addField => '添加栏位';
+
+  @override
+  String get fieldName => '标题';
+
+  @override
+  String get fieldValue => '内容';
+
+  @override
+  String get changeAvatar => '更换头像';
+
+  @override
+  String get changeBanner => '更换横幅';
+
+  @override
+  String get saved => '已保存';
+
+  @override
+  String get privacy => '隐私';
+
+  @override
+  String get newNoteDefaults => '新帖默认值';
+
+  @override
+  String get defaultLocalOnly => '默认仅本地';
+
+  @override
+  String get defaultLocalOnlyHint => '新帖默认只在本实例可见，可随时更改';
+
+  @override
+  String get mutedUsers => '已静音的用户';
+
+  @override
+  String get noMutedUsers => '没有已静音的用户';
+
+  @override
+  String get unmute => '取消静音';
+
+  @override
+  String get blockedUsers => '已屏蔽的用户';
+
+  @override
+  String get noBlockedUsers => '没有已屏蔽的用户';
+
+  @override
+  String get unblock => '取消屏蔽';
+
+  @override
+  String get notificationSettings => '通知';
+
+  @override
+  String get notifyAll => '全部';
+
+  @override
+  String get notifyNormal => '仅正常';
+
+  @override
+  String get notifyNone => '关闭';
+
+  @override
+  String get notifyEventNote => '新帖子';
+
+  @override
+  String get notifyEventFollow => '新关注';
+
+  @override
+  String get notifyEventMention => '提及';
+
+  @override
+  String get notifyEventReply => '回复';
+
+  @override
+  String get notifyEventRenote => '转帖';
+
+  @override
+  String get notifyEventQuote => '引用';
+
+  @override
+  String get notifyEventReaction => '回应';
+
+  @override
+  String get notifyEventPollEnded => '投票结束';
+
+  @override
+  String get notifyEventReceiveFollowRequest => '收到关注请求';
+
+  @override
+  String get notifyEventFollowRequestAccepted => '关注请求已接受';
+
+  @override
+  String get notifyEventRoleAssigned => '获得角色';
+
+  @override
+  String get notifyEventChatRoomInvitation => '聊天室邀请';
+
+  @override
+  String get notifyEventAchievement => '成就';
+
+  @override
+  String get notifyEventApp => '应用通知';
+
+  @override
+  String get emailSettings => '邮箱';
+
+  @override
+  String get currentEmail => '当前邮箱';
+
+  @override
+  String get emailAddress => '邮箱地址';
+
+  @override
+  String get emailUnavailable => '该地址不可用';
+
+  @override
+  String get emailPasswordHint => '修改邮箱需要输入当前密码。';
+
+  @override
+  String get currentPassword => '当前密码';
+
+  @override
+  String get newPassword => '新密码';
+
+  @override
+  String get confirmPassword => '确认新密码';
+
+  @override
+  String get passwordMismatch => '两次输入的新密码不一致';
+
+  @override
+  String get changePassword => '修改密码';
+
+  @override
+  String get security => '安全';
+
+  @override
+  String get twoFactor => '两步验证';
+
+  @override
+  String get twoFactorHint => '需要使用验证器应用中的验证码';
+
+  @override
+  String get twoFactorPasswordPrompt => '请输入密码';
+
+  @override
+  String get twoFactorTokenPrompt => '请输入 6 位验证码';
+
+  @override
+  String get twoFactorSecretHint => '无法扫码时，可将此密钥手动添加到验证器。';
+
+  @override
+  String get signinHistory => '登录记录';
+
+  @override
+  String get noSigninHistory => '暂无登录记录';
+
+  @override
+  String get signinSuccess => '成功';
+
+  @override
+  String get signinFailed => '失败';
+
+  @override
+  String get copy => '复制';
+
+  @override
+  String get driveSpaceUnavailable => '无法获取存储用量';
+
+  @override
+  String get openDrive => '打开网盘';
+
+  @override
   String get settings => '设置';
 
   @override

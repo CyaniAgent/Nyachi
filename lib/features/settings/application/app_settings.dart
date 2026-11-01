@@ -44,6 +44,8 @@ class AppSettings {
     required this.detailBreakpoint,
     required this.oobeCompleted,
     this.centerContent = true,
+    this.defaultVisibility = 'public',
+    this.defaultLocalOnly = false,
   });
 
   final String themeMode;
@@ -59,6 +61,11 @@ class AppSettings {
   /// Centers the readable column on wide screens instead of left-aligning it.
   final bool centerContent;
 
+  /// Starting visibility and local-only flag for a new note. The composer
+  /// reads them when it opens; the user can still change both per post.
+  final String defaultVisibility;
+  final bool defaultLocalOnly;
+
   AppSettings copyWith({
     String? themeMode,
     String? localeCode,
@@ -67,6 +74,8 @@ class AppSettings {
     int? detailBreakpoint,
     bool? oobeCompleted,
     bool? centerContent,
+    String? defaultVisibility,
+    bool? defaultLocalOnly,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -76,6 +85,8 @@ class AppSettings {
       detailBreakpoint: detailBreakpoint ?? this.detailBreakpoint,
       oobeCompleted: oobeCompleted ?? this.oobeCompleted,
       centerContent: centerContent ?? this.centerContent,
+      defaultVisibility: defaultVisibility ?? this.defaultVisibility,
+      defaultLocalOnly: defaultLocalOnly ?? this.defaultLocalOnly,
     );
   }
 }
@@ -90,6 +101,8 @@ class SettingsController extends _$SettingsController {
   static const detailBreakpointKey = 'layout.detailBreakpoint';
   static const centerContentKey = 'layout.centerContent';
   static const oobeCompletedKey = 'oobe.completed';
+  static const defaultVisibilityKey = 'composer.defaultVisibility';
+  static const defaultLocalOnlyKey = 'composer.defaultLocalOnly';
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
 
@@ -123,7 +136,19 @@ class SettingsController extends _$SettingsController {
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
               .toInt(),
       centerContent: prefs.getBool(centerContentKey) ?? true,
+      defaultVisibility: prefs.getString(defaultVisibilityKey) ?? 'public',
+      defaultLocalOnly: prefs.getBool(defaultLocalOnlyKey) ?? false,
     );
+  }
+
+  Future<void> setDefaultVisibility(String visibility) async {
+    state = state.copyWith(defaultVisibility: visibility);
+    await _prefs.setString(defaultVisibilityKey, visibility);
+  }
+
+  Future<void> setDefaultLocalOnly(bool value) async {
+    state = state.copyWith(defaultLocalOnly: value);
+    await _prefs.setBool(defaultLocalOnlyKey, value);
   }
 
   Future<void> setThemeMode(String mode) async {
