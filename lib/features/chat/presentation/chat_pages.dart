@@ -242,7 +242,7 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
   final _focus = FocusNode();
   Uint8List? _attachment;
   String? _attachmentName;
-  var _lastCount = 0;
+  var _lastNewestId = '';
   var _autoLoading = false;
 
   @override
@@ -261,26 +261,30 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
     super.dispose();
   }
 
-  /// Auto-loads older messages once the top of the transcript is reached.
+  /// Auto-loads older messages once the transcript's oldest edge is reached:
+  /// the list is reversed, so older messages sit toward maxScrollExtent.
+  /// Content shorter than the viewport reports a zero extent, which fills
+  /// the screen automatically.
   void _onScroll() {
     if (!_scroll.hasClients || _autoLoading) return;
-    if (_scroll.position.pixels > 200) return;
+    final position = _scroll.position;
+    if (position.maxScrollExtent - position.pixels > 200) return;
     final state = ref.read(chatThreadControllerProvider(widget.target));
     if (!state.hasMore || state.loadingOlder) return;
     _autoLoading = true;
     ref.read(chatThreadControllerProvider(widget.target).notifier).loadOlder();
   }
 
-  /// Pins the transcript to the newest message when the user is already at the
-  /// bottom; a reader scrolled up keeps their position.
-  void _scrollToBottomIfNear() {
+  /// Pins the transcript to the newest message when one arrives and the user
+  /// is already near the bottom (offset 0 in the reversed list); a reader
+  /// scrolled up keeps their position.
+  void _pinToNewestIfNear() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scroll.hasClients) return;
       final position = _scroll.position;
-      final nearBottom = position.maxScrollExtent - position.pixels < 240;
-      if (!nearBottom) return;
+      if (position.pixels > 240) return;
       _scroll.animateTo(
-        position.maxScrollExtent,
+        0,
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOut,
       );
@@ -296,13 +300,15 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
       chatThreadControllerProvider(widget.target).notifier,
     );
     final title = state.room?.name ?? state.user?.name ?? l10n.chat;
-    // New messages append at the bottom: keep the view pinned there, but only
-    // when the user is already near it so reading history is not interrupted.
-    if (state.items.length != _lastCount) {
-      final grew = state.items.length > _lastCount;
-      _lastCount = state.items.length;
-      if (grew) _scrollToBottomIfNear();
+    // The transcript renders reversed (offset 0 = newest message). Older
+    // messages prepend at the far end and never move the viewport; only a
+    // changed newest message id means a new arrival, which pins the bottom
+    // when the user is already near it so reading history is uninterrupted.
+    final newestId = state.items.isEmpty ? '' : state.items.last.id;
+    if (newestId != _lastNewestId && _lastNewestId.isNotEmpty) {
+      _pinToNewestIfNear();
     }
+    _lastNewestId = newestId;
     if (!state.loadingOlder) _autoLoading = false;
     final centered = ProviderScope.containerOf(
       context,
@@ -329,11 +335,15 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
               child: state.loading && state.items.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
+                      // Reversed transcript: index 0 is the newest message at
+                      // the visual bottom; the extra last slot sits at the
+                      // oldest edge, where older messages load.
+                      reverse: true,
                       controller: _scroll,
                       padding: const EdgeInsets.all(12),
                       itemCount: state.items.length + 1,
                       itemBuilder: (context, index) {
-                        if (index == 0) {
+                        if (index == state.items.length) {
                           if (state.loadingOlder) {
                             return const Padding(
                               padding: EdgeInsets.all(8),
@@ -356,7 +366,8 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
                           }
                           return const SizedBox.shrink();
                         }
-                        final item = state.items[index - 1];
+                        final item =
+                            state.items[state.items.length - 1 - index];
                         return _MessageBubble(
                           item: item,
                           isMine: item.fromUserId == active?.userId,
