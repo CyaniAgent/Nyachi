@@ -1863,6 +1863,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear all caches? They will be refetched when needed.'**
   String get cacheClearAllConfirm;
+
+  /// No description provided for @moreMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get moreMenu;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get linkCopied;
+
+  /// No description provided for @favorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get favorite;
+
+  /// No description provided for @unfavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorite'**
+  String get unfavorite;
+
+  /// No description provided for @userMemo.
+  ///
+  /// In en, this message translates to:
+  /// **'User memo'**
+  String get userMemo;
+
+  /// No description provided for @memoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only visible to you'**
+  String get memoHint;
+
+  /// No description provided for @memoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Memo saved'**
+  String get memoSaved;
+
+  /// No description provided for @muteThread.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute thread'**
+  String get muteThread;
+
+  /// No description provided for @unmuteThread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute thread'**
+  String get unmuteThread;
+
+  /// No description provided for @deleteNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete note'**
+  String get deleteNote;
+
+  /// No description provided for @deleteNoteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This note will be deleted. This cannot be undone.'**
+  String get deleteNoteConfirm;
+
+  /// No description provided for @noteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted'**
+  String get noteDeleted;
+
+  /// No description provided for @report.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get report;
+
+  /// No description provided for @reportUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Report user'**
+  String get reportUser;
+
+  /// No description provided for @reportUserBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This reports the user @{username}, not just this note.'**
+  String reportUserBody(String username);
+
+  /// No description provided for @reportUserHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the reason (required)'**
+  String get reportUserHint;
+
+  /// No description provided for @reportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent'**
+  String get reportSent;
 }
 
 class _AppLocalizationsDelegate

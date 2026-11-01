@@ -104,9 +104,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('detail'), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.more_horiz));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Note').last);
+    // The detail entry is the dedicated action-row button now.
+    await tester.tap(find.byIcon(Icons.article_outlined));
     await tester.pumpAndSettle();
     expect(find.text('detail'), findsOneWidget);
   });

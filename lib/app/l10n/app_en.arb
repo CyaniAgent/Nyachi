@@ -439,5 +439,29 @@
   "clearAllCaches": "Clear all caches",
   "cacheCleared": "Cache cleared",
   "cacheClearConfirm": "Clear this cache? It will be refetched when needed.",
-  "cacheClearAllConfirm": "Clear all caches? They will be refetched when needed."
+  "cacheClearAllConfirm": "Clear all caches? They will be refetched when needed.",
+  "moreMenu": "More",
+  "linkCopied": "Link copied",
+  "favorite": "Favorite",
+  "unfavorite": "Unfavorite",
+  "userMemo": "User memo",
+  "memoHint": "Only visible to you",
+  "memoSaved": "Memo saved",
+  "muteThread": "Mute thread",
+  "unmuteThread": "Unmute thread",
+  "deleteNote": "Delete note",
+  "deleteNoteConfirm": "This note will be deleted. This cannot be undone.",
+  "noteDeleted": "Note deleted",
+  "report": "Report",
+  "reportUser": "Report user",
+  "reportUserBody": "This reports the user @{username}, not just this note.",
+  "@reportUserBody": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "reportUserHint": "Describe the reason (required)",
+  "reportSent": "Report sent"
 }

@@ -72,6 +72,50 @@ class MisskeyNoteRepository implements NoteRepository {
     return _refresh(noteId);
   }
 
+  @override
+  Future<void> favorite(String noteId) =>
+      client.notes.favoritesCreate(noteId: noteId);
+
+  @override
+  Future<void> unfavorite(String noteId) =>
+      client.notes.favoritesDelete(noteId: noteId);
+
+  @override
+  Future<void> delete(String noteId) => client.notes.delete(noteId: noteId);
+
+  @override
+  Future<({bool isFavorited, bool isMutedThread})> state(String noteId) async {
+    final state = await client.notes.state(noteId: noteId);
+    return (
+      isFavorited: state.isFavorited,
+      isMutedThread: state.isMutedThread,
+    );
+  }
+
+  @override
+  Future<void> setThreadMuted(String noteId, {required bool muted}) =>
+      muted
+          ? client.notes.threadMutingCreate(noteId: noteId)
+          : client.notes.threadMutingDelete(noteId: noteId);
+
+  @override
+  Future<void> reportUser({
+    required String userId,
+    required String comment,
+  }) => client.users.reportAbuse(userId: userId, comment: comment);
+
+  @override
+  Future<String?> userMemo(String userId) async {
+    final user = await client.users.showByUserId(userId: userId);
+    return user.memo;
+  }
+
+  @override
+  Future<void> updateMemo({
+    required String userId,
+    required String memo,
+  }) => client.users.updateMemo(userId: userId, memo: memo);
+
   Future<Note> _refresh(String noteId) async {
     final note = await client.notes.show(noteId: noteId);
     await _write(note);

@@ -931,4 +931,57 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cacheClearAllConfirm => '要清除全部缓存吗？需要时会自动重新拉取。';
+
+  @override
+  String get moreMenu => '更多';
+
+  @override
+  String get linkCopied => '链接已复制';
+
+  @override
+  String get favorite => '收藏';
+
+  @override
+  String get unfavorite => '取消收藏';
+
+  @override
+  String get userMemo => '用户便签';
+
+  @override
+  String get memoHint => '仅自己可见';
+
+  @override
+  String get memoSaved => '便签已保存';
+
+  @override
+  String get muteThread => '静音此帖串';
+
+  @override
+  String get unmuteThread => '取消静音帖串';
+
+  @override
+  String get deleteNote => '删除帖子';
+
+  @override
+  String get deleteNoteConfirm => '该帖子将被删除，且无法恢复。';
+
+  @override
+  String get noteDeleted => '帖子已删除';
+
+  @override
+  String get report => '举报';
+
+  @override
+  String get reportUser => '举报用户';
+
+  @override
+  String reportUserBody(String username) {
+    return '将举报用户 @$username，而不仅是这条帖子。';
+  }
+
+  @override
+  String get reportUserHint => '请填写举报理由（必填）';
+
+  @override
+  String get reportSent => '举报已提交';
 }

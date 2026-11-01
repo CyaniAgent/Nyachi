@@ -932,4 +932,57 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cacheClearAllConfirm => 'すべてのキャッシュを消去しますか？必要なときに自動的に再取得されます。';
+
+  @override
+  String get moreMenu => 'その他';
+
+  @override
+  String get linkCopied => 'リンクをコピーしました';
+
+  @override
+  String get favorite => 'お気に入り';
+
+  @override
+  String get unfavorite => 'お気に入り解除';
+
+  @override
+  String get userMemo => 'ユーザーメモ';
+
+  @override
+  String get memoHint => '自分だけに見えます';
+
+  @override
+  String get memoSaved => 'メモを保存しました';
+
+  @override
+  String get muteThread => 'スレッドをミュート';
+
+  @override
+  String get unmuteThread => 'スレッドのミュート解除';
+
+  @override
+  String get deleteNote => 'ノートを削除';
+
+  @override
+  String get deleteNoteConfirm => 'このノートは削除されます。元に戻せません。';
+
+  @override
+  String get noteDeleted => 'ノートを削除しました';
+
+  @override
+  String get report => '通報';
+
+  @override
+  String get reportUser => 'ユーザーを通報';
+
+  @override
+  String reportUserBody(String username) {
+    return '@$username さんを通報します。このノートだけが対象ではありません。';
+  }
+
+  @override
+  String get reportUserHint => '通報理由を記入してください（必須）';
+
+  @override
+  String get reportSent => '通報を送信しました';
 }

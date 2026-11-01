@@ -420,5 +420,29 @@
   "clearAllCaches": "すべてのキャッシュを消去",
   "cacheCleared": "キャッシュを消去しました",
   "cacheClearConfirm": "このキャッシュを消去しますか？必要なときに自動的に再取得されます。",
-  "cacheClearAllConfirm": "すべてのキャッシュを消去しますか？必要なときに自動的に再取得されます。"
+  "cacheClearAllConfirm": "すべてのキャッシュを消去しますか？必要なときに自動的に再取得されます。",
+  "moreMenu": "その他",
+  "linkCopied": "リンクをコピーしました",
+  "favorite": "お気に入り",
+  "unfavorite": "お気に入り解除",
+  "userMemo": "ユーザーメモ",
+  "memoHint": "自分だけに見えます",
+  "memoSaved": "メモを保存しました",
+  "muteThread": "スレッドをミュート",
+  "unmuteThread": "スレッドのミュート解除",
+  "deleteNote": "ノートを削除",
+  "deleteNoteConfirm": "このノートは削除されます。元に戻せません。",
+  "noteDeleted": "ノートを削除しました",
+  "report": "通報",
+  "reportUser": "ユーザーを通報",
+  "reportUserBody": "@{username} さんを通報します。このノートだけが対象ではありません。",
+  "@reportUserBody": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "reportUserHint": "通報理由を記入してください（必須）",
+  "reportSent": "通報を送信しました"
 }

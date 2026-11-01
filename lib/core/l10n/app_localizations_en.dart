@@ -955,4 +955,58 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cacheClearAllConfirm =>
       'Clear all caches? They will be refetched when needed.';
+
+  @override
+  String get moreMenu => 'More';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
+  String get favorite => 'Favorite';
+
+  @override
+  String get unfavorite => 'Unfavorite';
+
+  @override
+  String get userMemo => 'User memo';
+
+  @override
+  String get memoHint => 'Only visible to you';
+
+  @override
+  String get memoSaved => 'Memo saved';
+
+  @override
+  String get muteThread => 'Mute thread';
+
+  @override
+  String get unmuteThread => 'Unmute thread';
+
+  @override
+  String get deleteNote => 'Delete note';
+
+  @override
+  String get deleteNoteConfirm =>
+      'This note will be deleted. This cannot be undone.';
+
+  @override
+  String get noteDeleted => 'Note deleted';
+
+  @override
+  String get report => 'Report';
+
+  @override
+  String get reportUser => 'Report user';
+
+  @override
+  String reportUserBody(String username) {
+    return 'This reports the user @$username, not just this note.';
+  }
+
+  @override
+  String get reportUserHint => 'Describe the reason (required)';
+
+  @override
+  String get reportSent => 'Report sent';
 }

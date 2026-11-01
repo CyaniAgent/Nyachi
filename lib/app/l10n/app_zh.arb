@@ -420,5 +420,29 @@
   "clearAllCaches": "清除全部缓存",
   "cacheCleared": "缓存已清除",
   "cacheClearConfirm": "要清除该缓存吗？需要时会自动重新拉取。",
-  "cacheClearAllConfirm": "要清除全部缓存吗？需要时会自动重新拉取。"
+  "cacheClearAllConfirm": "要清除全部缓存吗？需要时会自动重新拉取。",
+  "moreMenu": "更多",
+  "linkCopied": "链接已复制",
+  "favorite": "收藏",
+  "unfavorite": "取消收藏",
+  "userMemo": "用户便签",
+  "memoHint": "仅自己可见",
+  "memoSaved": "便签已保存",
+  "muteThread": "静音此帖串",
+  "unmuteThread": "取消静音帖串",
+  "deleteNote": "删除帖子",
+  "deleteNoteConfirm": "该帖子将被删除，且无法恢复。",
+  "noteDeleted": "帖子已删除",
+  "report": "举报",
+  "reportUser": "举报用户",
+  "reportUserBody": "将举报用户 @{username}，而不仅是这条帖子。",
+  "@reportUserBody": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "reportUserHint": "请填写举报理由（必填）",
+  "reportSent": "举报已提交"
 }

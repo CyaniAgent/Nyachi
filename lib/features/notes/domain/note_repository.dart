@@ -16,4 +16,24 @@ abstract interface class NoteRepository {
   Future<Note> unreact(String noteId);
 
   Future<Note> renote(String noteId);
+
+  Future<void> favorite(String noteId);
+
+  Future<void> unfavorite(String noteId);
+
+  Future<void> delete(String noteId);
+
+  Future<({bool isFavorited, bool isMutedThread})> state(String noteId);
+
+  Future<void> setThreadMuted(String noteId, {required bool muted});
+
+  /// Reports the note's author, not the note itself: the server endpoint
+  /// (`users/report-abuse`) only accepts a user and a comment.
+  Future<void> reportUser({required String userId, required String comment});
+
+  /// The per-user memo is stored on the user, so reading it requires the
+  /// user detail that `Note.user` (a UserLite) does not carry.
+  Future<String?> userMemo(String userId);
+
+  Future<void> updateMemo({required String userId, required String memo});
 }
