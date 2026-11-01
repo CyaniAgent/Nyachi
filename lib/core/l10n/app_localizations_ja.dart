@@ -486,7 +486,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get about => 'このアプリについて';
 
   @override
-  String get appVersion => 'バージョン 0.1.0+1';
+  String appVersion(String version) {
+    return 'バージョン $version';
+  }
 
   @override
   String get noAccounts => 'アカウントがありません';
@@ -881,4 +883,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oobeNext => '次へ';
+
+  @override
+  String updateAvailable(String version) {
+    return '新しいバージョン $version があります';
+  }
+
+  @override
+  String get updateOpen => 'リリースページを開く';
+
+  @override
+  String get updateFailed => 'アップデートを確認できませんでした';
 }

@@ -163,7 +163,15 @@
   "removeAccountConfirm": "Remove this account and its local data?",
   "activeAccount": "Active",
   "about": "About",
-  "appVersion": "Version 0.1.0+1",
+  "appVersion": "Version {version}",
+  "@appVersion": {
+    "description": "Build version shown in Settings and on the About page.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "noAccounts": "No accounts",
   "externalLinkFailed": "Could not open the link",
   "copyFailed": "Could not copy the link",
@@ -398,5 +406,16 @@
   "oobeDoneBody": "Initial setup is complete. Enjoy Nyachi!",
   "oobeEnterApp": "Enter Nyachi",
   "oobeBack": "Back",
-  "oobeNext": "Next"
+  "oobeNext": "Next",
+  "updateAvailable": "Version {version} is available",
+  "@updateAvailable": {
+    "description": "Shown on the About page when a newer build exists.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateOpen": "Open release",
+  "updateFailed": "Could not check for updates"
 }

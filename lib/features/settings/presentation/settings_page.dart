@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
@@ -10,6 +11,7 @@ import '../../../core/auth/session_controller.dart';
 import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/network/instance_repository.dart';
+import '../../../core/update/app_version.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../announcements/presentation/announcements_page.dart';
 import 'accent_color_picker.dart';
@@ -60,7 +62,9 @@ class SettingsPage extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.info_outline,
             title: l10n.about,
-            subtitle: l10n.appVersion,
+            subtitle: l10n.appVersion(
+              ref.watch(appVersionProvider).value ?? '',
+            ),
             onTap: () => openDetail(context, const SettingsAboutLocation()),
           ),
         ],
@@ -360,11 +364,11 @@ class AppearanceSettingsPage extends ConsumerWidget {
   }
 }
 
-class AboutSettingsPage extends StatelessWidget {
+class AboutSettingsPage extends ConsumerWidget {
   const AboutSettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -393,7 +397,7 @@ class AboutSettingsPage extends StatelessWidget {
                 Text(l10n.appTitle, style: theme.textTheme.headlineSmall),
                 const SizedBox(height: 4),
                 Text(
-                  l10n.appVersion,
+                  l10n.appVersion(ref.watch(appVersionProvider).value ?? ''),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -401,6 +405,7 @@ class AboutSettingsPage extends StatelessWidget {
               ],
             ),
           ),
+          _UpdateBanner(ref: ref),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.campaign_outlined),
@@ -442,6 +447,50 @@ class AboutSettingsPage extends StatelessWidget {
   }
 }
 
+/// Offers the newest published release, when one is newer than this build.
+///
+/// Failures stay silent here: the About page must not turn a network problem
+/// into an error surface, and the version line above already tells the user
+/// what they are running.
+class _UpdateBanner extends StatelessWidget {
+  const _UpdateBanner({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final release = ref.watch(availableReleaseProvider).value;
+    if (release == null) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(Icons.system_update_alt, color: scheme.primary),
+          title: Text(l10n.updateAvailable(release.tag)),
+          subtitle: release.name == release.tag ? null : Text(release.name),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => _open(context, release.url),
+        ),
+        const Divider(height: 1),
+      ],
+    );
+  }
+
+  Future<void> _open(BuildContext context, String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on Object {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(context.l10n.updateFailed)));
+      }
+    }
+  }
+}
+
 /// Third-party notices entry; the package count loads from the asset itself so
 /// it never drifts from the generated manifest.
 class _LicensesTile extends StatefulWidget {
@@ -466,9 +515,7 @@ class _LicensesTileState extends State<_LicensesTile> {
         return ListTile(
           leading: const Icon(Icons.description_outlined),
           title: Text(l10n.thirdPartyNotices),
-          subtitle: Text(
-            count == null ? l10n.appVersion : l10n.licensesBody(count),
-          ),
+          subtitle: Text(count == null ? '…' : l10n.licensesBody(count)),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => openDetail(context, const SettingsLicensesLocation()),
         );

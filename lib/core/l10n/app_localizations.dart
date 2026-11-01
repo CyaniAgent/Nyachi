@@ -1048,11 +1048,11 @@ abstract class AppLocalizations {
   /// **'About'**
   String get about;
 
-  /// No description provided for @appVersion.
+  /// Build version shown in Settings and on the About page.
   ///
   /// In en, this message translates to:
-  /// **'Version 0.1.0+1'**
-  String get appVersion;
+  /// **'Version {version}'**
+  String appVersion(String version);
 
   /// No description provided for @noAccounts.
   ///
@@ -1773,6 +1773,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next'**
   String get oobeNext;
+
+  /// Shown on the About page when a newer build exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available'**
+  String updateAvailable(String version);
+
+  /// No description provided for @updateOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open release'**
+  String get updateOpen;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for updates'**
+  String get updateFailed;
 }
 
 class _AppLocalizationsDelegate

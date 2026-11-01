@@ -495,7 +495,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
-  String get appVersion => 'Version 0.1.0+1';
+  String appVersion(String version) {
+    return 'Version $version';
+  }
 
   @override
   String get noAccounts => 'No accounts';
@@ -895,4 +897,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oobeNext => 'Next';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Version $version is available';
+  }
+
+  @override
+  String get updateOpen => 'Open release';
+
+  @override
+  String get updateFailed => 'Could not check for updates';
 }

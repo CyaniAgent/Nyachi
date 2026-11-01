@@ -163,7 +163,7 @@
   "removeAccountConfirm": "このアカウントとローカルデータを削除しますか？",
   "activeAccount": "使用中",
   "about": "このアプリについて",
-  "appVersion": "バージョン 0.1.0+1",
+  "appVersion": "バージョン {version}",
   "noAccounts": "アカウントがありません",
   "externalLinkFailed": "リンクを開けませんでした",
   "copyFailed": "リンクをコピーできませんでした",
@@ -398,5 +398,8 @@
   "oobeDoneBody": "初期設定が完了しました。楽しく使いましょう！",
   "oobeEnterApp": "Nyachi を始める",
   "oobeBack": "戻る",
-  "oobeNext": "次へ"
+  "oobeNext": "次へ",
+  "updateAvailable": "新しいバージョン {version} があります",
+  "updateOpen": "リリースページを開く",
+  "updateFailed": "アップデートを確認できませんでした"
 }

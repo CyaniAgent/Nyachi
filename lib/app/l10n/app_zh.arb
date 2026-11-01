@@ -163,7 +163,7 @@
   "removeAccountConfirm": "移除此账号及其本地数据？",
   "activeAccount": "当前",
   "about": "关于",
-  "appVersion": "版本 0.1.0+1",
+  "appVersion": "版本 {version}",
   "noAccounts": "暂无账号",
   "externalLinkFailed": "无法打开链接",
   "copyFailed": "无法复制链接",
@@ -398,5 +398,8 @@
   "oobeDoneBody": "初始设置已完成，祝你使用愉快！",
   "oobeEnterApp": "进入 Nyachi",
   "oobeBack": "上一步",
-  "oobeNext": "下一步"
+  "oobeNext": "下一步",
+  "updateAvailable": "发现新版本 {version}",
+  "updateOpen": "打开发布页",
+  "updateFailed": "无法检查更新"
 }

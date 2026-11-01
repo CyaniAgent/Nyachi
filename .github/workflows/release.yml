@@ -241,6 +241,45 @@ jobs:
           path: out
           merge-multiple: true
 
+      - name: Extract release notes
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          # Notes come from CHANGELOG.md: releases are cut from develop without
+          # pull requests, so GitHub's generated notes would only ever contain a
+          # compare link. The section runs from this version's heading to the
+          # next one; a missing section fails here rather than publishing an
+          # empty release.
+          #
+          # Matching uses index() rather than a regex: inside an awk string the
+          # intended "\\.*\\[" collapses to "[", which makes the pattern a
+          # character class that matches every heading.
+          awk -v v="$VERSION" '
+            BEGIN { head = "## [" v "]" }
+            index($0, head) == 1 { found = 1; next }
+            found && index($0, "## [") == 1 { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::CHANGELOG.md has no section for $VERSION"
+            exit 1
+          fi
+          # A codename is optional and belongs to pre-releases only. It is read
+          # from the "### Codename" line and then dropped from the body, because
+          # the release title already carries it.
+          CODENAME=$(awk '/^### Codename$/ { getline; while ($0 ~ /^[[:space:]]*$/) getline; print; exit }' notes.md)
+          awk '
+            /^### Codename$/ { skip = 1; next }
+            skip {
+              if ($0 ~ /^[[:space:]]*$/) next
+              if ($0 ~ /^#/) skip = 0; else next
+            }
+            { print }
+          ' notes.md > body.md
+          echo "codename=$CODENAME" >> "$GITHUB_OUTPUT"
+          cat body.md
+        id: notes
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -248,7 +287,12 @@ jobs:
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           ls -lh out
           # beta/rc tags publish as pre-releases; anything else is stable.
-          FLAGS=(--title "Nyachi ${TAG#v}" --generate-notes out/*)
+          CODENAME="${{ steps.notes.outputs.codename }}"
+          TITLE="Nyachi ${TAG#v}"
+          if [[ -n "$CODENAME" ]]; then
+            TITLE="$TITLE \"$CODENAME\""
+          fi
+          FLAGS=(--title "$TITLE" --notes-file body.md out/*)
           if [[ "$TAG" == *-beta* || "$TAG" == *-rc* ]]; then
             FLAGS+=(--prerelease)
           fi

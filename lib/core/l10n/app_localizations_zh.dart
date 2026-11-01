@@ -486,7 +486,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get about => '关于';
 
   @override
-  String get appVersion => '版本 0.1.0+1';
+  String appVersion(String version) {
+    return '版本 $version';
+  }
 
   @override
   String get noAccounts => '暂无账号';
@@ -880,4 +882,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oobeNext => '下一步';
+
+  @override
+  String updateAvailable(String version) {
+    return '发现新版本 $version';
+  }
+
+  @override
+  String get updateOpen => '打开发布页';
+
+  @override
+  String get updateFailed => '无法检查更新';
 }
