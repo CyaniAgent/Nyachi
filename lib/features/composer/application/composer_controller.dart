@@ -177,6 +177,11 @@ class ComposerController extends _$ComposerController {
   var _dirty = false;
   var _disposed = false;
 
+  /// True once the user has changed anything in this composer. `_dirty` is
+  /// not enough for the restore guard: `_persist` clears it, and a restore
+  /// can resolve after a save has already run.
+  var _touched = false;
+
   /// Captured in [build] so the dispose-persist can write without touching
   /// `ref` or reading `state` inside a riverpod lifecycle callback.
   late DraftStore? _store;
@@ -191,6 +196,7 @@ class ComposerController extends _$ComposerController {
     _disposed = false;
     _debounce?.cancel();
     _dirty = false;
+    _touched = false;
     // Captured up front: riverpod forbids `ref.read` inside lifecycle
     // callbacks, and the dispose-persist needs both. An account switch
     // re-runs this build through the watch below, refreshing both.
@@ -240,6 +246,10 @@ class ComposerController extends _$ComposerController {
     if (store == null) return;
     final drafts = await store.list();
     if (_disposed || drafts.isEmpty) return;
+    // The listing is async: the user may have started typing while it was in
+    // flight. Their content wins - the restore only fills an untouched
+    // composer, and it is the same content the autosave is persisting anyway.
+    if (_touched) return;
     final draft = drafts
         .where((candidate) => candidate.replyId == state.replyId)
         .firstOrNull;
@@ -252,6 +262,7 @@ class ComposerController extends _$ComposerController {
   void loadDraft(ComposerDraft draft) {
     _debounce?.cancel();
     _dirty = false;
+    _touched = true;
     _applyDraft(draft);
   }
 
@@ -300,6 +311,7 @@ class ComposerController extends _$ComposerController {
   void addFileId(String fileId) {
     if (state.fileIds.contains(fileId)) return;
     state = state.copyWith(fileIds: [...state.fileIds, fileId]);
+    _scheduleSave();
   }
 
   /// Removes an attachment from the post.
@@ -307,6 +319,7 @@ class ComposerController extends _$ComposerController {
     state = state.copyWith(
       fileIds: state.fileIds.where((id) => id != fileId).toList(),
     );
+    _scheduleSave();
   }
 
   void setLocalOnly(bool value) {
@@ -314,15 +327,14 @@ class ComposerController extends _$ComposerController {
     _scheduleSave();
   }
 
-  /// Toggles the poll editor. Turning it off clears the choices and drops any
-  /// attachments, because Misskey rejects notes carrying both.
+  /// Toggles the poll editor. Polls and attachments coexist - Misskey
+  /// accepts notes carrying both - so neither is cleared here.
   void setShowPoll(bool value) {
     state = state.copyWith(
       showPoll: value,
       pollChoices: value && state.pollChoices.isEmpty
           ? const ['', '']
           : state.pollChoices,
-      fileIds: value ? const <String>[] : state.fileIds,
     );
     _scheduleSave();
   }
@@ -424,6 +436,7 @@ class ComposerController extends _$ComposerController {
   void _scheduleSave() {
     _lastState = state;
     _dirty = true;
+    _touched = true;
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       unawaited(_persist());

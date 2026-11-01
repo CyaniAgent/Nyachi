@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +13,27 @@ import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/composer/application/composer_controller.dart';
 import 'package:nyachi/features/composer/application/draft_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Makes the restore listing resolve on demand, so the window where the user
+/// types while a draft is still loading can be exercised deterministically.
+class _SlowDraftStore extends DraftStore {
+  _SlowDraftStore({
+    required super.dao,
+    required super.accountId,
+    required this.gate,
+  }) : super(
+         client: MisskeyClient.fromHost('https://example.invalid'),
+         draftsSupported: false,
+       );
+
+  final Future<void> gate;
+
+  @override
+  Future<List<ComposerDraft>> list() async {
+    await gate;
+    return super.list();
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +60,7 @@ void main() {
     await database.close();
   });
 
-  ProviderContainer container({ComposerSender? sender}) {
+  ProviderContainer container({ComposerSender? sender, DraftStore? store}) {
     return ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(preferences),
@@ -46,12 +69,14 @@ void main() {
         // The local fallback store: no server drafts round-trip in these
         // tests, so the network client is never reached.
         draftStoreProvider.overrideWith(
-          (ref) => DraftStore(
-            client: MisskeyClient.fromHost('https://example.invalid'),
-            dao: database.localDraftsDao,
-            draftsSupported: false,
-            accountId: account.id,
-          ),
+          (ref) =>
+              store ??
+              DraftStore(
+                client: MisskeyClient.fromHost('https://example.invalid'),
+                dao: database.localDraftsDao,
+                draftsSupported: false,
+                accountId: account.id,
+              ),
         ),
         composerSenderProvider.overrideWithValue(
           sender ??
@@ -164,4 +189,90 @@ void main() {
     secondSub.close();
     second.dispose();
   });
+
+  test(
+    'a poll and attachments coexist in state and in the post payload',
+    () async {
+      List<String>? sentFileIds;
+      List<String>? sentChoices;
+      final scope = container(
+        sender:
+            ({
+              required text,
+              cw,
+              required visibility,
+              required localOnly,
+              replyId,
+              fileIds = const [],
+              pollChoices,
+              pollMultiple = false,
+              pollExpiresAt,
+              reactionAcceptance,
+              visibleUserIds = const [],
+              scheduledAt,
+            }) async {
+              sentFileIds = fileIds;
+              sentChoices = pollChoices;
+            },
+      );
+      final provider = composerControllerProvider(null);
+      final sub = scope.listen(provider, (_, _) {});
+      final controller = scope.read(provider.notifier);
+
+      controller.setText('poll with an image');
+      controller.addFileId('file-1');
+      // Turning the poll on no longer drops the attachment.
+      controller.setShowPoll(true);
+      expect(scope.read(provider).fileIds, ['file-1']);
+
+      controller.setPollChoice(0, 'yes');
+      controller.setPollChoice(1, 'no');
+      // Attaching while the poll is open still records the file.
+      controller.addFileId('file-2');
+      expect(scope.read(provider).fileIds, ['file-1', 'file-2']);
+
+      expect(await controller.post(), isTrue);
+      expect(sentFileIds, ['file-1', 'file-2']);
+      expect(sentChoices, ['yes', 'no']);
+
+      sub.close();
+      scope.dispose();
+    },
+  );
+
+  test(
+    'a slow restore never overwrites what the user typed while waiting',
+    () async {
+      final releaseGate = Completer<void>();
+      await database.localDraftsDao.save(
+        ComposerDraft(
+          id: 'local:stored',
+          accountId: account.id,
+          text: 'stored earlier',
+          visibility: 'public',
+          updatedAt: DateTime(2026),
+        ),
+      );
+
+      final scope = container(
+        store: _SlowDraftStore(
+          dao: database.localDraftsDao,
+          accountId: account.id,
+          gate: releaseGate.future,
+        ),
+      );
+      final provider = composerControllerProvider(null);
+      final sub = scope.listen(provider, (_, _) {});
+      final controller = scope.read(provider.notifier);
+
+      // The user types before the listing resolves.
+      controller.setText('typed while loading');
+      releaseGate.complete();
+      await pumpEventQueue();
+
+      expect(scope.read(provider).text, 'typed while loading');
+      sub.close();
+      scope.dispose();
+    },
+  );
 }

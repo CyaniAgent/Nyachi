@@ -266,7 +266,6 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
   Future<void> _attach(FileType type) async {
     final provider = composerControllerProvider(widget.replyId);
     final controller = ref.read(provider.notifier);
-    if (ref.read(provider).showPoll) return;
     final picked = await FilePicker.pickFiles(type: type);
     if (picked.isEmpty || !mounted) return;
     setState(() => _uploading += picked.length);
@@ -612,33 +611,24 @@ class _ComposerToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    Widget tool(Widget child, {bool enabled = true}) => enabled
-        ? child
-        : Opacity(opacity: 0.4, child: IgnorePointer(child: child));
 
     return Row(
       children: [
-        tool(
-          IconButton(
-            tooltip: l10n.attachMedia,
-            onPressed: uploading > 0 ? null : onPickImages,
-            icon: const Icon(Icons.image_outlined),
-          ),
-          enabled: !state.showPoll,
+        IconButton(
+          tooltip: l10n.attachMedia,
+          onPressed: uploading > 0 ? null : onPickImages,
+          icon: const Icon(Icons.image_outlined),
         ),
-        tool(
-          IconButton(
-            tooltip: l10n.attachFiles,
-            onPressed: uploading > 0 ? null : onPickFiles,
-            icon: uploading > 0
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.cloud_upload_outlined),
-          ),
-          enabled: !state.showPoll,
+        IconButton(
+          tooltip: l10n.attachFiles,
+          onPressed: uploading > 0 ? null : onPickFiles,
+          icon: uploading > 0
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.cloud_upload_outlined),
         ),
         IconButton(
           tooltip: l10n.poll,
