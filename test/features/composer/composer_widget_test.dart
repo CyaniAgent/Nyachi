@@ -11,6 +11,7 @@ import 'package:nyachi/core/network/instance_repository.dart';
 import 'package:nyachi/core/storage/app_database.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
+import 'package:nyachi/core/ui/avatar.dart';
 import 'package:nyachi/features/composer/application/composer_controller.dart';
 import 'package:nyachi/features/composer/application/draft_store.dart';
 import 'package:nyachi/features/composer/presentation/compose_sheet.dart';
@@ -210,5 +211,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Direct'), findsOneWidget);
+  });
+
+  testWidgets('the header action group sits flush to the trailing edge', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester);
+
+    // ComposerBody pads 16 on each side; the publish button ends at the
+    // padding edge, so the action group is flush right rather than flowing
+    // from the left cluster.
+    final post = tester.getRect(find.widgetWithText(FilledButton, 'Post'));
+    expect(1000 - post.right, 16);
+
+    // The spacer keeps the avatar cluster away from the action group.
+    final avatar = tester.getRect(find.byType(NyachiAvatar));
+    final visibility = tester.getRect(find.text('Public'));
+    expect(visibility.left, greaterThan(avatar.right + 100));
   });
 }

@@ -335,6 +335,8 @@ class _ComposerHeader extends ConsumerWidget {
         ref.watch(instanceInfoProvider).value?.maxNoteTextLength ?? 3000;
     final used = state.text.runes.length;
 
+    // Left: close and the panel avatar. Right: the action group - visibility,
+    // local-only, overflow, publish - flush to the trailing edge as one block.
     return Row(
       children: [
         IconButton(
@@ -347,27 +349,25 @@ class _ComposerHeader extends ConsumerWidget {
           size: 32,
           onTap: () => showComposerPanel(context, replyId: replyId),
         ),
-        const SizedBox(width: 4),
-        Flexible(
-          child: _VisibilityMenu(
-            visibility: state.visibility,
-            onSelected: (value) async {
-              if (value == NotesCreateRequestVisibility.specified) {
-                final picked = await showRecipientPicker(
-                  context,
-                  preselected: state.visibleUserIds,
-                );
-                if (picked == null) return;
-                for (final id in state.visibleUserIds) {
-                  controller.removeVisibleUser(id);
-                }
-                for (final id in picked) {
-                  controller.addVisibleUser(id);
-                }
+        const Spacer(),
+        _VisibilityMenu(
+          visibility: state.visibility,
+          onSelected: (value) async {
+            if (value == NotesCreateRequestVisibility.specified) {
+              final picked = await showRecipientPicker(
+                context,
+                preselected: state.visibleUserIds,
+              );
+              if (picked == null) return;
+              for (final id in state.visibleUserIds) {
+                controller.removeVisibleUser(id);
               }
-              controller.setVisibility(value);
-            },
-          ),
+              for (final id in picked) {
+                controller.addVisibleUser(id);
+              }
+            }
+            controller.setVisibility(value);
+          },
         ),
         IconButton(
           tooltip: l10n.localOnly,
