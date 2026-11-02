@@ -365,6 +365,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openDrive => 'Open drive';
 
   @override
+  String get pushNotifications => 'Push notifications';
+
+  @override
+  String get pushEnable => 'Enable push notifications';
+
+  @override
+  String get pushEnableHint =>
+      'Receive notifications even when Nyachi is closed';
+
+  @override
+  String get pushUnsupported => 'Not available in this build';
+
+  @override
+  String get pushUnsupportedHint =>
+      'Push notifications work in the web version of Nyachi.';
+
+  @override
+  String get pushUnavailable => 'This server does not offer push';
+
+  @override
+  String get pushUnavailableHint =>
+      'The instance has its push service worker disabled.';
+
+  @override
+  String get pushNoKey => 'The server did not provide a push key';
+
+  @override
+  String get pushDenied => 'Notification permission was not granted';
+
+  @override
+  String get pushEnabled => 'Push notifications enabled';
+
+  @override
+  String get pushDisabled => 'Push notifications disabled';
+
+  @override
   String get settings => 'Settings';
 
   @override

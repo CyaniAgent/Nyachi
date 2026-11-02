@@ -24,6 +24,7 @@ class InstanceInfo {
     required this.maxNoteTextLength,
     this.urlPreviewEnabled = false,
     this.draftsSupported = false,
+    this.serviceWorkerEnabled = false,
     this.version,
   });
 
@@ -38,16 +39,25 @@ class InstanceInfo {
   /// posts work. Probed once and cached, because meta has no flag for it.
   final bool draftsSupported;
 
+  /// Whether the server runs a web push service worker (`enableServiceWorker`
+  /// in meta). Gates the push settings entry, which is useless without it.
+  final bool serviceWorkerEnabled;
+
   /// Server version string, kept for diagnostics.
   final String? version;
 
-  InstanceInfo copyWith({bool? urlPreviewEnabled, bool? draftsSupported}) {
+  InstanceInfo copyWith({
+    bool? urlPreviewEnabled,
+    bool? draftsSupported,
+    bool? serviceWorkerEnabled,
+  }) {
     return InstanceInfo(
       name: name,
       themeColor: themeColor,
       maxNoteTextLength: maxNoteTextLength,
       urlPreviewEnabled: urlPreviewEnabled ?? this.urlPreviewEnabled,
       draftsSupported: draftsSupported ?? this.draftsSupported,
+      serviceWorkerEnabled: serviceWorkerEnabled ?? this.serviceWorkerEnabled,
       version: version,
     );
   }
@@ -150,6 +160,7 @@ class InstanceRepository {
       maxNoteTextLength: meta.maxNoteTextLength.toInt(),
       // The meta model exposes this capability as `enableUrlPreview`.
       urlPreviewEnabled: meta.enableUrlPreview,
+      serviceWorkerEnabled: meta.enableServiceWorker,
       version: meta.version,
     );
   }

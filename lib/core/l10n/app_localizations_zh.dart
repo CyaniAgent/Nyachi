@@ -354,6 +354,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get openDrive => '打开网盘';
 
   @override
+  String get pushNotifications => '推送通知';
+
+  @override
+  String get pushEnable => '开启推送通知';
+
+  @override
+  String get pushEnableHint => '即使 Nyachi 已关闭也能收到通知';
+
+  @override
+  String get pushUnsupported => '当前版本不支持';
+
+  @override
+  String get pushUnsupportedHint => '推送通知仅在 Nyachi 网页版可用。';
+
+  @override
+  String get pushUnavailable => '该服务器未提供推送';
+
+  @override
+  String get pushUnavailableHint => '实例已禁用推送服务工作者。';
+
+  @override
+  String get pushNoKey => '服务器未提供推送公钥';
+
+  @override
+  String get pushDenied => '未获得通知权限';
+
+  @override
+  String get pushEnabled => '已开启推送通知';
+
+  @override
+  String get pushDisabled => '已关闭推送通知';
+
+  @override
   String get settings => '设置';
 
   @override

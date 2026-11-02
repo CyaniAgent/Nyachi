@@ -85,6 +85,13 @@ class SettingsPage extends ConsumerWidget {
             subtitle: l10n.openDrive,
             onTap: () => openDetail(context, const SettingsDriveLocation()),
           ),
+          const Divider(height: 1),
+          _SettingsTile(
+            icon: Icons.notifications_active_outlined,
+            title: l10n.pushNotifications,
+            subtitle: l10n.pushEnable,
+            onTap: () => openDetail(context, const SettingsPushLocation()),
+          ),
 
           const Divider(height: 1),
           _SettingsTile(

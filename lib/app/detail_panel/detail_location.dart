@@ -15,6 +15,7 @@ import '../../features/settings/presentation/email_settings_page.dart';
 import '../../features/settings/presentation/notification_settings_page.dart';
 import '../../features/settings/presentation/privacy_settings_page.dart';
 import '../../features/settings/presentation/profile_edit_page.dart';
+import '../../features/settings/presentation/push_settings_page.dart';
 import '../../features/settings/presentation/security_settings_page.dart';
 import '../../features/settings/presentation/licenses_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
@@ -74,6 +75,8 @@ sealed class DetailLocation {
         const SettingsSecurityLocation(),
       'settings' when segments.length == 2 && segments[1] == 'drive-settings' =>
         const SettingsDriveLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'push' =>
+        const SettingsPushLocation(),
       'add-account' when segments.length == 1 => const AddAccountLocation(),
       _ => null,
     };
@@ -306,6 +309,16 @@ class SettingsDriveLocation extends DetailLocation {
 
   @override
   Widget build(BuildContext context) => const DriveSettingsPage();
+}
+
+class SettingsPushLocation extends DetailLocation {
+  const SettingsPushLocation();
+
+  @override
+  String get location => '/settings/push';
+
+  @override
+  Widget build(BuildContext context) => const PushSettingsPage();
 }
 
 class AddAccountLocation extends DetailLocation {

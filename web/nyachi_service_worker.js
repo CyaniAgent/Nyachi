@@ -67,3 +67,46 @@ self.addEventListener('fetch', (event) => {
     }),
   );
 });
+
+// Web Push.
+//
+// The server sends a JSON body with the notification title, body and the in-app
+// route to open; anything unparsable still shows a generic notification rather
+// than dropping the push silently.
+self.addEventListener('push', (event) => {
+  let payload = {};
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch (error) {
+      payload = {body: event.data.text()};
+    }
+  }
+  const title = payload.title || 'Nyachi';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: payload.body || '',
+      icon: 'icons/Icon-192.png',
+      badge: 'icons/Icon-192.png',
+      tag: payload.tag,
+      data: {url: payload.url || '/'},
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/';
+  // Focus an existing tab when one is open; otherwise open a new one.
+  event.waitUntil(
+    self.clients.matchAll({type: 'window', includeUncontrolled: true}).then((tabs) => {
+      for (const tab of tabs) {
+        if (tab.url.startsWith(self.location.origin)) {
+          tab.navigate(target);
+          return tab.focus();
+        }
+      }
+      return self.clients.openWindow(target);
+    }),
+  );
+});

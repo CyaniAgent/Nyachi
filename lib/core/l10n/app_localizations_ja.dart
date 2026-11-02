@@ -354,6 +354,39 @@ class AppLocalizationsJa extends AppLocalizations {
   String get openDrive => 'ドライブを開く';
 
   @override
+  String get pushNotifications => 'プッシュ通知';
+
+  @override
+  String get pushEnable => 'プッシュ通知を有効にする';
+
+  @override
+  String get pushEnableHint => 'Nyachi を閉じていても通知を受け取ります';
+
+  @override
+  String get pushUnsupported => 'このビルドでは利用できません';
+
+  @override
+  String get pushUnsupportedHint => 'プッシュ通知は Nyachi の Web 版で利用できます。';
+
+  @override
+  String get pushUnavailable => 'このサーバーはプッシュに対応していません';
+
+  @override
+  String get pushUnavailableHint => 'インスタンスのプッシュ用サービスワーカーが無効です。';
+
+  @override
+  String get pushNoKey => 'サーバーからプッシュ用の鍵が提供されませんでした';
+
+  @override
+  String get pushDenied => '通知の許可が得られませんでした';
+
+  @override
+  String get pushEnabled => 'プッシュ通知を有効にしました';
+
+  @override
+  String get pushDisabled => 'プッシュ通知を無効にしました';
+
+  @override
   String get settings => '設定';
 
   @override

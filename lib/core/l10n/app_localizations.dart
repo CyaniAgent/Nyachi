@@ -784,6 +784,72 @@ abstract class AppLocalizations {
   /// **'Open drive'**
   String get openDrive;
 
+  /// No description provided for @pushNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get pushNotifications;
+
+  /// No description provided for @pushEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable push notifications'**
+  String get pushEnable;
+
+  /// No description provided for @pushEnableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive notifications even when Nyachi is closed'**
+  String get pushEnableHint;
+
+  /// No description provided for @pushUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available in this build'**
+  String get pushUnsupported;
+
+  /// No description provided for @pushUnsupportedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications work in the web version of Nyachi.'**
+  String get pushUnsupportedHint;
+
+  /// No description provided for @pushUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not offer push'**
+  String get pushUnavailable;
+
+  /// No description provided for @pushUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The instance has its push service worker disabled.'**
+  String get pushUnavailableHint;
+
+  /// No description provided for @pushNoKey.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not provide a push key'**
+  String get pushNoKey;
+
+  /// No description provided for @pushDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission was not granted'**
+  String get pushDenied;
+
+  /// No description provided for @pushEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications enabled'**
+  String get pushEnabled;
+
+  /// No description provided for @pushDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications disabled'**
+  String get pushDisabled;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
