@@ -150,4 +150,24 @@ void main() {
     expect(repository.marksRead, 1);
     expect(calls, callsAfterHydrate + 1);
   });
+
+  test('a pushed notification lands at the head without duplicating', () async {
+    final repository = _FakeRepository(cached: [_notification('n1')]);
+    repository.fetch = (_) async =>
+        NotificationPage(items: [_notification('n1')], hasMore: false);
+    final container = await _makeContainer(repository);
+
+    final provider = notificationListControllerProvider;
+    container.listen(provider, (_, _) {});
+    await pumpEventQueue();
+    expect(container.read(provider).items.map((n) => n.id), ['n1']);
+
+    final controller = container.read(provider.notifier);
+    controller.prepend(_notification('live-1'));
+    expect(container.read(provider).items.map((n) => n.id), ['live-1', 'n1']);
+
+    // A reconnect replays the same push; the id guard keeps one row.
+    controller.prepend(_notification('live-1'));
+    expect(container.read(provider).items.map((n) => n.id), ['live-1', 'n1']);
+  });
 }
