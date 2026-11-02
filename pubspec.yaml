@@ -40,6 +40,10 @@ dependencies:
   # different type from Flutter's; 1.9.0 uses the framework's own.
   dynamic_color: ^1.9.0
   package_info_plus: ^10.2.2
+  window_manager: ^0.5.1
+  flutter_local_notifications: ^22.3.3
+  flutter_foreground_task: ^11.0.3
+  system_tray: ^0.1.1
 
 dev_dependencies:
   build_runner: ^2.16.2

@@ -2,6 +2,11 @@
     <!-- Release builds need the network permission; the debug/profile manifests already declare it. -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Residency: a foreground service keeps notifications arriving while the
+         app is backgrounded, and notifications need a runtime grant on API 33+. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <application
         android:allowBackup="false"
         android:label="Nyachi"
