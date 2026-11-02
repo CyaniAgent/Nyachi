@@ -4,10 +4,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:nativeapi/nativeapi.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'residency.g.dart';
@@ -60,7 +62,7 @@ class ResidencyService {
       } else {
         _tray = tray;
         tray.setTooltip('Nyachi');
-        final icon = Image.fromFile(_trayIconPath());
+        final icon = await _loadTrayIcon();
         if (icon != null) tray.icon = icon;
         final menu = Menu.create();
         if (menu != null) {
@@ -99,8 +101,25 @@ class ResidencyService {
     }
   }
 
-  /// The bundled app icon, which the tray reads from disk.
-  String _trayIconPath() => 'assets/brand/app_icon_full.png';
+  /// Loads the tray icon from the bundled assets.
+  ///
+  /// The tray API takes a file path, but a packaged app has no such file on
+  /// disk until it is extracted, so the asset is copied to a temp file first.
+  /// Returns null when the icon cannot be prepared, leaving the tray without
+  /// one rather than failing the whole setup.
+  Future<Image?> _loadTrayIcon() async {
+    try {
+      final data = await rootBundle.load('assets/brand/app_icon_full.png');
+      final file = File(
+        '${(await getTemporaryDirectory()).path}/nyachi-tray.png',
+      );
+      await file.writeAsBytes(data.buffer.asUint8List(), flush: true);
+      return Image.fromFile(file.path);
+    } catch (error) {
+      debugPrint('Nyachi: tray icon unavailable: $error');
+      return null;
+    }
+  }
 
   Future<void> showWindow() async {
     if (Platform.isAndroid) return;
