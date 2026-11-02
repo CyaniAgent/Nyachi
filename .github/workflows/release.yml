@@ -143,7 +143,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libsecret-1-dev libjsoncpp-dev \
-            libmpv-dev mpv
+            libmpv-dev mpv \
+            libayatana-appindicator3-dev
+
+          # system_tray's Linux backend needs appindicator3-0.1; the ayatana
+          # package above is the maintained provider of it on 24.04.
 
       - name: Cache CocoaPods
         if: matrix.target == 'macos-arm64'
