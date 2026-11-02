@@ -107,9 +107,8 @@ Future<void> _pumpPage(
       sessionControllerProvider.overrideWith(
         () => _FakeSessionController(account),
       ),
-      userProfileProvider(
-        'u-target',
-      ).overrideWith((ref) => Future<UserDetailed?>.value(user)),
+      userProfileProvider('u-target')
+          .overrideWith((ref) => Future<UserDetailed?>.value(user)),
       noteFeedRepositoryProvider.overrideWith(
         (ref, source) => _FakeFeedRepository(),
       ),
@@ -145,7 +144,7 @@ void main() {
       expect(
         find.byWidgetPredicate(
           (w) => w is CachedNetworkImage && w.imageUrl == bannerUrl,
-          ),
+        ),
         findsOneWidget,
       );
       // Full-bleed 3:1 banner.
@@ -174,17 +173,13 @@ void main() {
       await _pumpPage(tester, user: _user(bannerUrl: null));
 
       final context = tester.element(find.byType(UserProfilePage));
-      final placeholder = Theme.of(
-        context,
-      ).colorScheme.surfaceContainerHighest;
+      final placeholder = Theme.of(context).colorScheme.surfaceContainerHighest;
 
       // No banner image request, only the avatar's own.
       expect(
         find.byWidgetPredicate(
-          (w) =>
-              w is CachedNetworkImage &&
-              w.imageUrl.contains('banner'),
-          ),
+          (w) => w is CachedNetworkImage && w.imageUrl.contains('banner'),
+        ),
         findsNothing,
       );
       // Placeholder background fills the banner slot (3:1 full-bleed).
@@ -193,7 +188,7 @@ void main() {
       expect(
         find.byWidgetPredicate(
           (w) => w is ColoredBox && w.color == placeholder,
-          ),
+        ),
         findsAtLeastNWidgets(1),
       );
       // Avatar still renders at the fixed size.

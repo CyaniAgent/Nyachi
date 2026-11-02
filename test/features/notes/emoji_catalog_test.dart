@@ -113,26 +113,23 @@ void main() {
     expect(calls, 1);
   });
 
-  test(
-    'first failed fetch without cache surfaces the error',
-    () async {
-      final client = _FakeClient(
-        _FakeEmojiApi(() async => throw Exception('network down')),
-      );
-      final container = _makeContainer(client, _FakeCacheDao());
-      final errors = <Object>[];
-      final subscription = container.listen(emojiCatalogProvider, (_, next) {
-        if (next.hasError) errors.add(next.error!);
-      });
-      addTearDown(subscription.close);
+  test('first failed fetch without cache surfaces the error', () async {
+    final client = _FakeClient(
+      _FakeEmojiApi(() async => throw Exception('network down')),
+    );
+    final container = _makeContainer(client, _FakeCacheDao());
+    final errors = <Object>[];
+    final subscription = container.listen(emojiCatalogProvider, (_, next) {
+      if (next.hasError) errors.add(next.error!);
+    });
+    addTearDown(subscription.close);
 
-      // Without a cached catalogue there is nothing to degrade to, so the
-      // failure must be visible to the UI instead of masquerading as an
-      // empty catalogue.
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-      expect(errors, isNotEmpty);
-    },
-  );
+    // Without a cached catalogue there is nothing to degrade to, so the
+    // failure must be visible to the UI instead of masquerading as an
+    // empty catalogue.
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(errors, isNotEmpty);
+  });
 
   test(
     'scheduled retry after 30 seconds recovers the remote catalogue',

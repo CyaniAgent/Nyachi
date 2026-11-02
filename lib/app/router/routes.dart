@@ -504,7 +504,10 @@ class AppShellRouteData extends StatefulShellRouteData {
     BuildContext context,
     StatefulNavigationShell navigationShell,
     List<Widget> children,
-  ) => BranchSlideContainer(navigationShell: navigationShell, children: children);
+  ) => BranchSlideContainer(
+    navigationShell: navigationShell,
+    children: children,
+  );
 
   @override
   Widget builder(

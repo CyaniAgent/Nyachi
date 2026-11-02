@@ -18,8 +18,10 @@ EmojiSimple _emoji(String name, {String? category}) => EmojiSimple(
   url: 'https://example.test/emoji/$name.png',
 );
 
-Future<void> _pumpHost(WidgetTester tester, Widget home) async {
-  await tester.pumpWidget(home);
+// The ProviderScope must sit directly under pumpWidget: these providers are
+// root providers (no `dependencies`), so the lint requires the scope to be
+// recognizably the root one.
+Future<void> _openAndSettle(WidgetTester tester) async {
   await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
 }
@@ -34,40 +36,35 @@ Widget _materialApp(Widget home) => MaterialApp(
 );
 
 void main() {
-  testWidgets(
-    'renders catalogue entries alongside the built-in unicode set',
-    (tester) async {
-      // The bottom sheet route is pushed on the root navigator, so the scope
-      // must sit above MaterialApp for the sheet to find it.
-      await _pumpHost(
-        tester,
-        ProviderScope(
-          overrides: [
-            emojiCatalogProvider.overrideWith(
-              (ref) async => [
-                _emoji('nyan', category: 'fun'),
-                _emoji('kawaii'),
-              ],
-            ),
-          ],
-          child: _materialApp(_OpenButton(onPicked: (_) {})),
-        ),
-      );
+  testWidgets('renders catalogue entries alongside the built-in unicode set', (
+    tester,
+  ) async {
+    // The bottom sheet route is pushed on the root navigator, so the scope
+    // must sit above MaterialApp for the sheet to find it.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          emojiCatalogProvider.overrideWith(
+            (ref) async => [_emoji('nyan', category: 'fun'), _emoji('kawaii')],
+          ),
+        ],
+        child: _materialApp(_OpenButton(onPicked: (_) {})),
+      ),
+    );
+    await _openAndSettle(tester);
 
-      // The catalogue entries are grouped in the grid.
-      expect(find.byTooltip('nyan'), findsOneWidget);
-      expect(find.byTooltip('kawaii'), findsOneWidget);
-      // The built-in unicode fallback row is still offered.
-      for (final reaction in defaultReactions) {
-        expect(find.text(reaction), findsOneWidget);
-      }
-    },
-  );
+    // The catalogue entries are grouped in the grid.
+    expect(find.byTooltip('nyan'), findsOneWidget);
+    expect(find.byTooltip('kawaii'), findsOneWidget);
+    // The built-in unicode fallback row is still offered.
+    for (final reaction in defaultReactions) {
+      expect(find.text(reaction), findsOneWidget);
+    }
+  });
 
   testWidgets('tapping a catalogue entry returns that emoji', (tester) async {
     String? picked;
-    await _pumpHost(
-      tester,
+    await tester.pumpWidget(
       ProviderScope(
         overrides: [
           emojiCatalogProvider.overrideWith((ref) async => [_emoji('nyan')]),
@@ -75,6 +72,7 @@ void main() {
         child: _materialApp(_OpenButton(onPicked: (r) => picked = r)),
       ),
     );
+    await _openAndSettle(tester);
 
     await tester.tap(find.byTooltip('nyan'));
     await tester.pumpAndSettle();
@@ -93,12 +91,14 @@ void main() {
         reactionEmojis: const {'muri@misskey.io': remoteUrl},
       );
       String? picked;
-      await _pumpHost(
-        tester,
+      await tester.pumpWidget(
         ProviderScope(
-          child: _materialApp(_OpenButton(note: note, onPicked: (r) => picked = r)),
+          child: _materialApp(
+            _OpenButton(note: note, onPicked: (r) => picked = r),
+          ),
         ),
       );
+      await _openAndSettle(tester);
 
       expect(
         find.byWidgetPredicate(
@@ -117,8 +117,7 @@ void main() {
   );
 
   testWidgets('catalogue errors show a retry affordance', (tester) async {
-    await _pumpHost(
-      tester,
+    await tester.pumpWidget(
       ProviderScope(
         overrides: [
           emojiCatalogProvider.overrideWith(
@@ -128,6 +127,7 @@ void main() {
         child: _materialApp(_OpenButton(onPicked: (_) {})),
       ),
     );
+    await _openAndSettle(tester);
 
     // The built-in unicode fallback row is always offered.
     expect(find.text('❤️'), findsOneWidget);

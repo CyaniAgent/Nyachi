@@ -12,10 +12,10 @@ import 'package:nyachi/features/notes/domain/note_repository.dart';
 import '../../support/fixtures.dart';
 
 /// The note the user is replying to, with distinctive body text.
-Note _replyTarget() =>
-    makeNote('n1', text: 'quick reply target content zzz9').copyWith(
-      user: makeUser('alice', name: 'Alice'),
-    );
+Note _replyTarget() => makeNote(
+  'n1',
+  text: 'quick reply target content zzz9',
+).copyWith(user: makeUser('alice', name: 'Alice'));
 
 /// Repository whose [fetch] succeeds; the preview must show what it returns.
 class _FakeNoteRepository implements NoteRepository {
@@ -39,7 +39,11 @@ class _FakeNoteRepository implements NoteRepository {
 Future<void> _pumpPreview(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [noteRepositoryProvider.overrideWithValue(_FakeNoteRepository(_replyTarget()))],
+      overrides: [
+        noteRepositoryProvider.overrideWithValue(
+          _FakeNoteRepository(_replyTarget()),
+        ),
+      ],
       child: MaterialApp(
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -58,20 +62,25 @@ void main() {
       await _pumpPreview(tester, ReplyPreviewCard(noteId: 'n1'));
 
       // The resolved note's real text is visible.
-      expect(find.textContaining('quick reply target content zzz9'), findsOneWidget);
+      expect(
+        find.textContaining('quick reply target content zzz9'),
+        findsOneWidget,
+      );
       // A heart reaction must never stand in for the content.
       expect(find.text('❤️'), findsNothing);
     },
   );
 
-  testWidgets(
-    'a wrong reply id surfaces nothing rather than a foreign note',
-    (tester) async {
-      await _pumpPreview(tester, ReplyPreviewCard(noteId: 'other'));
+  testWidgets('a wrong reply id surfaces nothing rather than a foreign note', (
+    tester,
+  ) async {
+    await _pumpPreview(tester, ReplyPreviewCard(noteId: 'other'));
 
-      // The fake repository only knows n1; a mismatched id shows an empty
-      // preview instead of some other note's content.
-      expect(find.textContaining('quick reply target content zzz9'), findsNothing);
-    },
-  );
+    // The fake repository only knows n1; a mismatched id shows an empty
+    // preview instead of some other note's content.
+    expect(
+      find.textContaining('quick reply target content zzz9'),
+      findsNothing,
+    );
+  });
 }

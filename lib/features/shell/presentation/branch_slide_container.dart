@@ -67,8 +67,8 @@ class _BranchSlideContainerState extends State<BranchSlideContainer>
 
   Axis _axisOf(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= kCompactBreakpoint
-          ? Axis.vertical
-          : Axis.horizontal;
+      ? Axis.vertical
+      : Axis.horizontal;
 
   @override
   Widget build(BuildContext context) {
@@ -76,8 +76,7 @@ class _BranchSlideContainerState extends State<BranchSlideContainer>
     final axis = _axisOf(context);
     final animating =
         _outgoingIndex != null && _controller.status == AnimationStatus.forward;
-    final delta =
-        _previousIndex == null ? 0 : (current - _previousIndex!).sign;
+    final delta = _previousIndex == null ? 0 : (current - _previousIndex!).sign;
 
     Widget branch(int index) {
       final child = widget.children[index];

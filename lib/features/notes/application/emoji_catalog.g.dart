@@ -48,4 +48,4 @@ final class EmojiCatalogProvider
   }
 }
 
-String _$emojiCatalogHash() => r'957517de8986837810e03717ac61eb93a7cb8506';
+String _$emojiCatalogHash() => r'3331a2d1c7db5353b8ff9fbe3bee5eff3e49831a';

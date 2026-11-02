@@ -47,7 +47,9 @@ void main() {
   };
 
   for (final entry in cases.entries) {
-    testWidgets('router resolves ${entry.key} to ${entry.value}', (tester) async {
+    testWidgets('router resolves ${entry.key} to ${entry.value}', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
       final preferences = await SharedPreferences.getInstance();
       final router = GoRouter(
@@ -75,9 +77,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(preferences),
-          ],
+          overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
           child: MaterialApp.router(
             locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -107,4 +107,3 @@ void main() {
     });
   }
 }
-

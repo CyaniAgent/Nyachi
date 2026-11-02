@@ -103,7 +103,9 @@ abstract class NotificationListState with _$NotificationListState {
   }) = _NotificationListState;
 }
 
-@riverpod
+/// Kept alive: the realtime service pushes notifications into this list even
+/// when no screen is listening, so it must not be disposed between visits.
+@Riverpod(keepAlive: true)
 class NotificationListController extends _$NotificationListController {
   late NotificationRepository _repository;
   var _disposed = false;

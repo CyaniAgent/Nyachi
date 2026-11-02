@@ -8,21 +8,27 @@ part of 'notification_list_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Kept alive: the realtime service pushes notifications into this list even
+/// when no screen is listening, so it must not be disposed between visits.
 
 @ProviderFor(NotificationListController)
 final notificationListControllerProvider =
     NotificationListControllerProvider._();
 
+/// Kept alive: the realtime service pushes notifications into this list even
+/// when no screen is listening, so it must not be disposed between visits.
 final class NotificationListControllerProvider
     extends
         $NotifierProvider<NotificationListController, NotificationListState> {
+  /// Kept alive: the realtime service pushes notifications into this list even
+  /// when no screen is listening, so it must not be disposed between visits.
   NotificationListControllerProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'notificationListControllerProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -44,7 +50,10 @@ final class NotificationListControllerProvider
 }
 
 String _$notificationListControllerHash() =>
-    r'006ec0778b9bdda2c2da12d0b908f14ae7633879';
+    r'8ae6ae187f4558b6b03edbf97fe876ccb5a389cd';
+
+/// Kept alive: the realtime service pushes notifications into this list even
+/// when no screen is listening, so it must not be disposed between visits.
 
 abstract class _$NotificationListController
     extends $Notifier<NotificationListState> {

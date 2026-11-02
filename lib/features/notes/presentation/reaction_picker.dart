@@ -111,8 +111,7 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
                         ),
                         const SizedBox(height: 12),
                         OutlinedButton(
-                          onPressed: () =>
-                              ref.invalidate(emojiCatalogProvider),
+                          onPressed: () => ref.invalidate(emojiCatalogProvider),
                           child: Text(context.l10n.retry),
                         ),
                       ],
