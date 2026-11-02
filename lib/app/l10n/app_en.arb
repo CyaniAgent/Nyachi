@@ -192,6 +192,7 @@
   "noTrends": "No trends right now",
   "noUsers": "No users found",
   "noSearchResults": "No results",
+  "emojiCatalogLoadFailed": "Couldn’t load this instance’s custom emoji.",
   "newNote": "New note",
   "replyTo": "Reply",
   "contentWarning": "Content warning",

@@ -1222,6 +1222,12 @@ abstract class AppLocalizations {
   /// **'No results'**
   String get noSearchResults;
 
+  /// No description provided for @emojiCatalogLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load this instance’s custom emoji.'**
+  String get emojiCatalogLoadFailed;
+
   /// No description provided for @newNote.
   ///
   /// In en, this message translates to:

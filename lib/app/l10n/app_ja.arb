@@ -192,6 +192,7 @@
   "noTrends": "トレンドはありません",
   "noUsers": "ユーザーが見つかりません",
   "noSearchResults": "結果がありません",
+  "emojiCatalogLoadFailed": "このインスタンスのカスタム絵文字を読み込めませんでした。",
   "newNote": "新しい投稿",
   "replyTo": "返信",
   "contentWarning": "内容の警告",

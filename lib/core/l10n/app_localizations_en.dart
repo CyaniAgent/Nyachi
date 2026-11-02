@@ -588,6 +588,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSearchResults => 'No results';
 
   @override
+  String get emojiCatalogLoadFailed =>
+      'Couldn’t load this instance’s custom emoji.';
+
+  @override
   String get newNote => 'New note';
 
   @override

@@ -573,6 +573,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noSearchResults => '没有结果';
 
   @override
+  String get emojiCatalogLoadFailed => '无法加载本实例的自定义表情。';
+
+  @override
   String get newNote => '新帖子';
 
   @override

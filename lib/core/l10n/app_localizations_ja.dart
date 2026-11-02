@@ -573,6 +573,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noSearchResults => '結果がありません';
 
   @override
+  String get emojiCatalogLoadFailed => 'このインスタンスのカスタム絵文字を読み込めませんでした。';
+
+  @override
   String get newNote => '新しい投稿';
 
   @override

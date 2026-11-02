@@ -92,7 +92,25 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
                 child: emojis.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (_, _) => const SizedBox.shrink(),
+                  error: (_, _) => Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          context.l10n.emojiCatalogLoadFailed,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: () =>
+                              ref.invalidate(emojiCatalogProvider),
+                          child: Text(context.l10n.retry),
+                        ),
+                      ],
+                    ),
+                  ),
                   data: (items) {
                     final filtered = items
                         .where(

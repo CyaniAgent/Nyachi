@@ -192,6 +192,7 @@
   "noTrends": "暂无趋势",
   "noUsers": "未找到用户",
   "noSearchResults": "没有结果",
+  "emojiCatalogLoadFailed": "无法加载本实例的自定义表情。",
   "newNote": "新帖子",
   "replyTo": "回复",
   "contentWarning": "内容警告",

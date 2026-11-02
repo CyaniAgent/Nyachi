@@ -36,21 +36,23 @@ Future<List<EmojiSimple>> emojiCatalog(Ref ref) async {
     return response.emojis;
   } catch (e) {
     if (e is MisskeyAuthenticationException) rethrow;
-    logSilentFallback('emoji_catalog.emojiCatalog', e);
     retrySoon();
     final cached = await cache.read(active.id, key);
-    if (cached == null) return const [];
+    if (cached == null) {
+      // No cached catalogue to degrade to: surface the failure so the
+      // picker can show an explicit error state instead of silently
+      // shrinking to the built-in unicode set.
+      rethrow;
+    }
     try {
       final json = jsonDecode(cached.payload);
       if (json is Map<String, dynamic>) {
+        logSilentFallback('emoji_catalog.emojiCatalog', e);
         return EmojiListResponse.fromJson(json).emojis;
       }
-    } catch (e) {
-      if (e is MisskeyAuthenticationException) rethrow;
-      logSilentFallback('emoji_catalog.emojiCatalog.cache', e);
-      retrySoon();
-      return const [];
+    } catch (_) {
+      // Undecodable cache: fall through and surface the original failure.
     }
-    return const [];
+    rethrow;
   }
 }
