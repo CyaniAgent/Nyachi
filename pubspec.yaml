@@ -43,8 +43,8 @@ dependencies:
   window_manager: ^0.5.1
   flutter_local_notifications: ^22.3.3
   flutter_foreground_task: ^11.0.3
-  system_tray: ^0.1.1
-
+  nativeapi: ^0.5.7
+  nativeapi_flutter: ^0.5.7
 dev_dependencies:
   build_runner: ^2.16.2
   dart_pubspec_licenses: ^3.0.12

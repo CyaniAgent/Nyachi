@@ -54,31 +54,6 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 
-# The tray plugin resolves `appindicator3-0.1`, the name the AppIndicator
-# library carried before Ubuntu 24.04 moved to the maintained Ayatana fork.
-# Ubuntu 24.04 ships only `ayatana-appindicator3-0.1`, so without this shim the
-# whole Linux build fails at configure time over an optional tray icon. The
-# shim points the old name at whichever variant is installed, keeping the
-# plugin's own CMakeLists untouched.
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(_APPINDICATOR_LEGACY QUIET appindicator3-0.1)
-if(NOT _APPINDICATOR_LEGACY_FOUND)
-  pkg_check_modules(_APPINDICATOR_AYATANA QUIET ayatana-appindicator3-0.1)
-  if(_APPINDICATOR_AYATANA_FOUND)
-    # Expose the Ayatana package under the legacy module name, since the tray
-    # plugin's own CMakeLists asks for the old one unconditionally.
-    set(_shim_dir "${CMAKE_BINARY_DIR}/pkgconfig-shim")
-    file(MAKE_DIRECTORY "${_shim_dir}")
-    file(WRITE "${_shim_dir}/appindicator3-0.1.pc"
-      "Name: appindicator3-0.1 (Ayatana alias)\n"
-      "Description: Alias for ayatana-appindicator3-0.1\n"
-      "Version: 0.5.93\n"
-      "Requires: ayatana-appindicator3-0.1\n"
-    )
-    set(ENV{PKG_CONFIG_PATH} "${_shim_dir}:$ENV{PKG_CONFIG_PATH}")
-  endif()
-endif()
-
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 

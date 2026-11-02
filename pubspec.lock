@@ -193,6 +193,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.3"
+  cnativeapi:
+    dependency: transitive
+    description:
+      name: cnativeapi
+      sha256: "15c23cf1713a98ceba66d1068e9470621a47e10429c843884ad70ad3600071be"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.7"
   code_assets:
     dependency: transitive
     description:
@@ -957,6 +965,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.19.5"
+  nativeapi:
+    dependency: "direct main"
+    description:
+      name: nativeapi
+      sha256: c6155e67d3565b6b36947c376b420f84f0939ce893a2d2a0cf6108441df6dd2e
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.7"
+  nativeapi_flutter:
+    dependency: "direct main"
+    description:
+      name: nativeapi_flutter
+      sha256: ddde55e8460e744ae30f51dfdbed4bac2d9f53bcafe71acf595539b5eff87871
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.7"
   objective_c:
     dependency: transitive
     description:
@@ -1450,14 +1474,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.5.0"
-  system_tray:
-    dependency: "direct main"
-    description:
-      name: system_tray
-      sha256: "1bcc11bc230033be20d7443c29f65f68d67169715a838a1122f20fbff5dd2d19"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.1"
   term_glyph:
     dependency: transitive
     description:

@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:system_tray/system_tray.dart';
+import 'package:nativeapi/nativeapi.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'residency.g.dart';
@@ -24,13 +24,13 @@ class ResidencyService {
   var _initialized = false;
   final _notifications = FlutterLocalNotificationsPlugin();
 
-  /// The desktop tray handle; the package keeps no global instance.
-  final _systemTray = SystemTray();
+  /// The tray icon and its click listener; both live for the app's lifetime.
+  TrayIcon? _tray;
+  ListenerId? _trayListenerId;
 
   /// Registered with `windowManager` while residency is active.
   ResidencyWindowListener? _windowListener;
 
-  /// Whether residency is active, i.e. closing the window hides it instead of
   /// Whether residency is active, i.e. closing the window hides it instead of
   /// quitting and the process keeps running.
   bool get closeToTray =>
@@ -51,23 +51,42 @@ class ResidencyService {
   Future<void> _initializeDesktop() async {
     try {
       await windowManager.ensureInitialized();
-      await _systemTray.initSystemTray(
-        title: 'Nyachi',
-        iconPath: _trayIconPath(),
-        toolTip: 'Nyachi',
-      );
-      await _systemTray.setContextMenu([
-        MenuItem(
-          label: 'Show Nyachi',
-          onClicked: () => unawaited(showWindow()),
-        ),
-        MenuItem(label: 'Quit', onClicked: () => unawaited(quit())),
-      ]);
-      _systemTray.registerSystemTrayEventHandler((eventName) {
-        // The tray reports a click as "click"; everything else (the menu) is
-        // handled by the item callbacks above.
-        if (eventName == 'click') unawaited(showWindow());
-      });
+      // The tray goes through nativeapi's own implementation rather than the
+      // old libappindicator C library: on Linux that means the
+      // StatusNotifierItem D-Bus standard, which Ubuntu still ships.
+      final tray = TrayIcon.create();
+      if (tray == null) {
+        debugPrint('Nyachi: the platform refused to create a tray icon');
+      } else {
+        _tray = tray;
+        tray.setTooltip('Nyachi');
+        final icon = Image.fromFile(_trayIconPath());
+        if (icon != null) tray.icon = icon;
+        final menu = Menu.create();
+        if (menu != null) {
+          final show = MenuItem.createWithLabelAndType(
+            'Show Nyachi',
+            MenuItemType.normal,
+          );
+          final quitItem = MenuItem.createWithLabelAndType(
+            'Quit',
+            MenuItemType.normal,
+          );
+          show?.addListener((event) {
+            if (event is MenuItemClickedEvent) unawaited(showWindow());
+          });
+          quitItem?.addListener((event) {
+            if (event is MenuItemClickedEvent) unawaited(quit());
+          });
+          menu.addItem(show);
+          menu.addSeparator();
+          menu.addItem(quitItem);
+          tray.setContextMenu(menu);
+        }
+        _trayListenerId = tray.addListener((event) {
+          if (event is TrayIconClickedEvent) unawaited(showWindow());
+        });
+      }
       // Without a close handler `setPreventClose` would leave the window
       // unclosable; the listener turns the close into a hide instead.
       _windowListener = ResidencyWindowListener(this);
@@ -153,6 +172,14 @@ class ResidencyService {
   }
 
   Future<void> dispose() async {
+    final tray = _tray;
+    final listenerId = _trayListenerId;
+    if (tray != null && listenerId != null) {
+      tray.removeListener(listenerId);
+    }
+    _trayListenerId = null;
+    tray?.dispose();
+    _tray = null;
     final listener = _windowListener;
     if (listener != null) {
       windowManager.removeListener(listener);
