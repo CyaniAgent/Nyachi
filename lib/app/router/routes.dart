@@ -25,6 +25,7 @@ import '../../features/settings/presentation/privacy_settings_page.dart';
 import '../../features/settings/presentation/security_settings_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/shell/presentation/app_shell.dart';
+import '../../features/shell/presentation/branch_slide_container.dart';
 import '../../features/tags/presentation/tag_timeline_page.dart';
 import '../../features/timeline/presentation/home_page.dart';
 import 'navigator_keys.dart';
@@ -496,6 +497,14 @@ class SettingsPushRoute extends GoRouteData with $SettingsPushRoute {
 )
 class AppShellRouteData extends StatefulShellRouteData {
   const AppShellRouteData();
+
+  /// Custom branch-navigator container: slides between branches instead of
+  /// swapping them via IndexedStack.
+  static Widget $navigatorContainerBuilder(
+    BuildContext context,
+    StatefulNavigationShell navigationShell,
+    List<Widget> children,
+  ) => BranchSlideContainer(navigationShell: navigationShell, children: children);
 
   @override
   Widget builder(

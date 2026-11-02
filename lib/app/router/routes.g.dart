@@ -778,6 +778,7 @@ mixin $SettingsPushRoute on GoRouteData {
 }
 
 RouteBase get $appShellRouteData => StatefulShellRouteData.$route(
+  navigatorContainerBuilder: AppShellRouteData.$navigatorContainerBuilder,
   factory: $AppShellRouteDataExtension._fromState,
   branches: [
     StatefulShellBranchData.$branch(
