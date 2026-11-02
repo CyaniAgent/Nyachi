@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$NoteDetailState {
 
- Note? get note; bool get loading; bool get mutating; AppFailure? get error; bool get usingCache; List<Note> get replies; bool get repliesLoading; bool get repliesLoadingMore; bool get repliesHasMore; String? get repliesCursor; AppFailure? get repliesError;
+ Note? get note;/// Ancestor chain above the focused note, oldest first.
+ List<Note> get ancestors; bool get loading; bool get mutating; AppFailure? get error; bool get usingCache; List<Note> get replies; bool get repliesLoading; bool get repliesLoadingMore; bool get repliesHasMore; String? get repliesCursor; AppFailure? get repliesError;
 /// Create a copy of NoteDetailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +28,20 @@ $NoteDetailStateCopyWith<NoteDetailState> get copyWith => _$NoteDetailStateCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as NoteDetailState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NoteDetailState&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.mutating, _this.mutating) || other.mutating == _this.mutating)&&(identical(other.error, _this.error) || other.error == _this.error)&&(identical(other.usingCache, _this.usingCache) || other.usingCache == _this.usingCache)&&const DeepCollectionEquality().equals(other.replies, _this.replies)&&(identical(other.repliesLoading, _this.repliesLoading) || other.repliesLoading == _this.repliesLoading)&&(identical(other.repliesLoadingMore, _this.repliesLoadingMore) || other.repliesLoadingMore == _this.repliesLoadingMore)&&(identical(other.repliesHasMore, _this.repliesHasMore) || other.repliesHasMore == _this.repliesHasMore)&&(identical(other.repliesCursor, _this.repliesCursor) || other.repliesCursor == _this.repliesCursor)&&(identical(other.repliesError, _this.repliesError) || other.repliesError == _this.repliesError));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NoteDetailState&&(identical(other.note, _this.note) || other.note == _this.note)&&const DeepCollectionEquality().equals(other.ancestors, _this.ancestors)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.mutating, _this.mutating) || other.mutating == _this.mutating)&&(identical(other.error, _this.error) || other.error == _this.error)&&(identical(other.usingCache, _this.usingCache) || other.usingCache == _this.usingCache)&&const DeepCollectionEquality().equals(other.replies, _this.replies)&&(identical(other.repliesLoading, _this.repliesLoading) || other.repliesLoading == _this.repliesLoading)&&(identical(other.repliesLoadingMore, _this.repliesLoadingMore) || other.repliesLoadingMore == _this.repliesLoadingMore)&&(identical(other.repliesHasMore, _this.repliesHasMore) || other.repliesHasMore == _this.repliesHasMore)&&(identical(other.repliesCursor, _this.repliesCursor) || other.repliesCursor == _this.repliesCursor)&&(identical(other.repliesError, _this.repliesError) || other.repliesError == _this.repliesError));
 }
 
 
 @override
 int get hashCode {
   final _this = this as NoteDetailState;
-  return Object.hash(runtimeType,_this.note,_this.loading,_this.mutating,_this.error,_this.usingCache,const DeepCollectionEquality().hash(_this.replies),_this.repliesLoading,_this.repliesLoadingMore,_this.repliesHasMore,_this.repliesCursor,_this.repliesError);
+  return Object.hash(runtimeType,_this.note,const DeepCollectionEquality().hash(_this.ancestors),_this.loading,_this.mutating,_this.error,_this.usingCache,const DeepCollectionEquality().hash(_this.replies),_this.repliesLoading,_this.repliesLoadingMore,_this.repliesHasMore,_this.repliesCursor,_this.repliesError);
 }
 
 @override
 String toString() {
   final _this = this as NoteDetailState;
-  return 'NoteDetailState(note: ${_this.note}, loading: ${_this.loading}, mutating: ${_this.mutating}, error: ${_this.error}, usingCache: ${_this.usingCache}, replies: ${_this.replies}, repliesLoading: ${_this.repliesLoading}, repliesLoadingMore: ${_this.repliesLoadingMore}, repliesHasMore: ${_this.repliesHasMore}, repliesCursor: ${_this.repliesCursor}, repliesError: ${_this.repliesError})';
+  return 'NoteDetailState(note: ${_this.note}, ancestors: ${_this.ancestors}, loading: ${_this.loading}, mutating: ${_this.mutating}, error: ${_this.error}, usingCache: ${_this.usingCache}, replies: ${_this.replies}, repliesLoading: ${_this.repliesLoading}, repliesLoadingMore: ${_this.repliesLoadingMore}, repliesHasMore: ${_this.repliesHasMore}, repliesCursor: ${_this.repliesCursor}, repliesError: ${_this.repliesError})';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $NoteDetailStateCopyWith<$Res>  {
   factory $NoteDetailStateCopyWith(NoteDetailState value, $Res Function(NoteDetailState) _then) = _$NoteDetailStateCopyWithImpl;
 @useResult
 $Res call({
- Note? note, bool loading, bool mutating, AppFailure? error, bool usingCache, List<Note> replies, bool repliesLoading, bool repliesLoadingMore, bool repliesHasMore, String? repliesCursor, AppFailure? repliesError
+ Note? note, List<Note> ancestors, bool loading, bool mutating, AppFailure? error, bool usingCache, List<Note> replies, bool repliesLoading, bool repliesLoadingMore, bool repliesHasMore, String? repliesCursor, AppFailure? repliesError
 });
 
 
@@ -68,10 +69,11 @@ class _$NoteDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of NoteDetailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? note = freezed,Object? loading = null,Object? mutating = null,Object? error = freezed,Object? usingCache = null,Object? replies = null,Object? repliesLoading = null,Object? repliesLoadingMore = null,Object? repliesHasMore = null,Object? repliesCursor = freezed,Object? repliesError = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? note = freezed,Object? ancestors = null,Object? loading = null,Object? mutating = null,Object? error = freezed,Object? usingCache = null,Object? replies = null,Object? repliesLoading = null,Object? repliesLoadingMore = null,Object? repliesHasMore = null,Object? repliesCursor = freezed,Object? repliesError = freezed,}) {
   return _then(NoteDetailState(
 note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
-as Note?,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as Note?,ancestors: null == ancestors ? _self.ancestors : ancestors // ignore: cast_nullable_to_non_nullable
+as List<Note>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,mutating: null == mutating ? _self.mutating : mutating // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as AppFailure?,usingCache: null == usingCache ? _self.usingCache : usingCache // ignore: cast_nullable_to_non_nullable
@@ -178,10 +180,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Note? note,  bool loading,  bool mutating,  AppFailure? error,  bool usingCache,  List<Note> replies,  bool repliesLoading,  bool repliesLoadingMore,  bool repliesHasMore,  String? repliesCursor,  AppFailure? repliesError)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Note? note,  List<Note> ancestors,  bool loading,  bool mutating,  AppFailure? error,  bool usingCache,  List<Note> replies,  bool repliesLoading,  bool repliesLoadingMore,  bool repliesHasMore,  String? repliesCursor,  AppFailure? repliesError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NoteDetailState() when $default != null:
-return $default(_that.note,_that.loading,_that.mutating,_that.error,_that.usingCache,_that.replies,_that.repliesLoading,_that.repliesLoadingMore,_that.repliesHasMore,_that.repliesCursor,_that.repliesError);case _:
+return $default(_that.note,_that.ancestors,_that.loading,_that.mutating,_that.error,_that.usingCache,_that.replies,_that.repliesLoading,_that.repliesLoadingMore,_that.repliesHasMore,_that.repliesCursor,_that.repliesError);case _:
   return orElse();
 
 }
@@ -199,10 +201,10 @@ return $default(_that.note,_that.loading,_that.mutating,_that.error,_that.usingC
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Note? note,  bool loading,  bool mutating,  AppFailure? error,  bool usingCache,  List<Note> replies,  bool repliesLoading,  bool repliesLoadingMore,  bool repliesHasMore,  String? repliesCursor,  AppFailure? repliesError)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Note? note,  List<Note> ancestors,  bool loading,  bool mutating,  AppFailure? error,  bool usingCache,  List<Note> replies,  bool repliesLoading,  bool repliesLoadingMore,  bool repliesHasMore,  String? repliesCursor,  AppFailure? repliesError)  $default,) {final _that = this;
 switch (_that) {
 case _NoteDetailState():
-return $default(_that.note,_that.loading,_that.mutating,_that.error,_that.usingCache,_that.replies,_that.repliesLoading,_that.repliesLoadingMore,_that.repliesHasMore,_that.repliesCursor,_that.repliesError);case _:
+return $default(_that.note,_that.ancestors,_that.loading,_that.mutating,_that.error,_that.usingCache,_that.replies,_that.repliesLoading,_that.repliesLoadingMore,_that.repliesHasMore,_that.repliesCursor,_that.repliesError);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -219,10 +221,10 @@ return $default(_that.note,_that.loading,_that.mutating,_that.error,_that.usingC
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Note? note,  bool loading,  bool mutating,  AppFailure? error,  bool usingCache,  List<Note> replies,  bool repliesLoading,  bool repliesLoadingMore,  bool repliesHasMore,  String? repliesCursor,  AppFailure? repliesError)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Note? note,  List<Note> ancestors,  bool loading,  bool mutating,  AppFailure? error,  bool usingCache,  List<Note> replies,  bool repliesLoading,  bool repliesLoadingMore,  bool repliesHasMore,  String? repliesCursor,  AppFailure? repliesError)?  $default,) {final _that = this;
 switch (_that) {
 case _NoteDetailState() when $default != null:
-return $default(_that.note,_that.loading,_that.mutating,_that.error,_that.usingCache,_that.replies,_that.repliesLoading,_that.repliesLoadingMore,_that.repliesHasMore,_that.repliesCursor,_that.repliesError);case _:
+return $default(_that.note,_that.ancestors,_that.loading,_that.mutating,_that.error,_that.usingCache,_that.replies,_that.repliesLoading,_that.repliesLoadingMore,_that.repliesHasMore,_that.repliesCursor,_that.repliesError);case _:
   return null;
 
 }
@@ -234,10 +236,19 @@ return $default(_that.note,_that.loading,_that.mutating,_that.error,_that.usingC
 
 
 class _NoteDetailState implements NoteDetailState {
-  const _NoteDetailState({this.note, this.loading = true, this.mutating = false, this.error, this.usingCache = false,  List<Note> replies = const <Note>[], this.repliesLoading = true, this.repliesLoadingMore = false, this.repliesHasMore = false, this.repliesCursor, this.repliesError}): _replies = replies;
+  const _NoteDetailState({this.note,  List<Note> ancestors = const <Note>[], this.loading = true, this.mutating = false, this.error, this.usingCache = false,  List<Note> replies = const <Note>[], this.repliesLoading = true, this.repliesLoadingMore = false, this.repliesHasMore = false, this.repliesCursor, this.repliesError}): _ancestors = ancestors,_replies = replies;
   
 
 @override final  Note? note;
+/// Ancestor chain above the focused note, oldest first.
+ final  List<Note> _ancestors;
+/// Ancestor chain above the focused note, oldest first.
+@override@JsonKey() List<Note> get ancestors {
+  if (_ancestors is EqualUnmodifiableListView) return _ancestors;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_ancestors);
+}
+
 @override@JsonKey() final  bool loading;
 @override@JsonKey() final  bool mutating;
 @override final  AppFailure? error;
@@ -265,18 +276,18 @@ _$NoteDetailStateCopyWith<_NoteDetailState> get copyWith => __$NoteDetailStateCo
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _NoteDetailState&&(identical(other.note, note) || other.note == note)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.mutating, mutating) || other.mutating == mutating)&&(identical(other.error, error) || other.error == error)&&(identical(other.usingCache, usingCache) || other.usingCache == usingCache)&&const DeepCollectionEquality().equals(other.replies, _replies)&&(identical(other.repliesLoading, repliesLoading) || other.repliesLoading == repliesLoading)&&(identical(other.repliesLoadingMore, repliesLoadingMore) || other.repliesLoadingMore == repliesLoadingMore)&&(identical(other.repliesHasMore, repliesHasMore) || other.repliesHasMore == repliesHasMore)&&(identical(other.repliesCursor, repliesCursor) || other.repliesCursor == repliesCursor)&&(identical(other.repliesError, repliesError) || other.repliesError == repliesError));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _NoteDetailState&&(identical(other.note, note) || other.note == note)&&const DeepCollectionEquality().equals(other.ancestors, _ancestors)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.mutating, mutating) || other.mutating == mutating)&&(identical(other.error, error) || other.error == error)&&(identical(other.usingCache, usingCache) || other.usingCache == usingCache)&&const DeepCollectionEquality().equals(other.replies, _replies)&&(identical(other.repliesLoading, repliesLoading) || other.repliesLoading == repliesLoading)&&(identical(other.repliesLoadingMore, repliesLoadingMore) || other.repliesLoadingMore == repliesLoadingMore)&&(identical(other.repliesHasMore, repliesHasMore) || other.repliesHasMore == repliesHasMore)&&(identical(other.repliesCursor, repliesCursor) || other.repliesCursor == repliesCursor)&&(identical(other.repliesError, repliesError) || other.repliesError == repliesError));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,note,loading,mutating,error,usingCache,const DeepCollectionEquality().hash(_replies),repliesLoading,repliesLoadingMore,repliesHasMore,repliesCursor,repliesError);
+    return Object.hash(runtimeType,note,const DeepCollectionEquality().hash(_ancestors),loading,mutating,error,usingCache,const DeepCollectionEquality().hash(_replies),repliesLoading,repliesLoadingMore,repliesHasMore,repliesCursor,repliesError);
 }
 
 @override
 String toString() {
-    return 'NoteDetailState(note: $note, loading: $loading, mutating: $mutating, error: $error, usingCache: $usingCache, replies: $replies, repliesLoading: $repliesLoading, repliesLoadingMore: $repliesLoadingMore, repliesHasMore: $repliesHasMore, repliesCursor: $repliesCursor, repliesError: $repliesError)';
+    return 'NoteDetailState(note: $note, ancestors: $ancestors, loading: $loading, mutating: $mutating, error: $error, usingCache: $usingCache, replies: $replies, repliesLoading: $repliesLoading, repliesLoadingMore: $repliesLoadingMore, repliesHasMore: $repliesHasMore, repliesCursor: $repliesCursor, repliesError: $repliesError)';
 }
 
 
@@ -287,7 +298,7 @@ abstract mixin class _$NoteDetailStateCopyWith<$Res> implements $NoteDetailState
   factory _$NoteDetailStateCopyWith(_NoteDetailState value, $Res Function(_NoteDetailState) _then) = __$NoteDetailStateCopyWithImpl;
 @override @useResult
 $Res call({
- Note? note, bool loading, bool mutating, AppFailure? error, bool usingCache, List<Note> replies, bool repliesLoading, bool repliesLoadingMore, bool repliesHasMore, String? repliesCursor, AppFailure? repliesError
+ Note? note, List<Note> ancestors, bool loading, bool mutating, AppFailure? error, bool usingCache, List<Note> replies, bool repliesLoading, bool repliesLoadingMore, bool repliesHasMore, String? repliesCursor, AppFailure? repliesError
 });
 
 
@@ -304,10 +315,11 @@ class __$NoteDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of NoteDetailState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? note = freezed,Object? loading = null,Object? mutating = null,Object? error = freezed,Object? usingCache = null,Object? replies = null,Object? repliesLoading = null,Object? repliesLoadingMore = null,Object? repliesHasMore = null,Object? repliesCursor = freezed,Object? repliesError = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? note = freezed,Object? ancestors = null,Object? loading = null,Object? mutating = null,Object? error = freezed,Object? usingCache = null,Object? replies = null,Object? repliesLoading = null,Object? repliesLoadingMore = null,Object? repliesHasMore = null,Object? repliesCursor = freezed,Object? repliesError = freezed,}) {
   return _then(_NoteDetailState(
 note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
-as Note?,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as Note?,ancestors: null == ancestors ? _self._ancestors : ancestors // ignore: cast_nullable_to_non_nullable
+as List<Note>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,mutating: null == mutating ? _self.mutating : mutating // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as AppFailure?,usingCache: null == usingCache ? _self.usingCache : usingCache // ignore: cast_nullable_to_non_nullable

@@ -55,6 +55,10 @@ class MisskeyNoteRepository implements NoteRepository {
       client.notes.childrenPage(noteId: noteId, limit: limit, untilId: untilId);
 
   @override
+  Future<List<Note>> conversation(String noteId, {int limit = 10}) =>
+      client.notes.conversation(noteId: noteId, limit: limit);
+
+  @override
   Future<Note> react(String noteId, String reaction) async {
     await client.notes.reactionsCreate(noteId: noteId, reaction: reaction);
     return _refresh(noteId);

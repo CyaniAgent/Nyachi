@@ -11,6 +11,12 @@ abstract interface class NoteRepository {
     String? untilId,
   });
 
+  /// The note's ancestors, as `notes/conversation` reports them.
+  ///
+  /// The focused note itself is not included; callers render the result above
+  /// it, oldest first.
+  Future<List<Note>> conversation(String noteId, {int limit = 10});
+
   Future<Note> react(String noteId, String reaction);
 
   Future<Note> unreact(String noteId);

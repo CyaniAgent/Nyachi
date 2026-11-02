@@ -7,6 +7,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../settings/application/app_settings.dart';
+import '../../../core/ui/avatar.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/network_image.dart';
@@ -84,6 +85,11 @@ class _NoteDetailPageState extends ConsumerState<NoteDetailPage> {
                           title: Text(state.error!.message(l10n)),
                         ),
                       ),
+                    // Ancestors render oldest first above the focused note,
+                    // each joined by a reference line so the reply chain reads
+                    // as one conversation rather than a list of notes.
+                    for (final ancestor in state.ancestors)
+                      _AncestorTile(note: ancestor),
                     NoteCard(note: note, detailMode: true),
                     const Divider(height: 24),
                     ScrollEdgeLoader(
@@ -161,6 +167,81 @@ class _RepliesSection extends StatelessWidget {
             child: Center(child: CircularProgressIndicator()),
           ),
       ],
+    );
+  }
+}
+
+/// One ancestor in the chain above the focused note.
+///
+/// Tapping it pushes its own detail page, so a chain is walked step by step
+/// instead of expanded in place.
+class _AncestorTile extends StatelessWidget {
+  const _AncestorTile({required this.note});
+
+  final Note note;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => openDetail(context, NoteDetailLocation(note.id)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        // IntrinsicHeight gives the reference line a definite height to
+        // stretch into; a bare stretch inside a scroll view has none.
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // The reference line: the visual join into the note below.
+              SizedBox(
+                width: 24,
+                child: Center(
+                  child: Container(
+                    width: 2,
+                    constraints: const BoxConstraints(minHeight: 32),
+                    color: scheme.outlineVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        NyachiAvatar(url: note.user.avatarUrl, size: 20),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            note.user.name ?? note.user.username,
+                            style: Theme.of(context).textTheme.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (note.cw?.isNotEmpty == true)
+                      Text(
+                        note.cw!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      )
+                    else if (note.text?.isNotEmpty == true)
+                      NoteContent(
+                        text: note.text!,
+                        emojis: note.emojis,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

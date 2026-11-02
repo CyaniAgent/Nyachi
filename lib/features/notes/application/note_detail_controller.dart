@@ -30,6 +30,9 @@ class NoteOverrides extends _$NoteOverrides {
 abstract class NoteDetailState with _$NoteDetailState {
   const factory NoteDetailState({
     Note? note,
+
+    /// Ancestor chain above the focused note, oldest first.
+    @Default(<Note>[]) List<Note> ancestors,
     @Default(true) bool loading,
     @Default(false) bool mutating,
     AppFailure? error,
@@ -55,12 +58,28 @@ class NoteDetailController extends _$NoteDetailController {
     ref.watch(sessionControllerProvider).active?.id;
     ref.onDispose(() => _disposed = true);
     final override = ref.read(noteOverridesProvider)[noteId];
+    // An override only supplies the note body; the ancestors and replies
+    // still have to be fetched, so the early return no longer skips them.
+    unawaited(Future<void>.microtask(_loadAncestors));
+    unawaited(Future<void>.microtask(_loadReplies));
     if (override != null) {
       return NoteDetailState(note: override, loading: false);
     }
     unawaited(Future<void>.microtask(_load));
-    unawaited(Future<void>.microtask(_loadReplies));
     return const NoteDetailState();
+  }
+
+  Future<void> _loadAncestors() async {
+    try {
+      final ancestors = await ref
+          .read(noteRepositoryProvider)
+          .conversation(_noteId);
+      if (_disposed) return;
+      state = state.copyWith(ancestors: _chronological(ancestors));
+    } catch (_) {
+      // The chain is supplementary: a server without conversation support,
+      // or a failure here, must not block the focused note.
+    }
   }
 
   Future<void> _load() async {
