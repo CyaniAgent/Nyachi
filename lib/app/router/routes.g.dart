@@ -25,6 +25,14 @@ List<RouteBase> get $appRoutes => [
   $settingsLicensesRoute,
   $settingsCacheRoute,
   $settingsAboutRoute,
+  $settingsDriveRoute,
+  $settingsProfileRoute,
+  $settingsPrivacyRoute,
+  $settingsNotificationsRoute,
+  $settingsEmailRoute,
+  $settingsSecurityRoute,
+  $settingsDriveSettingsRoute,
+  $settingsPushRoute,
   $appShellRouteData,
 ];
 
@@ -530,6 +538,230 @@ mixin $SettingsAboutRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/settings/about');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsDriveRoute => GoRouteData.$route(
+  path: '/settings/drive',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsDriveRoute.$parentNavigatorKey,
+  factory: $SettingsDriveRoute._fromState,
+);
+
+mixin $SettingsDriveRoute on GoRouteData {
+  static SettingsDriveRoute _fromState(GoRouterState state) =>
+      const SettingsDriveRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/drive');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsProfileRoute => GoRouteData.$route(
+  path: '/settings/profile',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsProfileRoute.$parentNavigatorKey,
+  factory: $SettingsProfileRoute._fromState,
+);
+
+mixin $SettingsProfileRoute on GoRouteData {
+  static SettingsProfileRoute _fromState(GoRouterState state) =>
+      const SettingsProfileRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/profile');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsPrivacyRoute => GoRouteData.$route(
+  path: '/settings/privacy',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsPrivacyRoute.$parentNavigatorKey,
+  factory: $SettingsPrivacyRoute._fromState,
+);
+
+mixin $SettingsPrivacyRoute on GoRouteData {
+  static SettingsPrivacyRoute _fromState(GoRouterState state) =>
+      const SettingsPrivacyRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/privacy');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsNotificationsRoute => GoRouteData.$route(
+  path: '/settings/notifications',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsNotificationsRoute.$parentNavigatorKey,
+  factory: $SettingsNotificationsRoute._fromState,
+);
+
+mixin $SettingsNotificationsRoute on GoRouteData {
+  static SettingsNotificationsRoute _fromState(GoRouterState state) =>
+      const SettingsNotificationsRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/notifications');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsEmailRoute => GoRouteData.$route(
+  path: '/settings/email',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsEmailRoute.$parentNavigatorKey,
+  factory: $SettingsEmailRoute._fromState,
+);
+
+mixin $SettingsEmailRoute on GoRouteData {
+  static SettingsEmailRoute _fromState(GoRouterState state) =>
+      const SettingsEmailRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/email');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsSecurityRoute => GoRouteData.$route(
+  path: '/settings/security',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsSecurityRoute.$parentNavigatorKey,
+  factory: $SettingsSecurityRoute._fromState,
+);
+
+mixin $SettingsSecurityRoute on GoRouteData {
+  static SettingsSecurityRoute _fromState(GoRouterState state) =>
+      const SettingsSecurityRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/security');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsDriveSettingsRoute => GoRouteData.$route(
+  path: '/settings/drive-settings',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsDriveSettingsRoute.$parentNavigatorKey,
+  factory: $SettingsDriveSettingsRoute._fromState,
+);
+
+mixin $SettingsDriveSettingsRoute on GoRouteData {
+  static SettingsDriveSettingsRoute _fromState(GoRouterState state) =>
+      const SettingsDriveSettingsRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/drive-settings');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsPushRoute => GoRouteData.$route(
+  path: '/settings/push',
+  hasOverriddenOnExit: false,
+  parentNavigatorKey: SettingsPushRoute.$parentNavigatorKey,
+  factory: $SettingsPushRoute._fromState,
+);
+
+mixin $SettingsPushRoute on GoRouteData {
+  static SettingsPushRoute _fromState(GoRouterState state) =>
+      const SettingsPushRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings/push');
 
   @override
   void go(BuildContext context) => context.go(location);

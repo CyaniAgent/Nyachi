@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'dart:ui' as ui;
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:misskey_dart_api/misskey_dart_api.dart';
+import 'package:misskey_dart_api/misskey_dart_api.dart' hide Clip;
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
@@ -14,6 +11,7 @@ import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/ui/breakpoints.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../notes/presentation/note_content.dart';
@@ -130,23 +128,19 @@ class _ProfileHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: 190,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (banner != null && banner.isNotEmpty)
-                CachedNetworkImage(
-                  imageUrl: banner,
-                  fit: BoxFit.cover,
-                  errorWidget: (_, _, _) =>
-                      _BannerFallback(avatarUrl: user.avatarUrl),
-                  placeholder: (_, _) =>
-                      _BannerFallback(avatarUrl: user.avatarUrl),
-                )
-              else
-                _BannerFallback(avatarUrl: user.avatarUrl),
-              DecoratedBox(
+        // Full-bleed banner at a fixed 3:1 aspect ratio; the avatar straddles
+        // its bottom edge at a fixed size.
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AspectRatio(
+              aspectRatio: 3,
+              child: banner != null && banner.isNotEmpty
+                  ? NyachiImage(url: banner, fit: BoxFit.cover)
+                  : const _BannerFallback(),
+            ),
+            Positioned.fill(
+              child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -159,19 +153,24 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 12,
-                child: Row(
-                  children: [
-                    NyachiAvatar(
-                      url: user.avatarUrl,
-                      size: 76,
-                      borderColor: scheme.surface,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              // Half of the avatar hangs below the banner edge.
+              bottom: -kProfileAvatarSize / 2,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  NyachiAvatar(
+                    url: user.avatarUrl,
+                    size: kProfileAvatarSize,
+                    borderColor: scheme.surface,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -191,14 +190,15 @@ class _ProfileHeader extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          // Top padding clears the avatar half overhanging the banner.
+          padding: EdgeInsets.fromLTRB(16, kProfileAvatarSize / 2 + 12, 16, 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -251,38 +251,18 @@ String _normalizeDescription(String text) {
       .join('\n');
 }
 
-class _BannerFallback extends StatelessWidget {
-  const _BannerFallback({this.avatarUrl});
+/// Fixed avatar size on the profile page so the header overlap stays
+/// consistent across layouts.
+const double kProfileAvatarSize = 72;
 
-  final String? avatarUrl;
+/// Neutral placeholder shown when the user has no banner.
+class _BannerFallback extends StatelessWidget {
+  const _BannerFallback();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [scheme.primaryContainer, scheme.tertiaryContainer],
-            ),
-          ),
-        ),
-        if (avatarUrl != null && avatarUrl!.isNotEmpty)
-          ImageFiltered(
-            imageFilter: ui.ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-            child: CachedNetworkImage(
-              imageUrl: avatarUrl!,
-              fit: BoxFit.cover,
-              color: scheme.surface.withValues(alpha: 0.35),
-              colorBlendMode: BlendMode.srcOver,
-              errorWidget: (_, _, _) => const SizedBox.shrink(),
-            ),
-          ),
-      ],
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
     );
   }
 }

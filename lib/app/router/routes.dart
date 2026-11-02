@@ -15,7 +15,14 @@ import '../../features/oobe/presentation/oobe_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
 import '../../features/settings/presentation/cache_page.dart';
+import '../../features/settings/presentation/drive_settings_page.dart';
+import '../../features/settings/presentation/email_settings_page.dart';
 import '../../features/settings/presentation/licenses_page.dart';
+import '../../features/settings/presentation/notification_settings_page.dart';
+import '../../features/settings/presentation/profile_edit_page.dart';
+import '../../features/settings/presentation/push_settings_page.dart';
+import '../../features/settings/presentation/privacy_settings_page.dart';
+import '../../features/settings/presentation/security_settings_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_timeline_page.dart';
@@ -331,6 +338,135 @@ class SettingsAboutRoute extends GoRouteData with $SettingsAboutRoute {
   Widget build(BuildContext context, GoRouterState state) {
     return const AboutSettingsPage();
   }
+}
+
+@TypedGoRoute<SettingsDriveRoute>(path: '/settings/drive')
+class SettingsDriveRoute extends GoRouteData with $SettingsDriveRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsDriveRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => const DrivePage();
+}
+
+@TypedGoRoute<SettingsProfileRoute>(path: '/settings/profile')
+class SettingsProfileRoute extends GoRouteData with $SettingsProfileRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsProfileRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const ProfileEditPage();
+}
+
+@TypedGoRoute<SettingsPrivacyRoute>(path: '/settings/privacy')
+class SettingsPrivacyRoute extends GoRouteData with $SettingsPrivacyRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsPrivacyRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PrivacySettingsPage();
+}
+
+@TypedGoRoute<SettingsNotificationsRoute>(path: '/settings/notifications')
+class SettingsNotificationsRoute extends GoRouteData
+    with $SettingsNotificationsRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsNotificationsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const NotificationSettingsPage();
+}
+
+@TypedGoRoute<SettingsEmailRoute>(path: '/settings/email')
+class SettingsEmailRoute extends GoRouteData with $SettingsEmailRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsEmailRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const EmailSettingsPage();
+}
+
+@TypedGoRoute<SettingsSecurityRoute>(path: '/settings/security')
+class SettingsSecurityRoute extends GoRouteData with $SettingsSecurityRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsSecurityRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const SecuritySettingsPage();
+}
+
+@TypedGoRoute<SettingsDriveSettingsRoute>(path: '/settings/drive-settings')
+class SettingsDriveSettingsRoute extends GoRouteData
+    with $SettingsDriveSettingsRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsDriveSettingsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const DriveSettingsPage();
+}
+
+@TypedGoRoute<SettingsPushRoute>(path: '/settings/push')
+class SettingsPushRoute extends GoRouteData with $SettingsPushRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsPushRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PushSettingsPage();
 }
 
 @TypedStatefulShellRoute<AppShellRouteData>(
