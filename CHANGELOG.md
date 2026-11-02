@@ -3,7 +3,7 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
-## [2.1.0-beta.1] - 2026-11-02
+## [2.1.0-beta.1] - 2026-11-03
 
 ### Codename
 
@@ -99,6 +99,13 @@ realtime connection the app did not have before.
 - Cache management lists entry count and byte size per kind and clears one kind
   or everything.
 
+### Interface
+
+- Tab switching animates with a directional slide: horizontally on narrow
+  windows where the tabs sit in the bottom bar, vertically on wide screens
+  where they sit in the sidebar. Branch state is preserved during the
+  animation.
+
 ### Delivery
 
 - One websocket carries the main channel for notifications and a chat channel
@@ -107,7 +114,11 @@ realtime connection the app did not have before.
 - Web push: the service worker shows a system notification and focuses an
   existing tab (or opens the route) on click. Setup registers the browser
   subscription with the instance; disabling unsubscribes the browser first.
-- Desktop keeps a tray icon and hides to it on close instead of quitting.
+- Desktop keeps a tray icon and hides to it on close instead of quitting. On
+  Linux the tray uses the StatusNotifierItem D-Bus standard via nativeapi,
+  replacing the libappindicator C library that current distributions no longer
+  ship, and the tray icon loads from the bundled assets rather than a file
+  path that was never packaged.
 - Android declares notification and foreground-service permissions and runs a
   foreground service so the connection survives backgrounding.
 
@@ -120,6 +131,10 @@ realtime connection the app did not have before.
 - Opening a note from a list never loaded its replies, because the controller
   returned early whenever a cached override existed — which is exactly what a
   pushed note has.
+- Reacting via the picker's existing-reaction chips did not render remote
+  emoji (`:name@host:`); they now resolve through the note's own emoji map.
+- A failed emoji-catalogue load silently shrank the picker to the built-in
+  set; it now shows an explicit error with a retry.
 
 </details>
 
