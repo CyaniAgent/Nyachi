@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
+import 'package:nyachi/core/ui/network_image.dart';
 import 'package:nyachi/features/notes/application/emoji_catalog.dart';
 import 'package:nyachi/features/notes/presentation/reaction_picker.dart';
 
@@ -81,6 +82,40 @@ void main() {
     expect(picked, ':nyan:');
   });
 
+  testWidgets(
+    'existing remote reactions render their image and return the raw string',
+    (tester) async {
+      // The note map is the only source for remote emoji (`:name@host:`);
+      // without it the chip could only ever render bare text.
+      const remoteUrl = 'https://media.example.test/muri.png';
+      final note = makeNote('n1').copyWith(
+        reactions: const {':muri@misskey.io:': 2},
+        reactionEmojis: const {'muri@misskey.io': remoteUrl},
+      );
+      String? picked;
+      await _pumpHost(
+        tester,
+        ProviderScope(
+          child: _materialApp(_OpenButton(note: note, onPicked: (r) => picked = r)),
+        ),
+      );
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is NyachiImage && widget.url == remoteUrl,
+        ),
+        findsOneWidget,
+        reason: 'the remote emoji image must render from the note map',
+      );
+
+      // The chip posts the raw ':name@host:' string unchanged: that is what
+      // Misskey expects for a remote reaction.
+      await tester.tap(find.byType(ActionChip).first);
+      await tester.pumpAndSettle();
+      expect(picked, ':muri@misskey.io:');
+    },
+  );
+
   testWidgets('catalogue errors show a retry affordance', (tester) async {
     await _pumpHost(
       tester,
@@ -108,9 +143,10 @@ void main() {
 }
 
 class _OpenButton extends StatelessWidget {
-  const _OpenButton({required this.onPicked});
+  const _OpenButton({required this.onPicked, this.note});
 
   final ValueChanged<String?> onPicked;
+  final Note? note;
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +156,7 @@ class _OpenButton extends StatelessWidget {
           onPressed: () async {
             final reaction = await showReactionPicker(
               context,
-              note: makeNote('n1'),
+              note: note ?? makeNote('n1'),
             );
             onPicked(reaction);
           },

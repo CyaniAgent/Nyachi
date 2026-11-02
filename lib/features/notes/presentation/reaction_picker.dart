@@ -62,7 +62,14 @@ class _ReactionPickerState extends ConsumerState<_ReactionPicker> {
                   children: [
                     for (final reaction in existing)
                       ActionChip(
-                        label: EmojiText(emoji: reaction, size: 16),
+                        // reactionEmojis is the only source for emoji hosted
+                        // on other servers (`:name@host:`); without it those
+                        // chips render as bare text.
+                        label: EmojiText(
+                          emoji: reaction,
+                          emojis: widget.note.reactionEmojis,
+                          size: 16,
+                        ),
                         onPressed: () => Navigator.pop(context, reaction),
                       ),
                   ],
