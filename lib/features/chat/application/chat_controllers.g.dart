@@ -112,7 +112,7 @@ final class ChatThreadControllerProvider
 }
 
 String _$chatThreadControllerHash() =>
-    r'3d8883c20164b4bf99bf749f552aafff9264df58';
+    r'dfa45dde9c56bbcd4c3c7e70565d5cfb1d3ee035';
 
 final class ChatThreadControllerFamily extends $Family
     with

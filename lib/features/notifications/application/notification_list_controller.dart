@@ -159,6 +159,19 @@ class NotificationListController extends _$NotificationListController {
     }
   }
 
+  /// Inserts a notification pushed over the realtime stream.
+  ///
+  /// Sits at the head because the API returns newest first, and an id already
+  /// present is dropped so a reconnect replay cannot duplicate a row.
+  void prepend(Notification notification) {
+    if (_disposed) return;
+    if (state.items.any((item) => item.id == notification.id)) return;
+    state = state.copyWith(
+      items: [notification, ...state.items],
+      initialLoading: false,
+    );
+  }
+
   Future<void> loadMore() async {
     if (_disposed ||
         state.loadingMore ||

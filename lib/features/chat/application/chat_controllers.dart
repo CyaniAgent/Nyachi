@@ -13,6 +13,7 @@ import '../../../core/network/error_mapper.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_models.dart';
+import '../../notifications/application/realtime_providers.dart';
 import '../domain/chat_repository.dart';
 
 part 'chat_controllers.freezed.dart';
@@ -126,6 +127,12 @@ class ChatThreadController extends _$ChatThreadController {
       cache: ref.watch(cacheDaoProvider),
       accountId: active.id,
     );
+    // Live messages for this thread share the app's single socket; the
+    // subscription dies with the controller when the page closes.
+    ref.listen(chatThreadStreamProvider(target), (_, next) {
+      final message = next.value;
+      if (message != null) appendLive(message);
+    });
     unawaited(Future<void>.microtask(_load));
     return const ChatThreadState();
   }
@@ -242,5 +249,17 @@ class ChatThreadController extends _$ChatThreadController {
       }
       return false;
     }
+  }
+
+  /// Appends a message pushed over the realtime stream.
+  ///
+  /// Ignored when the id is already present: `send` refreshes the thread, and
+  /// the socket echoes the same message back.
+  void appendLive(ChatMessageItem message) {
+    if (_disposed) return;
+    if (state.items.any((item) => item.id == message.id)) return;
+    final items = [...state.items, message]
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    state = state.copyWith(items: items, loading: false);
   }
 }

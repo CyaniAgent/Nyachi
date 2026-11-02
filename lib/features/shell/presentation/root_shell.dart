@@ -17,6 +17,7 @@ import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/ui/breakpoints.dart';
 import '../../../core/ui/l10n_ext.dart';
+import '../../notifications/application/realtime_providers.dart';
 import '../../settings/application/app_settings.dart';
 import '../application/shell_navigation.dart';
 
@@ -140,6 +141,9 @@ class _RootShellState extends ConsumerState<RootShell> {
     // it opens or closes; otherwise the system back button keeps a stale
     // `canPop` and refuses to unwind the panel.
     ref.watch(detailPanelControllerProvider);
+    // Holds the app's single realtime socket open: notifications and chat
+    // channels arrive wherever the user is, not only on their own tabs.
+    ref.watch(realtimeServiceProvider);
     _ensureCoordinator();
     _queueSync();
     final coordinator = _coordinator;
