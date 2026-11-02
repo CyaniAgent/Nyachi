@@ -296,8 +296,17 @@ jobs:
           if [[ -n "$CODENAME" ]]; then
             TITLE="$TITLE \"$CODENAME\""
           fi
-          FLAGS=(--title "$TITLE" --notes-file body.md out/*)
+          FLAGS=(--title "$TITLE" --notes-file body.md)
           if [[ "$TAG" == *-beta* || "$TAG" == *-rc* ]]; then
             FLAGS+=(--prerelease)
           fi
-          gh release create -R CyaniAgent/Nyachi "$TAG" "${FLAGS[@]}"
+          # Re-cutting a tag is a supported flow, so the release may already
+          # exist from an earlier run of the same tag. Update it in place
+          # (assets clobbered, title/body/prerelease re-applied) instead of
+          # failing; only create it when it does not exist yet.
+          if gh release view -R CyaniAgent/Nyachi "$TAG" > /dev/null 2>&1; then
+            gh release edit -R CyaniAgent/Nyachi "$TAG" "${FLAGS[@]}"
+            gh release upload -R CyaniAgent/Nyachi "$TAG" out/* --clobber
+          else
+            gh release create -R CyaniAgent/Nyachi "$TAG" "${FLAGS[@]}" out/*
+          fi
