@@ -3,14 +3,125 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
-## [Unreleased]
+## [2.1.0-beta.1] - 2026-11-02
 
-### Bug fixes
+### Codename
 
-- Web requests no longer try to set `User-Agent`, a header browsers refuse;
-  the SDK set it unconditionally and every request logged a console warning.
+Kumo
+
+Seven planned domains shipped at once: the composer, the reading surfaces,
+account settings, and notification delivery. Minor rather than patch, because
+the surface area grew — new settings pages, new composer tooling, and a
+realtime connection the app did not have before.
+
+### Highlights
+
+- **The composer works like a real editor.** Drafts persist per context, both
+  server-side where the instance supports it and locally as a fallback; the
+  header avatar opens drafts, scheduled posts and same-instance account
+  switching. Typing `@`, `#` or `:name` opens a completion list anchored in the
+  text. One paperclip attaches either a local file or an existing drive file.
+  Polls and attachments can coexist, and the preview is a toolbar mode.
+- **Reading got faster and steadier.** The chat transcript opens at the newest
+  message and loading older history no longer moves what you are reading; every
+  feed loads at the scroll edge instead of a button. The note card has four
+  actions plus a real menu (favorite, delete, report, copy link, memo, thread
+  mute), a reacted note's button cancels the reaction, and a reply's detail page
+  now shows the chain of ancestors above it.
+- **Account settings are editable in the app.** Profile, privacy, per-event
+  notification delivery, email, password and two-factor, and drive quota —
+  each control mapped to a real API field, read fresh from the server on open.
+- **Notifications arrive without a refresh.** One websocket carries both
+  notifications and chat, web push works through the service worker, desktop
+  keeps running in the tray, and Android runs a foreground service.
+- **Caches are manageable.** Instance info, the emoji catalogue, notifications
+  and the following list each report their size and can be cleared separately.
+
+<details>
+<summary>Every change</summary>
+
+### Composer
+
+- Drafts are stored per context (text, CW, visibility, poll, scheduled time).
+  Where the instance supports `notes/drafts` they live on the server, otherwise
+  in a local table capped at 50 per account. A draft with no substantive content
+  is deleted rather than saved, so blank drafts no longer accumulate.
+- A reply's draft is stored separately from the timeline draft, so composing a
+  reply never overwrites what you were writing.
+- The header avatar opens a panel listing drafts, scheduled posts and other
+  accounts on the same instance. Switching accounts from there stays in the
+  composer instead of jumping to the timeline.
+- Visibility, local-only and post are grouped flush to the trailing edge.
+- Reaction acceptance moved into a submenu and now offers all five values the
+  API accepts, including remote-only variants.
+- Live preview is a toolbar toggle that replaces the editor, with a footnote
+  naming what it does not render.
+- `@` completes from your following list plus a remote user search after two
+  characters; `#` from instance trends; `:` from the emoji catalogue. Arrow
+  keys, Enter and Escape work, and completing mid-sentence does not leave a
+  double space.
+- One paperclip button offers a local file or a drive file. The drive picker
+  browses folders, can create one inline, and attaches by file id without
+  re-uploading.
+- Polls and attachments no longer exclude each other, and attachments survive
+  the autosave now that a poll can sit beside them.
+- Fixed: text typed while a draft was still loading could be overwritten by the
+  restored draft, and because local drafts drop attachments, files vanished
+  while the text survived. A restore now only fills an untouched composer.
+
+### Reading
+
+- The chat transcript is a reversed list: it opens at the newest message, and
+  loading older pages appends below the viewport instead of shifting what is on
+  screen.
+- Note actions are four buttons — reply, renote, react, detail — with the rest
+  behind an overflow menu: favorite, delete (own notes, with confirmation),
+  report (requires a comment; the endpoint reports the author), copy link, user
+  memo, and thread mute.
+- A note you already reacted to shows a cancel button; the picker still adds or
+  changes reactions.
+- The detail page renders the ancestor chain from `notes/conversation` above the
+  focused note, joined by reference lines, with replies below. Tapping an
+  ancestor opens its own page.
+- Custom emoji are grouped under sticky category headers in both the reaction
+  picker and the insert sheet, with uncategorized emoji last.
+- Home timeline, notifications, explore search, detail replies and chat all load
+  at the scroll edge; the load-more buttons are gone.
+
+### Settings
+
+- New pages: profile (name, bio, fields, birthday, location, bot/cat, avatar and
+  banner), privacy (mute and block lists, default visibility and local-only for
+  new notes), notifications (per-event delivery), email, security (password,
+  two-factor with secret entry, sign-in history) and drive (quota).
+- Default visibility and local-only are stored locally and read by the composer,
+  so a new note starts from your preference rather than a hardcoded public.
+- Cache management lists entry count and byte size per kind and clears one kind
+  or everything.
+
+### Delivery
+
+- One websocket carries the main channel for notifications and a chat channel
+  per open thread. Joining and leaving a thread happens on the live connection,
+  and both consumers deduplicate by id because a reconnect replays.
+- Web push: the service worker shows a system notification and focuses an
+  existing tab (or opens the route) on click. Setup registers the browser
+  subscription with the instance; disabling unsubscribes the browser first.
+- Desktop keeps a tray icon and hides to it on close instead of quitting.
+- Android declares notification and foreground-service permissions and runs a
+  foreground service so the connection survives backgrounding.
+
+### Fixed
+
+- Web requests no longer try to set `User-Agent`, a header browsers refuse; the
+  SDK set it unconditionally and every request logged a console warning.
 - The appearance picker no longer offers "System color" on the web, where no
   system palette exists and the choice silently did nothing.
+- Opening a note from a list never loaded its replies, because the controller
+  returned early whenever a cached override existed — which is exactly what a
+  pushed note has.
+
+</details>
 
 ## [2.0.0-beta.9] - 2026-11-01
 

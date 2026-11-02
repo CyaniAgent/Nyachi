@@ -1,11 +1,11 @@
 name: Release
 
-# Builds and publishes a version tag (e.g. v2.0.0-beta.5).
+# Builds and publishes a version tag (e.g. v2.1.0-beta.1).
 # Artifacts: split-per-ABI APKs, AAB, and Windows/macOS/Linux bundles.
 #
 # Release semantics come from the tag itself:
-#   - v2.0.0-beta.* / v2.0.0-rc.*  → marked as a pre-release
-#   - anything else (v2.0.0)       → a stable release
+#   - any tag containing `-beta` or `-rc` → marked as a pre-release
+#   - anything else (e.g. v2.1.0)         → a stable release
 #
 # Releases are infrequent by policy: only cut one when the maintainer asks.
 # To cut one, run the "Cut release" workflow with the new version number; it

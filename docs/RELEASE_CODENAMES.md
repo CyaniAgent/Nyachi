@@ -19,3 +19,4 @@ absent the release simply carries no codename.
 | Version | Codename |
 |---|---|
 | 2.0.0-beta.9 | Baka |
+| 2.1.0-beta.1 | Kumo |

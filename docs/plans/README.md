@@ -52,15 +52,15 @@ documents instead of chat history.
 
 ## Roadmap
 
-1. Correctness wave (shipped): back navigation (2.0.0-beta.9); composer
+1. Correctness wave (shipped, 2.0.0-beta.9): back navigation; composer
    drafts, header layout, poll coexistence.
-2. Reading wave: note thread view and actions; emoji grouping; chat scroll
-   fix, feed auto-load, notification/chat streams.
-3. Writing wave: autocomplete; unified upload entry with drive picker; live
-   preview; avatar panel (drafts / scheduled / same-instance switcher).
-4. Settings wave: the six personal-settings domains.
-5. Delivery wave: web push + in-app realtime notifications; desktop tray and
-   Android foreground service.
+2. Reading wave (shipped, 2.1.0-beta.1): note thread view and actions; emoji
+   grouping; chat scroll fix, feed auto-load.
+3. Writing wave (shipped, 2.1.0-beta.1): autocomplete; unified upload entry
+   with drive picker; live preview; avatar panel.
+4. Settings wave (shipped, 2.1.0-beta.1): the six personal-settings domains.
+5. Delivery wave (shipped, 2.1.0-beta.1): web push + in-app realtime
+   notifications; desktop tray and Android foreground service.
 6. Optional later: self-hosted push gateway (possible sponsor-gated service).
 
 ## Rules
