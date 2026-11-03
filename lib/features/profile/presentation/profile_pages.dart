@@ -100,16 +100,13 @@ class _ProfileBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      children: [
-        Expanded(
-          child: NoteList(
-            source: NoteFeedSource.user(user.id),
-            emptyText: l10n.noNotes,
-            header: _ProfileHeader(user: user, isMe: isMe),
-          ),
-        ),
-      ],
+    return NoteList(
+      source: NoteFeedSource.user(user.id),
+      emptyText: l10n.noNotes,
+      header: _ProfileHeader(user: user, isMe: isMe),
+      // The banner is the page's background: it must span the viewport
+      // instead of shrinking to the content column.
+      headerFullBleed: true,
     );
   }
 }
@@ -128,16 +125,27 @@ class _ProfileHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Full-bleed banner at a fixed 3:1 aspect ratio; the avatar straddles
-        // its bottom edge at a fixed size.
         Stack(
           clipBehavior: Clip.none,
           children: [
-            AspectRatio(
-              aspectRatio: 3,
-              child: banner != null && banner.isNotEmpty
-                  ? NyachiImage(url: banner, fit: BoxFit.cover)
-                  : const _BannerFallback(),
+            // The banner spans the full viewport width at a height that stays
+            // usable on narrow windows instead of collapsing with an aspect
+            // ratio; the image covers whatever space it gets.
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final height = (width * 0.28).clamp(
+                  kProfileBannerMinHeight,
+                  kProfileBannerMaxHeight,
+                );
+                return SizedBox(
+                  height: height,
+                  width: double.infinity,
+                  child: banner != null && banner.isNotEmpty
+                      ? NyachiImage(url: banner, fit: BoxFit.cover)
+                      : const _BannerFallback(),
+                );
+              },
             ),
             Positioned.fill(
               child: DecoratedBox(
@@ -254,6 +262,12 @@ String _normalizeDescription(String text) {
 /// Fixed avatar size on the profile page so the header overlap stays
 /// consistent across layouts.
 const double kProfileAvatarSize = 72;
+
+/// Banner height bounds. The height tracks the viewport width between these
+/// limits: a phone gets a readable strip instead of a sliver, and a wide
+/// window does not grow the banner into a wall.
+const double kProfileBannerMinHeight = 140;
+const double kProfileBannerMaxHeight = 240;
 
 /// Neutral placeholder shown when the user has no banner.
 class _BannerFallback extends StatelessWidget {

@@ -19,8 +19,14 @@ class NoteList extends ConsumerWidget {
     required this.source,
     this.header,
     this.emptyText,
+    this.headerFullBleed = false,
     super.key,
   });
+
+  /// Renders [header] across the whole viewport instead of inside the content
+  /// column's padding, for headers whose own background must reach the edges
+  /// (the profile banner).
+  final bool headerFullBleed;
 
   final NoteFeedSource source;
   final Widget? header;
@@ -76,8 +82,42 @@ class NoteList extends ConsumerWidget {
     final bannerCount =
         (state.usingCache ? 1 : 0) +
         (state.error != null && state.items.isNotEmpty ? 1 : 0) +
-        (header == null ? 0 : 1);
+        (header == null || headerFullBleed ? 0 : 1);
     final footer = state.items.isNotEmpty && state.loadingMore ? 1 : 0;
+    final headerWidget = header;
+    final list = _list(
+      ref: ref,
+      context: context,
+      state: state,
+      controller: controller,
+      l10n: l10n,
+      leading: leading,
+      trailing: trailing,
+      bannerCount: bannerCount,
+      footer: footer,
+      showEmpty: showEmpty,
+    );
+    if (headerWidget == null || !headerFullBleed) return list;
+    return Column(
+      children: [
+        headerWidget,
+        Expanded(child: list),
+      ],
+    );
+  }
+
+  Widget _list({
+    required WidgetRef ref,
+    required BuildContext context,
+    required NoteListState state,
+    required NoteListController controller,
+    required AppLocalizations l10n,
+    required double leading,
+    required double trailing,
+    required int bannerCount,
+    required int footer,
+    required bool showEmpty,
+  }) {
     return ScrollEdgeLoader(
       canLoad: () {
         final current = ref.read(noteListControllerProvider(source));
@@ -97,7 +137,7 @@ class NoteList extends ConsumerWidget {
             : const Divider(height: 1),
         itemBuilder: (context, index) {
           var cursor = 0;
-          if (header != null) {
+          if (header != null && !headerFullBleed) {
             if (index == cursor) return header!;
             cursor++;
           }

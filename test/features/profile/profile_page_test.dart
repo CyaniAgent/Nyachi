@@ -135,31 +135,46 @@ void main() {
   });
 
   testWidgets(
-    'renders banner and fixed-size overlapping avatar when bannerUrl is set',
+    'renders a full-width banner and an avatar filling its container',
     (tester) async {
       const bannerUrl = 'https://example.test/banner.png';
       await _pumpPage(tester, user: _user(bannerUrl: bannerUrl));
 
-      // Banner renders through NyachiImage (a CachedNetworkImage underneath).
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is CachedNetworkImage && w.imageUrl == bannerUrl,
-        ),
-        findsOneWidget,
-      );
-      // Full-bleed 3:1 banner.
-      final aspect = tester.widget<AspectRatio>(find.byType(AspectRatio));
-      expect(aspect.aspectRatio, 3);
-      final bannerBox = tester.getSize(find.byType(AspectRatio));
-      expect(bannerBox.width / bannerBox.height, closeTo(3, 0.01));
+      final viewport = tester.view.physicalSize / tester.view.devicePixelRatio;
 
-      // Avatar is the fixed profile size, both in widget args and on screen.
+      // Banner renders through NyachiImage (a CachedNetworkImage underneath).
+      final banner = find.byWidgetPredicate(
+        (w) => w is CachedNetworkImage && w.imageUrl == bannerUrl,
+      );
+      expect(banner, findsOneWidget);
+      // The banner spans the viewport instead of shrinking to the content
+      // column, and keeps a usable height on narrow windows.
+      final bannerSize = tester.getSize(banner);
+      expect(bannerSize.width, closeTo(viewport.width, 1));
+      expect(bannerSize.height, greaterThanOrEqualTo(kProfileBannerMinHeight));
+      expect(bannerSize.height, lessThanOrEqualTo(kProfileBannerMaxHeight));
+
+      // Avatar is the fixed profile size on screen, and its image fills that
+      // box rather than sitting at its decoded size inside it.
       final avatar = tester.widget<NyachiAvatar>(find.byType(NyachiAvatar));
       expect(avatar.size, kProfileAvatarSize);
       expect(
         tester.getSize(find.byType(NyachiAvatar)),
         Size(kProfileAvatarSize, kProfileAvatarSize),
       );
+      final avatarImage = tester.getSize(
+        find.descendant(
+          of: find.byType(NyachiAvatar),
+          matching: find.byType(CachedNetworkImage),
+        ),
+      );
+      // The ring eats 3px per side; the image still covers the circle.
+      expect(
+        avatarImage.width,
+        closeTo(kProfileAvatarSize - 6, 1),
+        reason: 'the avatar image must fill its container',
+      );
+      expect(avatarImage.height, closeTo(kProfileAvatarSize - 6, 1));
 
       // Name and handle are present in the overlap row.
       expect(find.text('Alice'), findsOneWidget);
@@ -174,6 +189,7 @@ void main() {
 
       final context = tester.element(find.byType(UserProfilePage));
       final placeholder = Theme.of(context).colorScheme.surfaceContainerHighest;
+      final viewport = tester.view.physicalSize / tester.view.devicePixelRatio;
 
       // No banner image request, only the avatar's own.
       expect(
@@ -182,14 +198,22 @@ void main() {
         ),
         findsNothing,
       );
-      // Placeholder background fills the banner slot (3:1 full-bleed).
-      final aspect = tester.widget<AspectRatio>(find.byType(AspectRatio));
-      expect(aspect.aspectRatio, 3);
+      // The placeholder fills the full-width banner slot.
+      final fallback = find.byWidgetPredicate(
+        (w) => w is ColoredBox && w.color == placeholder,
+      );
+      expect(fallback, findsWidgets);
+      final sizes = fallback.evaluate().map(
+        (element) => tester.getSize(find.byWidget(element.widget)),
+      );
       expect(
-        find.byWidgetPredicate(
-          (w) => w is ColoredBox && w.color == placeholder,
+        sizes.any(
+          (size) =>
+              size.width >= viewport.width - 1 &&
+              size.height >= kProfileBannerMinHeight,
         ),
-        findsAtLeastNWidgets(1),
+        isTrue,
+        reason: 'the placeholder must fill the banner area edge to edge',
       );
       // Avatar still renders at the fixed size.
       final avatar = tester.widget<NyachiAvatar>(find.byType(NyachiAvatar));

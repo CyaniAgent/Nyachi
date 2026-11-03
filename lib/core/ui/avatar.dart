@@ -62,17 +62,21 @@ class NyachiAvatar extends StatelessWidget {
                   size: size * 0.5,
                   color: scheme.onSurfaceVariant,
                 ))
-          : CachedNetworkImage(
-              imageUrl: url!,
-              fit: BoxFit.cover,
-              placeholder: (_, _) =>
-                  ColoredBox(color: scheme.surfaceContainerHighest),
-              errorWidget: (_, _, _) => ColoredBox(
-                color: scheme.surfaceContainerHighest,
-                child: Icon(
-                  Icons.person_outline,
-                  size: size * 0.5,
-                  color: scheme.onSurfaceVariant,
+          : SizedBox.expand(
+              child: CachedNetworkImage(
+                imageUrl: url!,
+                fit: BoxFit.cover,
+                width: size,
+                height: size,
+                placeholder: (_, _) =>
+                    ColoredBox(color: scheme.surfaceContainerHighest),
+                errorWidget: (_, _, _) => ColoredBox(
+                  color: scheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.person_outline,
+                    size: size * 0.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
