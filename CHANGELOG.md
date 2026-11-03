@@ -3,7 +3,7 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
-## [2.1.0-beta.1] - 2026-11-03
+## [2.1.0-beta.2] - 2026-11-03
 
 ### Codename
 
@@ -60,6 +60,8 @@ realtime connection the app did not have before.
   characters; `#` from instance trends; `:` from the emoji catalogue. Arrow
   keys, Enter and Escape work, and completing mid-sentence does not leave a
   double space.
+- Completions are accepted only with Tab or a click; Enter always inserts a
+  newline, so a typed `:` can never silently replace text with an emoji.
 - One paperclip button offers a local file or a drive file. The drive picker
   browses folders, can create one inline, and attaches by file id without
   re-uploading.
