@@ -75,7 +75,7 @@ final class RealtimeServiceProvider
   }
 }
 
-String _$realtimeServiceHash() => r'a1d03dc9a465f89e831a832b40daa7624f0383c3';
+String _$realtimeServiceHash() => r'da929f5a8f0356b80aa31f508bfa25ea071a4e44';
 
 /// Live messages for one chat thread.
 ///

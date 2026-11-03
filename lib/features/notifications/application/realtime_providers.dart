@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'dart:async';
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/auth/session_controller.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/network/client_provider.dart';
+import '../../../core/platform/residency.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../../chat/domain/chat_models.dart';
+import '../../settings/application/app_settings.dart';
+import '../domain/notification_copy.dart';
 import 'notification_list_controller.dart';
 import 'realtime_service.dart';
 
@@ -49,17 +54,35 @@ RealtimeService? realtimeService(Ref ref) {
       ),
     ),
   );
-  final pushed = notifications.stream.listen(
-    (body) => ref
-        .read(notificationListControllerProvider.notifier)
-        .prepend(Notification.fromJson(body)),
-  );
+  final pushed = notifications.stream.listen((body) {
+    final notification = Notification.fromJson(body);
+    ref.read(notificationListControllerProvider.notifier).prepend(notification);
+    // A system notification only makes sense when the user is not already
+    // looking at the list; the in-app list is the same information.
+    unawaited(_announce(ref, notification));
+  });
   ref.onDispose(() {
     unawaited(pushed.cancel());
     unawaited(handle.cancel());
     service.dispose();
   });
   return service;
+}
+
+/// Raises a system notification for an event that arrived on the socket.
+///
+/// The text is built with the app's configured language rather than a widget
+/// context, because a notification can arrive while the user is elsewhere or
+/// while no screen is mounted at all.
+Future<void> _announce(Ref ref, Notification notification) async {
+  final settings = ref.read(settingsControllerProvider);
+  final locale = settings.localeCode == 'system'
+      ? PlatformDispatcher.instance.locale
+      : Locale(settings.localeCode);
+  final copy = notificationCopy(lookupAppLocalizations(locale), notification);
+  await ref
+      .read(residencyProvider)
+      .showNotification(title: copy.title, body: copy.body);
 }
 
 /// Live messages for one chat thread.

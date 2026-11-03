@@ -44,6 +44,9 @@ class ResidencyService {
     if (_initialized) return;
     if (Platform.isAndroid) {
       await _initializeAndroid();
+      // The service is what keeps the websocket alive while the app is
+      // backgrounded; without it notifications only arrive in the foreground.
+      await startAndroidService();
     } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       await _initializeDesktop();
     }
@@ -53,6 +56,7 @@ class ResidencyService {
   Future<void> _initializeDesktop() async {
     try {
       await windowManager.ensureInitialized();
+      await _initializeDesktopNotifications();
       // The tray goes through nativeapi's own implementation rather than the
       // old libappindicator C library: on Linux that means the
       // StatusNotifierItem D-Bus standard, which Ubuntu still ships.
@@ -139,15 +143,11 @@ class ResidencyService {
   }
 
   Future<void> _initializeAndroid() async {
-    const settings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-    );
     try {
-      // Taps are delivered to the app through the callback below; nothing
-      // here needs to route them yet, so the handler is intentionally empty.
-      await _notifications.initialize(
-        settings: settings,
-        onDidReceiveNotificationResponse: (response) {},
+      await _initializeNotifications(
+        InitializationSettings(
+          android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
+        ),
       );
       final permission =
           await FlutterForegroundTask.checkNotificationPermission();
@@ -156,6 +156,82 @@ class ResidencyService {
       }
     } catch (error) {
       debugPrint('Nyachi notification setup failed: $error');
+    }
+  }
+
+  /// Prepares the notification channel for the desktop targets.
+  ///
+  /// Windows needs a distinct app-user-model id and a stable GUID so toasts
+  /// survive restarts instead of stacking a new entry per launch; Linux only
+  /// needs the channel itself.
+  Future<void> _initializeDesktopNotifications() async {
+    try {
+      if (Platform.isWindows) {
+        await _initializeNotifications(
+          const InitializationSettings(
+            windows: WindowsInitializationSettings(
+              appName: 'Nyachi',
+              appUserModelId: 'CyaniAgent.Nyachi.Client',
+              guid: '6d1f1d1e-6f4a-4a3e-9d0e-8ad1f5f0c9b2',
+            ),
+          ),
+        );
+      } else if (Platform.isLinux) {
+        await _initializeNotifications(
+          const InitializationSettings(
+            linux: LinuxInitializationSettings(defaultActionName: 'Open'),
+          ),
+        );
+      }
+    } catch (error) {
+      debugPrint('Nyachi desktop notifications unavailable: $error');
+    }
+  }
+
+  Future<void> _initializeNotifications(InitializationSettings settings) async {
+    await _notifications.initialize(
+      settings: settings,
+      // Taps only need to bring the window forward; the in-app list is the
+      // destination, and it is already open behind the toast.
+      onDidReceiveNotificationResponse: (_) => unawaited(showWindow()),
+    );
+  }
+
+  /// Whether this platform can raise a system notification.
+  ///
+  /// macOS is excluded: this build has no macOS notification setup, and
+  /// claiming otherwise would silently drop events.
+  bool get notificationsSupported =>
+      Platform.isAndroid || Platform.isWindows || Platform.isLinux;
+
+  static const _channel = AndroidNotificationDetails(
+    'nyachi_activity',
+    'Activity',
+    channelDescription: 'Mentions, replies and reactions',
+    importance: Importance.high,
+    priority: Priority.high,
+  );
+
+  /// Raises a system notification for an event that arrived while the app was
+  /// not in front of the user.
+  ///
+  /// Best-effort like everything else here: a refused permission or a platform
+  /// without a notification channel must not interrupt the realtime stream.
+  Future<void> showNotification({
+    required String title,
+    required String body,
+  }) async {
+    if (!notificationsSupported || !_initialized) return;
+    try {
+      await _notifications.show(
+        id: title.hashCode & 0x7fffffff,
+        title: title,
+        body: body,
+        notificationDetails: const NotificationDetails(android: _channel),
+        payload: 'notifications',
+      );
+    } catch (error) {
+      debugPrint('Nyachi notification failed: $error');
     }
   }
 

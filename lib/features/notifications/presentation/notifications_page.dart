@@ -6,7 +6,6 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/avatar.dart';
 import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
@@ -15,6 +14,7 @@ import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
 import '../application/notification_list_controller.dart';
+import '../domain/notification_copy.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -128,8 +128,9 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final actor = _actor(notification);
-    final note = _note(notification);
+    final actor = notificationActor(notification);
+    final note = notificationNote(notification);
+    final label = notificationLabel(l10n, notification);
     return ListTile(
       leading: NyachiAvatar(
         url: actor?.avatarUrl,
@@ -137,9 +138,7 @@ class _NotificationTile extends StatelessWidget {
         fallback: const Icon(Icons.notifications_outlined),
       ),
       title: Text(
-        actor?.name?.isNotEmpty == true
-            ? '@${actor!.username} ${_label(l10n, notification)}'
-            : _label(l10n, notification),
+        actor?.name?.isNotEmpty == true ? '@${actor!.username} $label' : label,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -148,103 +147,12 @@ class _NotificationTile extends StatelessWidget {
         children: [
           if (note?.text != null && note!.text!.isNotEmpty)
             Text(note.text!, maxLines: 2, overflow: TextOverflow.ellipsis),
-          Text(relativeTime(context, _createdAt(notification))),
+          Text(relativeTime(context, notificationCreatedAt(notification))),
         ],
       ),
       onTap: note == null
           ? null
           : () => openDetail(context, NoteDetailLocation(note.id)),
     );
-  }
-
-  String _label(AppLocalizations l10n, Notification notification) {
-    return switch (notification) {
-      NotificationNote() => l10n.notificationNote,
-      NotificationMention() => l10n.notificationMention,
-      NotificationReply() => l10n.notificationReply,
-      NotificationRenote() => l10n.notificationRenote,
-      NotificationQuote() => l10n.notificationQuote,
-      NotificationReaction() => l10n.notificationReaction,
-      NotificationPollEnded() => l10n.notificationPollEnded,
-      NotificationFollow() => l10n.notificationFollow,
-      NotificationReceiveFollowRequest() =>
-        l10n.notificationReceiveFollowRequest,
-      NotificationFollowRequestAccepted() =>
-        l10n.notificationFollowRequestAccepted,
-      NotificationRoleAssigned() => l10n.notificationRoleAssigned,
-      NotificationChatRoomInvitationReceived() =>
-        l10n.notificationChatRoomInvitation,
-      NotificationAchievementEarned() => l10n.notificationAchievement,
-      NotificationExportCompleted() => l10n.notificationExportCompleted,
-      NotificationLogin() => l10n.notificationLogin,
-      NotificationCreateToken() => l10n.notificationCreateToken,
-      NotificationApp() => l10n.notificationApp,
-      NotificationReactionGrouped() => l10n.notificationGroupedReaction,
-      NotificationRenoteGrouped() => l10n.notificationGroupedRenote,
-      _ => l10n.notificationGeneric,
-    };
-  }
-
-  UserLite? _actor(Notification notification) {
-    return switch (notification) {
-      NotificationNote(:final user) => user,
-      NotificationMention(:final user) => user,
-      NotificationReply(:final user) => user,
-      NotificationRenote(:final user) => user,
-      NotificationQuote(:final user) => user,
-      NotificationReaction(:final user) => user,
-      NotificationPollEnded(:final user) => user,
-      NotificationFollow(:final user) => user,
-      NotificationReceiveFollowRequest(:final user) => user,
-      NotificationFollowRequestAccepted(:final user) => user,
-      NotificationRenoteGrouped(:final users) =>
-        users.isEmpty ? null : users.first,
-      NotificationReactionGrouped(:final reactions) =>
-        reactions.isEmpty ? null : reactions.first.user,
-      _ => null,
-    };
-  }
-
-  Note? _note(Notification notification) {
-    return switch (notification) {
-      NotificationNote(:final note) => note,
-      NotificationMention(:final note) => note,
-      NotificationReply(:final note) => note,
-      NotificationRenote(:final note) => note,
-      NotificationQuote(:final note) => note,
-      NotificationReaction(:final note) => note,
-      NotificationPollEnded(:final note) => note,
-      NotificationScheduledNotePosted(:final note) => note,
-      NotificationReactionGrouped(:final note) => note,
-      NotificationRenoteGrouped(:final note) => note,
-      _ => null,
-    };
-  }
-
-  DateTime _createdAt(Notification notification) {
-    return switch (notification) {
-      NotificationNote(:final createdAt) => createdAt,
-      NotificationMention(:final createdAt) => createdAt,
-      NotificationReply(:final createdAt) => createdAt,
-      NotificationRenote(:final createdAt) => createdAt,
-      NotificationQuote(:final createdAt) => createdAt,
-      NotificationReaction(:final createdAt) => createdAt,
-      NotificationPollEnded(:final createdAt) => createdAt,
-      NotificationScheduledNotePosted(:final createdAt) => createdAt,
-      NotificationScheduledNotePostFailed(:final createdAt) => createdAt,
-      NotificationFollow(:final createdAt) => createdAt,
-      NotificationReceiveFollowRequest(:final createdAt) => createdAt,
-      NotificationFollowRequestAccepted(:final createdAt) => createdAt,
-      NotificationRoleAssigned(:final createdAt) => createdAt,
-      NotificationChatRoomInvitationReceived(:final createdAt) => createdAt,
-      NotificationAchievementEarned(:final createdAt) => createdAt,
-      NotificationExportCompleted(:final createdAt) => createdAt,
-      NotificationLogin(:final createdAt) => createdAt,
-      NotificationCreateToken(:final createdAt) => createdAt,
-      NotificationApp(:final createdAt) => createdAt,
-      NotificationReactionGrouped(:final createdAt) => createdAt,
-      NotificationRenoteGrouped(:final createdAt) => createdAt,
-      NotificationTest(:final createdAt) => createdAt,
-    };
   }
 }
