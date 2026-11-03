@@ -1245,4 +1245,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noScheduledPosts => '没有定时发布';
+
+  @override
+  String get settingsGroupAccount => '账号';
+
+  @override
+  String get settingsGroupApp => '应用';
+
+  @override
+  String get settingsGroupServer => '此服务器';
+
+  @override
+  String get settingsGroupAdvanced => '高级';
+
+  @override
+  String get settingsSearchHint => '搜索设置';
+
+  @override
+  String get settingsAccountAndServer => '账号与服务器';
+
+  @override
+  String get settingsServerSubtitle => '读取自此实例';
 }

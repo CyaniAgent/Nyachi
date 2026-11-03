@@ -2487,6 +2487,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No scheduled posts'**
   String get noScheduledPosts;
+
+  /// No description provided for @settingsGroupAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get settingsGroupAccount;
+
+  /// No description provided for @settingsGroupApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get settingsGroupApp;
+
+  /// No description provided for @settingsGroupServer.
+  ///
+  /// In en, this message translates to:
+  /// **'This server'**
+  String get settingsGroupServer;
+
+  /// No description provided for @settingsGroupAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get settingsGroupAdvanced;
+
+  /// No description provided for @settingsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search settings'**
+  String get settingsSearchHint;
+
+  /// No description provided for @settingsAccountAndServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and server'**
+  String get settingsAccountAndServer;
+
+  /// No description provided for @settingsServerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read from this instance'**
+  String get settingsServerSubtitle;
 }
 
 class _AppLocalizationsDelegate

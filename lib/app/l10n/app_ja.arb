@@ -532,5 +532,12 @@
   "noDrafts": "保存された下書きはありません",
   "draftsLoadFailed": "下書きを読み込めませんでした",
   "scheduledPosts": "予約投稿",
-  "noScheduledPosts": "予約投稿はありません"
+  "noScheduledPosts": "予約投稿はありません",
+  "settingsGroupAccount": "アカウント",
+  "settingsGroupApp": "アプリ",
+  "settingsGroupServer": "このサーバー",
+  "settingsGroupAdvanced": "詳細",
+  "settingsSearchHint": "設定を検索",
+  "settingsAccountAndServer": "アカウントとサーバー",
+  "settingsServerSubtitle": "このインスタンスから取得"
 }

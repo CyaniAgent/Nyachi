@@ -1246,4 +1246,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noScheduledPosts => '予約投稿はありません';
+
+  @override
+  String get settingsGroupAccount => 'アカウント';
+
+  @override
+  String get settingsGroupApp => 'アプリ';
+
+  @override
+  String get settingsGroupServer => 'このサーバー';
+
+  @override
+  String get settingsGroupAdvanced => '詳細';
+
+  @override
+  String get settingsSearchHint => '設定を検索';
+
+  @override
+  String get settingsAccountAndServer => 'アカウントとサーバー';
+
+  @override
+  String get settingsServerSubtitle => 'このインスタンスから取得';
 }

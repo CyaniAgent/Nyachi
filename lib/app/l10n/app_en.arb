@@ -551,5 +551,12 @@
   "noDrafts": "No saved drafts",
   "draftsLoadFailed": "Could not load drafts",
   "scheduledPosts": "Scheduled posts",
-  "noScheduledPosts": "No scheduled posts"
+  "noScheduledPosts": "No scheduled posts",
+  "settingsGroupAccount": "Account",
+  "settingsGroupApp": "App",
+  "settingsGroupServer": "This server",
+  "settingsGroupAdvanced": "Advanced",
+  "settingsSearchHint": "Search settings",
+  "settingsAccountAndServer": "Account and server",
+  "settingsServerSubtitle": "Read from this instance"
 }

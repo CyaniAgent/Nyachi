@@ -21,111 +21,196 @@ import '../../../app/theme/app_theme.dart';
 import '../../../core/ui/content_width.dart';
 import '../application/app_settings.dart';
 
-class SettingsPage extends ConsumerWidget {
+/// Settings entry point.
+///
+/// A profile header opens the account hub - the account itself plus the
+/// profile, privacy, email and security pages, which all change this user on
+/// the server. Below it the remaining pages are grouped by who owns the
+/// setting (this server vs. this app), with the rarely touched ones under
+/// "Advanced", and the search field jumps straight to any of them.
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  var _query = '';
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final session = ref.watch(sessionControllerProvider);
+    final entries = <_SettingsEntry>[
+      _SettingsEntry(
+        group: _SettingsGroup.app,
+        icon: Icons.tune,
+        title: l10n.navigation,
+        subtitle: l10n.visibleTabs,
+        open: const SettingsNavigationLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.app,
+        icon: Icons.palette_outlined,
+        title: l10n.appearance,
+        subtitle: l10n.theme,
+        open: const SettingsAppearanceLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.app,
+        icon: Icons.info_outline,
+        title: l10n.about,
+        subtitle: l10n.appVersion(ref.watch(appVersionProvider).value ?? ''),
+        open: const SettingsAboutLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.server,
+        icon: Icons.notifications_outlined,
+        title: l10n.notificationSettings,
+        subtitle: l10n.notifyAll,
+        open: const SettingsNotificationLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.server,
+        icon: Icons.notifications_active_outlined,
+        title: l10n.pushNotifications,
+        subtitle: l10n.pushEnable,
+        open: const SettingsPushLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.server,
+        icon: Icons.cloud_outlined,
+        title: l10n.driveSpace,
+        subtitle: l10n.openDrive,
+        open: const SettingsDriveLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.server,
+        icon: Icons.campaign_outlined,
+        title: l10n.instanceAnnouncements,
+        subtitle: l10n.settingsServerSubtitle,
+        onTap: () => Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const AnnouncementsPage()),
+        ),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.advanced,
+        icon: Icons.cleaning_services_outlined,
+        title: l10n.cacheManagement,
+        subtitle: l10n.cacheManagementSubtitle,
+        open: const SettingsCacheLocation(),
+      ),
+    ];
+    final query = _query.trim().toLowerCase();
+    final visible = query.isEmpty
+        ? entries
+        : entries
+              .where(
+                (entry) =>
+                    entry.title.toLowerCase().contains(query) ||
+                    entry.subtitle.toLowerCase().contains(query),
+              )
+              .toList(growable: false);
+    final active = session.active;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: _SettingsBody(
         children: [
-          _SettingsTile(
-            icon: Icons.people_outline,
-            title: l10n.accounts,
-            subtitle:
-                session.active?.displayName ??
-                session.active?.username ??
-                l10n.noAccounts,
-            onTap: () => openDetail(context, const SettingsAccountsLocation()),
-          ),
-
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.person_outline,
-            title: l10n.editProfile,
-            subtitle: l10n.profile,
-            onTap: () => openDetail(context, const SettingsProfileLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.lock_outline,
-            title: l10n.privacy,
-            subtitle: l10n.mutedUsers,
-            onTap: () => openDetail(context, const SettingsPrivacyLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.notifications_outlined,
-            title: l10n.notificationSettings,
-            subtitle: l10n.notifyAll,
-            onTap: () =>
-                openDetail(context, const SettingsNotificationLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.mail_outline,
-            title: l10n.emailSettings,
-            subtitle: l10n.emailAddress,
-            onTap: () => openDetail(context, const SettingsEmailLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.shield_outlined,
-            title: l10n.security,
-            subtitle: l10n.twoFactor,
-            onTap: () => openDetail(context, const SettingsSecurityLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.cloud_outlined,
-            title: l10n.driveSpace,
-            subtitle: l10n.openDrive,
-            onTap: () => openDetail(context, const SettingsDriveLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.notifications_active_outlined,
-            title: l10n.pushNotifications,
-            subtitle: l10n.pushEnable,
-            onTap: () => openDetail(context, const SettingsPushLocation()),
-          ),
-
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.tune,
-            title: l10n.navigation,
-            subtitle: l10n.visibleTabs,
-            onTap: () =>
-                openDetail(context, const SettingsNavigationLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.palette_outlined,
-            title: l10n.appearance,
-            subtitle: l10n.theme,
-            onTap: () =>
-                openDetail(context, const SettingsAppearanceLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.cleaning_services_outlined,
-            title: l10n.cacheManagement,
-            subtitle: l10n.cacheManagementSubtitle,
-            onTap: () => openDetail(context, const SettingsCacheLocation()),
-          ),
-          const Divider(height: 1),
-          _SettingsTile(
-            icon: Icons.info_outline,
-            title: l10n.about,
-            subtitle: l10n.appVersion(
-              ref.watch(appVersionProvider).value ?? '',
+          if (query.isEmpty) ...[
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+              leading: NyachiAvatar(
+                url: active?.avatarUrl,
+                size: 48,
+                fallback: Text(
+                  active?.username.characters.firstOrNull?.toUpperCase() ?? '?',
+                ),
+              ),
+              title: Text(
+                active?.displayName ?? active?.username ?? l10n.noAccounts,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              subtitle: Text(l10n.settingsAccountAndServer),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () =>
+                  openDetail(context, const SettingsAccountsLocation()),
             ),
-            onTap: () => openDetail(context, const SettingsAboutLocation()),
+            const SizedBox(height: 8),
+          ],
+          TextField(
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: l10n.settingsSearchHint,
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (value) => setState(() => _query = value),
           ),
+          if (visible.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.noSearchResults),
+            ),
+          for (final group in _SettingsGroup.values)
+            if (visible.any((entry) => entry.group == group)) ...[
+              _SettingsSectionHeader(
+                label: switch (group) {
+                  _SettingsGroup.app => l10n.settingsGroupApp,
+                  _SettingsGroup.server => l10n.settingsGroupServer,
+                  _SettingsGroup.advanced => l10n.settingsGroupAdvanced,
+                },
+              ),
+              for (final entry in visible.where(
+                (entry) => entry.group == group,
+              ))
+                _SettingsTile(
+                  icon: entry.icon,
+                  title: entry.title,
+                  subtitle: entry.subtitle,
+                  onTap: entry.onTap ?? () => openDetail(context, entry.open!),
+                ),
+            ],
         ],
+      ),
+    );
+  }
+}
+
+enum _SettingsGroup { app, server, advanced }
+
+/// One searchable settings row: a page location or a direct callback.
+class _SettingsEntry {
+  const _SettingsEntry({
+    required this.group,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.open,
+    this.onTap,
+  }) : assert(open != null || onTap != null);
+
+  final _SettingsGroup group;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final DetailLocation? open;
+  final VoidCallback? onTap;
+}
+
+class _SettingsSectionHeader extends StatelessWidget {
+  const _SettingsSectionHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 16, 8, 4),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge
+            ?.copyWith(color: Theme.of(context).colorScheme.primary),
       ),
     );
   }
@@ -166,25 +251,38 @@ class AccountsSettingsPage extends ConsumerWidget {
             ),
             const Divider(height: 1),
           ],
-          // Instance announcements belong to the account's server, not to the
-          // app: they are read from the instance the active account lives on,
-          // so they sit with the account rather than on the About page.
-          ListTile(
-            leading: const Icon(Icons.campaign_outlined),
-            title: Text(l10n.instanceAnnouncements),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push<void>(
-              MaterialPageRoute<void>(
-                builder: (_) => const AnnouncementsPage(),
-              ),
-            ),
-          ),
-          const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.person_add_alt),
             title: Text(l10n.addAccount),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => openDetail(context, const AddAccountLocation()),
+          ),
+          // These pages change this user on the server, so they belong to the
+          // account rather than to the app-wide settings list.
+          _SettingsSectionHeader(label: l10n.settingsGroupAccount),
+          _SettingsTile(
+            icon: Icons.person_outline,
+            title: l10n.editProfile,
+            subtitle: l10n.profile,
+            onTap: () => openDetail(context, const SettingsProfileLocation()),
+          ),
+          _SettingsTile(
+            icon: Icons.lock_outline,
+            title: l10n.privacy,
+            subtitle: l10n.mutedUsers,
+            onTap: () => openDetail(context, const SettingsPrivacyLocation()),
+          ),
+          _SettingsTile(
+            icon: Icons.mail_outline,
+            title: l10n.emailSettings,
+            subtitle: l10n.emailAddress,
+            onTap: () => openDetail(context, const SettingsEmailLocation()),
+          ),
+          _SettingsTile(
+            icon: Icons.shield_outlined,
+            title: l10n.security,
+            subtitle: l10n.twoFactor,
+            onTap: () => openDetail(context, const SettingsSecurityLocation()),
           ),
         ],
       ),

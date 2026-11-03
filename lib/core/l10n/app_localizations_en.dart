@@ -1278,4 +1278,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noScheduledPosts => 'No scheduled posts';
+
+  @override
+  String get settingsGroupAccount => 'Account';
+
+  @override
+  String get settingsGroupApp => 'App';
+
+  @override
+  String get settingsGroupServer => 'This server';
+
+  @override
+  String get settingsGroupAdvanced => 'Advanced';
+
+  @override
+  String get settingsSearchHint => 'Search settings';
+
+  @override
+  String get settingsAccountAndServer => 'Account and server';
+
+  @override
+  String get settingsServerSubtitle => 'Read from this instance';
 }

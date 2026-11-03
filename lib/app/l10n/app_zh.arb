@@ -532,5 +532,12 @@
   "noDrafts": "没有已保存的草稿",
   "draftsLoadFailed": "无法加载草稿",
   "scheduledPosts": "定时发布",
-  "noScheduledPosts": "没有定时发布"
+  "noScheduledPosts": "没有定时发布",
+  "settingsGroupAccount": "账号",
+  "settingsGroupApp": "应用",
+  "settingsGroupServer": "此服务器",
+  "settingsGroupAdvanced": "高级",
+  "settingsSearchHint": "搜索设置",
+  "settingsAccountAndServer": "账号与服务器",
+  "settingsServerSubtitle": "读取自此实例"
 }
