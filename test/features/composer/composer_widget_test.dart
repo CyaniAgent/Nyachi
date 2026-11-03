@@ -2,6 +2,7 @@
 
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
@@ -404,6 +405,55 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.text, 'hi @alice again');
+
+    // Drain the autosave debounce; a pending timer fails the teardown.
+    await tester.pump(const Duration(milliseconds: 600));
+  });
+
+  testWidgets('Enter does not accept or replace the completion token', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester);
+    final field = find.byType(TextField).first;
+    await tester.enterText(field, 'hi @ali');
+    await tester.pumpAndSettle();
+    expect(find.text('@alice'), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    final controller = tester.widget<TextField>(field).controller!;
+    // The token is untouched and the panel stays open: Enter is never
+    // intercepted, so the field's own multiline handling applies.
+    expect(controller.text, 'hi @ali');
+    expect(find.text('@alice'), findsOneWidget);
+
+    // Drain the autosave debounce; a pending timer fails the teardown.
+    await tester.pump(const Duration(milliseconds: 600));
+  });
+
+  testWidgets('Tab accepts the highlighted completion', (tester) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpComposer(tester);
+    final field = find.byType(TextField).first;
+    await tester.enterText(field, 'hi @ali');
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+
+    final controller = tester.widget<TextField>(field).controller!;
+    expect(controller.text, 'hi @alice ');
+    expect(find.byType(ListTile), findsNothing);
 
     // Drain the autosave debounce; a pending timer fails the teardown.
     await tester.pump(const Duration(milliseconds: 600));

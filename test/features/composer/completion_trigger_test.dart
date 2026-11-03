@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nyachi/features/composer/domain/completion_trigger.dart';
+import 'package:nyachi/features/composer/presentation/completion_panel.dart';
 
 void main() {
   group('triggerAt', () {
@@ -89,6 +91,96 @@ void main() {
       final applied = trigger.apply(text, ':blobcat:');
       expect(applied.text, ':blobcat: ');
       expect(applied.caret, 10);
+    });
+  });
+
+  group('handleCompletionKey', () {
+    KeyEvent key(LogicalKeyboardKey k) => KeyDownEvent(
+      logicalKey: k,
+      physicalKey: PhysicalKeyboardKey.keyA,
+      timeStamp: Duration.zero,
+    );
+
+    test('Enter and numpad Enter are never consumed', () {
+      bool accepted = false;
+      final consumed = handleCompletionKey(
+        event: key(LogicalKeyboardKey.enter),
+        entryCount: 3,
+        selectedIndex: 0,
+        onHighlight: (_) {},
+        onAccept: (_) => accepted = true,
+        onDismiss: () {},
+      );
+      expect(consumed, isFalse);
+      expect(accepted, isFalse);
+
+      final numpad = handleCompletionKey(
+        event: key(LogicalKeyboardKey.numpadEnter),
+        entryCount: 3,
+        selectedIndex: 0,
+        onHighlight: (_) {},
+        onAccept: (_) => accepted = true,
+        onDismiss: () {},
+      );
+      expect(numpad, isFalse);
+      expect(accepted, isFalse);
+    });
+
+    test('Tab accepts the highlighted entry', () {
+      var acceptedIndex = -1;
+      final consumed = handleCompletionKey(
+        event: key(LogicalKeyboardKey.tab),
+        entryCount: 3,
+        selectedIndex: 2,
+        onHighlight: (_) {},
+        onAccept: (index) => acceptedIndex = index,
+        onDismiss: () {},
+      );
+      expect(consumed, isTrue);
+      expect(acceptedIndex, 2);
+    });
+
+    test('Escape dismisses and arrows move the highlight', () {
+      var dismissed = false;
+      var highlighted = -1;
+      expect(
+        handleCompletionKey(
+          event: key(LogicalKeyboardKey.escape),
+          entryCount: 3,
+          selectedIndex: 0,
+          onHighlight: (_) {},
+          onAccept: (_) {},
+          onDismiss: () => dismissed = true,
+        ),
+        isTrue,
+      );
+      expect(dismissed, isTrue);
+      expect(
+        handleCompletionKey(
+          event: key(LogicalKeyboardKey.arrowDown),
+          entryCount: 3,
+          selectedIndex: 2,
+          onHighlight: (index) => highlighted = index,
+          onAccept: (_) {},
+          onDismiss: () {},
+        ),
+        isTrue,
+      );
+      expect(highlighted, 0);
+    });
+
+    test('returns false when the panel has no entries', () {
+      expect(
+        handleCompletionKey(
+          event: key(LogicalKeyboardKey.tab),
+          entryCount: 0,
+          selectedIndex: 0,
+          onHighlight: (_) {},
+          onAccept: (_) {},
+          onDismiss: () {},
+        ),
+        isFalse,
+      );
     });
   });
 }

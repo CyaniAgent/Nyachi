@@ -187,7 +187,8 @@ class _Leading extends StatelessWidget {
 /// Translates a key press into a panel action.
 ///
 /// Returns true when the key was consumed so the host text field stops
-/// handling it: arrows move the highlight, Enter/Tab accept, Escape dismisses.
+/// handling it: arrows move the highlight, Tab accepts, Escape dismisses.
+/// Enter is never consumed so the text field inserts a newline as usual.
 bool handleCompletionKey({
   required KeyEvent event,
   required int entryCount,
@@ -207,9 +208,7 @@ bool handleCompletionKey({
     onHighlight((selectedIndex - 1 + entryCount) % entryCount);
     return true;
   }
-  if (key == LogicalKeyboardKey.enter ||
-      key == LogicalKeyboardKey.numpadEnter ||
-      key == LogicalKeyboardKey.tab) {
+  if (key == LogicalKeyboardKey.tab) {
     onAccept(selectedIndex % entryCount);
     return true;
   }

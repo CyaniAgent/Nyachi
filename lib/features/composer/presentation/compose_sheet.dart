@@ -252,8 +252,9 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
                         ),
                       ),
                     Focus(
-                      // The panel must win Enter/arrows before the field acts
-                      // on them, so keys pass through here first.
+                      // Arrows and Tab go to the panel before the field acts
+                      // on them; Enter is never consumed, so it inserts a
+                      // newline in the field as usual.
                       onKeyEvent: (_, event) {
                         final trigger = _trigger;
                         if (trigger == null) return KeyEventResult.ignored;
