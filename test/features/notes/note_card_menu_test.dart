@@ -9,6 +9,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
+import 'package:nyachi/core/ui/network_image.dart';
 import 'package:nyachi/features/notes/application/note_providers.dart';
 import 'package:nyachi/features/notes/domain/note_repository.dart';
 import 'package:nyachi/features/notes/presentation/note_card.dart';
@@ -151,17 +152,47 @@ void main() {
     verify(() => repository.favorite('n1')).called(1);
   });
 
-  testWidgets('a reacted note turns the button into remove-reaction', (
+  testWidgets('a reacted note shows the followed reaction and removes it', (
     tester,
   ) async {
     when(() => repository.unreact('n1'))
         .thenAnswer((_) async => makeNote('n1'));
+    // No reaction chip in the wrap: the only instance is the action button.
     final note = makeNote('n1').copyWith(myReaction: '🎉');
 
     await pumpCard(tester, note: note, account: account());
-    expect(find.byIcon(Icons.heart_broken_outlined), findsOneWidget);
+    // The button renders the user's actual reaction - including one followed
+    // from another user - never a generic heart icon.
+    expect(find.text('🎉'), findsOneWidget);
+    expect(find.byIcon(Icons.heart_broken_outlined), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.heart_broken_outlined));
+    await tester.tap(find.text('🎉'));
+    await tester.pump();
+    await tester.pump();
+
+    verify(() => repository.unreact('n1')).called(1);
+  });
+
+  testWidgets('a custom-emoji own reaction renders its image', (tester) async {
+    when(() => repository.unreact('n1'))
+        .thenAnswer((_) async => makeNote('n1'));
+    // No reaction chip, so the button is the only renderer of the emoji.
+    final note = makeNote('n1').copyWith(
+      myReaction: ':muri@misskey.io:',
+      reactionEmojis: const {'muri@misskey.io': 'https://e.test/muri.png'},
+    );
+
+    await pumpCard(tester, note: note, account: account());
+    final image = find.byWidgetPredicate(
+      (w) => w is NyachiImage && w.url == 'https://e.test/muri.png',
+    );
+    expect(
+      image,
+      findsOneWidget,
+      reason: 'the own-reaction button must render the real emoji image',
+    );
+
+    await tester.tap(image);
     await tester.pump();
     await tester.pump();
 

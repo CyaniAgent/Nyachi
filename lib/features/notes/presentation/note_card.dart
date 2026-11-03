@@ -16,6 +16,7 @@ import '../../composer/presentation/compose_sheet.dart';
 import '../application/note_detail_controller.dart';
 import '../application/note_providers.dart';
 import 'reaction_chip.dart';
+import 'emoji_text.dart';
 import 'reaction_picker.dart';
 import 'note_content.dart';
 import 'note_media.dart';
@@ -202,7 +203,9 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                       _NoteAction(
                         icon: note.myReaction == null
                             ? Icons.add_reaction_outlined
-                            : Icons.heart_broken_outlined,
+                            : null,
+                        emoji: note.myReaction,
+                        note: note,
                         value: note.reactionCount,
                         label: note.myReaction == null
                             ? context.l10n.react
@@ -558,14 +561,25 @@ class _NoteCardState extends ConsumerState<NoteCard> {
 
 class _NoteAction extends StatelessWidget {
   const _NoteAction({
-    required this.icon,
+    this.icon,
+    this.emoji,
+    this.note,
     required this.value,
     required this.label,
     required this.onTap,
     this.onLongPress,
-  });
+  }) : assert(
+         icon != null || emoji != null,
+         'a note action shows either an icon or a reaction',
+       );
 
-  final IconData icon;
+  final IconData? icon;
+
+  /// The user's own reaction, rendered as itself. A heart icon would claim a
+  /// reaction the user never picked, so the actual emoji is shown instead -
+  /// unicode as text, custom emoji as its image.
+  final String? emoji;
+  final Note? note;
   final num value;
   final String label;
   final VoidCallback? onTap;
@@ -584,7 +598,10 @@ class _NoteAction extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18),
+              if (emoji != null)
+                NoteEmojiText(emoji: emoji!, note: note!, size: 18)
+              else
+                Icon(icon, size: 18),
               if (value > 0) ...[
                 const SizedBox(width: 4),
                 Text(compactCount(context, value)),
