@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:fake_async/fake_async.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/features/notifications/application/realtime_service.dart';
@@ -209,6 +210,51 @@ void main() {
       expect(expired, 1);
       expect(service.status.value, RealtimeStatus.offline);
       // The backoff timer never gets scheduled, so no second client appears.
+      async.elapse(const Duration(minutes: 1));
+      expect(created, 1);
+    });
+  });
+
+  test('retainConnectionOnPause keeps the socket in the background', () {
+    fakeAsync((async) {
+      late _FakeStreamingClient client;
+      var created = 0;
+      final events = StreamController<JsonMap>.broadcast();
+      final service = RealtimeService(
+        baseUri: Uri.parse('https://misskey.test'),
+        tokenProvider: () async => 'token',
+        retainConnectionOnPause: () => true,
+        clientFactory: ({required baseUri, required tokenProvider}) {
+          created++;
+          return client = _FakeStreamingClient();
+        },
+      );
+      addTearDown(service.dispose);
+
+      service.join(
+        'main',
+        RealtimeSubscription<JsonMap>(
+          channel: const MainChannel(),
+          eventType: 'notification',
+          events: events,
+        ),
+      );
+      service.start();
+      async.elapse(const Duration(milliseconds: 10));
+      async.flushMicrotasks();
+      client.eventsController.add(const MisskeyConnected(subscriptionId: 's1'));
+      async.flushMicrotasks();
+      expect(service.status.value, RealtimeStatus.live);
+
+      // Backgrounding must not tear the socket down: the Android foreground
+      // service holds the process and background notifications need the
+      // stream as their source.
+      service.didChangeAppLifecycleState(AppLifecycleState.paused);
+      expect(client.closeCount, 0);
+      expect(service.status.value, RealtimeStatus.live);
+
+      // Returning to the foreground must not open a second client.
+      service.didChangeAppLifecycleState(AppLifecycleState.resumed);
       async.elapse(const Duration(minutes: 1));
       expect(created, 1);
     });

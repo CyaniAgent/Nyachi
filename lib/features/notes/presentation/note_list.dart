@@ -132,7 +132,8 @@ class NoteList extends ConsumerWidget {
         padding: EdgeInsets.fromLTRB(leading, 4, trailing, 24),
         itemCount:
             state.items.length + bannerCount + footer + (showEmpty ? 1 : 0),
-        separatorBuilder: (context, index) => header != null && index == 0
+        separatorBuilder: (context, index) =>
+            header != null && !headerFullBleed && index == 0
             ? const SizedBox.shrink()
             : const Divider(height: 1),
         itemBuilder: (context, index) {

@@ -215,16 +215,21 @@ class ResidencyService {
   /// Raises a system notification for an event that arrived while the app was
   /// not in front of the user.
   ///
+  /// [eventId] is the Misskey notification id: deriving the plugin id from it
+  /// keeps same-title events (three reactions from one user) distinct instead
+  /// of overwriting each other.
+  ///
   /// Best-effort like everything else here: a refused permission or a platform
   /// without a notification channel must not interrupt the realtime stream.
   Future<void> showNotification({
+    required String eventId,
     required String title,
     required String body,
   }) async {
     if (!notificationsSupported || !_initialized) return;
     try {
       await _notifications.show(
-        id: title.hashCode & 0x7fffffff,
+        id: eventId.hashCode & 0x7fffffff,
         title: title,
         body: body,
         notificationDetails: const NotificationDetails(android: _channel),
@@ -256,14 +261,21 @@ class ResidencyService {
         notificationTitle: 'Nyachi',
         notificationText: 'Connected in the background',
       );
+      _androidServiceRunning = true;
     } catch (error) {
       debugPrint('Nyachi foreground service failed: $error');
     }
   }
 
+  /// Whether the Android foreground service is running; drives the realtime
+  /// socket's keep-alive-in-background decision.
+  bool get androidServiceRunning => _androidServiceRunning;
+  var _androidServiceRunning = false;
+
   Future<void> stopAndroidService() async {
     if (!Platform.isAndroid) return;
     await FlutterForegroundTask.stopService();
+    _androidServiceRunning = false;
   }
 
   Future<void> dispose() async {

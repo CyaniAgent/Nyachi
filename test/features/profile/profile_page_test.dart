@@ -17,6 +17,8 @@ import 'package:nyachi/features/profile/application/profile_providers.dart';
 import 'package:nyachi/features/profile/presentation/profile_pages.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/fixtures.dart';
+
 class _FakeSessionController extends SessionController {
   _FakeSessionController(this.account);
 
@@ -28,9 +30,13 @@ class _FakeSessionController extends SessionController {
 }
 
 class _FakeFeedRepository implements NoteFeedRepository {
+  _FakeFeedRepository([this.notes = const []]);
+
+  final List<Note> notes;
+
   @override
   Future<NotePage> fetchPage(NoteFeedSource source, {String? untilId}) async =>
-      const NotePage(items: [], hasMore: false);
+      NotePage(items: notes, hasMore: false);
 
   @override
   Future<List<Note>> readCache(NoteFeedSource source) async => const [];
@@ -91,6 +97,7 @@ UserDetailedNotMe _user({
 Future<void> _pumpPage(
   WidgetTester tester, {
   required UserDetailedNotMe user,
+  List<Note> notes = const [],
 }) async {
   final account = LocalAccount(
     id: 'account',
@@ -110,7 +117,7 @@ Future<void> _pumpPage(
       userProfileProvider('u-target')
           .overrideWith((ref) => Future<UserDetailed?>.value(user)),
       noteFeedRepositoryProvider.overrideWith(
-        (ref, source) => _FakeFeedRepository(),
+        (ref, source) => _FakeFeedRepository(notes),
       ),
     ],
   );
@@ -220,4 +227,41 @@ void main() {
       expect(avatar.size, kProfileAvatarSize);
     },
   );
+
+  testWidgets('a full-bleed header keeps dividers between the notes', (
+    tester,
+  ) async {
+    final note = makeNote(
+      'n1',
+      text: 'first note body zzz1',
+    ).copyWith(user: makeUser('alice', name: 'Alice'));
+    final second = makeNote(
+      'n2',
+      text: 'second note body zzz2',
+    ).copyWith(user: makeUser('alice', name: 'Alice'));
+
+    await _pumpPage(
+      tester,
+      user: _user(bannerUrl: 'https://example.test/banner.png'),
+      notes: [note, second],
+    );
+
+    // The header lives above the list in the full-bleed layout, so the
+    // separator between the first two notes is a real divider, not the
+    // suppressed header separator. (The header itself ends with a divider
+    // of its own, so count only the one between the two notes.)
+    final firstRect = tester.getRect(find.text('first note body zzz1'));
+    final secondRect = tester.getRect(find.text('second note body zzz2'));
+    final dividersBetween = find
+        .byType(Divider)
+        .evaluate()
+        .where((element) {
+          final rect = tester.getRect(find.byWidget(element.widget));
+          return rect.top >= firstRect.bottom && rect.bottom <= secondRect.top;
+        })
+        .length;
+    expect(dividersBetween, 1);
+    expect(find.text('first note body zzz1'), findsOneWidget);
+    expect(find.text('second note body zzz2'), findsOneWidget);
+  });
 }

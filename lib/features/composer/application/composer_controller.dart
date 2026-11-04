@@ -261,7 +261,14 @@ class ComposerController extends _$ComposerController {
   Future<void> _restoreDraft() async {
     final store = _store;
     if (store == null) return;
-    final drafts = await store.list();
+    final List<ComposerDraft> drafts;
+    try {
+      drafts = await store.list();
+    } on MisskeyAuthenticationException {
+      // An expired session must not surface as an unhandled error in this
+      // fire-and-forget microtask; the realtime layer surfaces the expiry.
+      return;
+    }
     if (_disposed || drafts.isEmpty) return;
     // The listing is async: the user may have started typing while it was in
     // flight. Their content wins - the restore only fills an untouched
@@ -496,7 +503,15 @@ class ComposerController extends _$ComposerController {
           : _encodeStringList(current.visibleUserIds),
       scheduledAt: current.scheduledAt,
     );
-    final id = await store.save(draft);
+    String? id;
+    try {
+      id = await store.save(draft);
+    } on MisskeyAuthenticationException {
+      // The session expired mid-edit: keep the content in the local fallback
+      // so nothing typed is lost. The realtime layer surfaces the expiry.
+      if (!DraftStore.hasSubstantiveContent(draft)) return null;
+      id = await store.saveLocal(draft);
+    }
     if (!_disposed) {
       _lastState = state.copyWith(draftId: id);
       state = _lastState!;
@@ -535,7 +550,13 @@ class ComposerController extends _$ComposerController {
   /// by the avatar panel's rows.
   Future<void> deleteStoredDraft(String? id) async {
     if (id == null) return;
-    await _store?.delete(id);
+    try {
+      await _store?.delete(id);
+    } on MisskeyAuthenticationException {
+      // The expiry is surfaced by the realtime layer; a failed server-side
+      // delete leaves the server row for the next session rather than
+      // crashing the caller.
+    }
   }
 
   Future<bool> post() async {

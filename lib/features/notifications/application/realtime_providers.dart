@@ -3,6 +3,10 @@
 import 'dart:async';
 import 'dart:ui' show Locale, PlatformDispatcher;
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
+import 'package:flutter/widgets.dart'
+    show AppLifecycleState, WidgetsBinding, basicLocaleListResolution;
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -39,6 +43,12 @@ RealtimeService? realtimeService(Ref ref) {
     tokenProvider: () => tokens.read(active.id),
     onSessionExpired: () =>
         ref.read(sessionControllerProvider.notifier).expireActiveAccount(),
+    // While the Android foreground service is running, the socket must stay
+    // open in the background or system notifications have no source.
+    retainConnectionOnPause: () =>
+        defaultTargetPlatform == TargetPlatform.android
+        ? ref.read(residencyProvider).androidServiceRunning
+        : false,
   )..start();
 
   final handle = service.join(
@@ -74,15 +84,31 @@ RealtimeService? realtimeService(Ref ref) {
 /// The text is built with the app's configured language rather than a widget
 /// context, because a notification can arrive while the user is elsewhere or
 /// while no screen is mounted at all.
+///
+/// Skipped while the app is in the foreground ([AppLifecycleState.resumed]):
+/// the in-app list is on screen and a toast would only duplicate it. The tray
+/// hidden state and Android background both announce.
 Future<void> _announce(Ref ref, Notification notification) async {
+  if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+    return;
+  }
   final settings = ref.read(settingsControllerProvider);
-  final locale = settings.localeCode == 'system'
+  final requested = settings.localeCode == 'system'
       ? PlatformDispatcher.instance.locale
       : Locale(settings.localeCode);
+  // The direct lookup throws for languages the app does not ship; resolve the
+  // request against the supported list the same way MaterialApp does.
+  final locale = basicLocaleListResolution(AppLocalizations.supportedLocales, [
+    requested,
+  ]);
   final copy = notificationCopy(lookupAppLocalizations(locale), notification);
   await ref
       .read(residencyProvider)
-      .showNotification(title: copy.title, body: copy.body);
+      .showNotification(
+        eventId: notification.id,
+        title: copy.title,
+        body: copy.body,
+      );
 }
 
 /// Live messages for one chat thread.

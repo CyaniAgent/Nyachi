@@ -182,4 +182,140 @@ void main() {
     expect(drafts.first.text, 'draft 54');
     expect(drafts.any((draft) => draft.text == 'draft 4'), isFalse);
   });
+
+  test(
+    'a failed server update falls back locally and recovers in place',
+    () async {
+      final s = store();
+      // First save lands on the server.
+      when(
+        () => notes.draftsCreate(
+          visibility: any(named: 'visibility'),
+          visibleUserIds: any(named: 'visibleUserIds'),
+          cw: any(named: 'cw'),
+          localOnly: any(named: 'localOnly'),
+          reactionAcceptance: any(named: 'reactionAcceptance'),
+          replyId: any(named: 'replyId'),
+          text: any(named: 'text'),
+          fileIds: any(named: 'fileIds'),
+          poll: any(named: 'poll'),
+          scheduledAt: any(named: 'scheduledAt'),
+          isActuallyScheduled: any(named: 'isActuallyScheduled'),
+        ),
+      ).thenAnswer(
+        (_) async => NotesDraftsCreateResponse(
+          createdDraft: _serverDraft('server-1', 'hello'),
+        ),
+      );
+      final id = await s.save(_draft('hello'));
+      expect(id, 'server-1');
+
+      // A transient network failure during the next autosave.
+      var updateCalls = 0;
+      when(
+        () => notes.draftsUpdate(
+          draftId: any(named: 'draftId'),
+          visibility: any(named: 'visibility'),
+          visibleUserIds: any(named: 'visibleUserIds'),
+          cw: any(named: 'cw'),
+          localOnly: any(named: 'localOnly'),
+          reactionAcceptance: any(named: 'reactionAcceptance'),
+          replyId: any(named: 'replyId'),
+          text: any(named: 'text'),
+          fileIds: any(named: 'fileIds'),
+          poll: any(named: 'poll'),
+          scheduledAt: any(named: 'scheduledAt'),
+          isActuallyScheduled: any(named: 'isActuallyScheduled'),
+        ),
+      ).thenAnswer((_) async {
+        updateCalls++;
+        if (updateCalls == 1) throw Exception('timeout');
+        return NotesDraftsUpdateResponse(
+          updatedDraft: _serverDraft('server-1', 'hello v2'),
+        );
+      });
+
+      final fallbackId = await s.save(
+        _draft('hello v2').copyWith(id: id, accountId: 'account'),
+      );
+      // The fallback keeps the server identity under the local prefix
+      // instead of minting a fresh UUID that would fork the draft.
+      expect(fallbackId, 'local:server-1');
+
+      // Recovery updates the same server draft and drops the shadow row.
+      final recovered = await s.save(
+        _draft('hello v2').copyWith(id: fallbackId, accountId: 'account'),
+      );
+      expect(recovered, 'server-1');
+      expect(updateCalls, 2);
+      expect(await database.localDraftsDao.list('account'), isEmpty);
+
+      // The panel shows exactly one row for the draft.
+      when(
+        () => notes.draftsList(
+          limit: any(named: 'limit'),
+          sinceId: any(named: 'sinceId'),
+          untilId: any(named: 'untilId'),
+          sinceDate: any(named: 'sinceDate'),
+          untilDate: any(named: 'untilDate'),
+          scheduled: any(named: 'scheduled'),
+        ),
+      ).thenAnswer((_) async => [_serverDraft('server-1', 'hello v2')]);
+      final drafts = await s.list();
+      expect(drafts.single.id, 'server-1');
+    },
+  );
+
+  test('a shadow row is deduplicated against its server draft', () async {
+    // A leftover shadow row from an older fallback, plus the live server row.
+    await database.localDraftsDao.save(
+      _draft('hello v2').copyWith(
+        id: 'local:server-1',
+        accountId: 'account',
+        fileIds: const [],
+      ),
+    );
+    when(
+      () => notes.draftsList(
+        limit: any(named: 'limit'),
+        sinceId: any(named: 'sinceId'),
+        untilId: any(named: 'untilId'),
+        sinceDate: any(named: 'sinceDate'),
+        untilDate: any(named: 'untilDate'),
+        scheduled: any(named: 'scheduled'),
+      ),
+    ).thenAnswer((_) async => [_serverDraft('server-1', 'hello v2')]);
+
+    final drafts = await store().list();
+
+    expect(drafts, hasLength(1));
+    expect(drafts.single.id, 'server-1');
+  });
+
+  test('an expired session falls back to the local table', () async {
+    when(
+      () => notes.draftsCreate(
+        visibility: any(named: 'visibility'),
+        visibleUserIds: any(named: 'visibleUserIds'),
+        cw: any(named: 'cw'),
+        localOnly: any(named: 'localOnly'),
+        reactionAcceptance: any(named: 'reactionAcceptance'),
+        replyId: any(named: 'replyId'),
+        text: any(named: 'text'),
+        fileIds: any(named: 'fileIds'),
+        poll: any(named: 'poll'),
+        scheduledAt: any(named: 'scheduledAt'),
+        isActuallyScheduled: any(named: 'isActuallyScheduled'),
+      ),
+    ).thenThrow(MisskeyAuthenticationException('expired', statusCode: 401));
+
+    final s = store();
+    final id = await s.save(_draft('typed before expiry'));
+
+    // Content survives in the local table instead of escaping as an
+    // unhandled error.
+    expect(id, startsWith('local:'));
+    final stored = await database.localDraftsDao.list('account');
+    expect(stored.single.text, 'typed before expiry');
+  });
 }

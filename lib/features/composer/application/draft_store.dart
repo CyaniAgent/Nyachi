@@ -52,8 +52,21 @@ class DraftStore {
         limit: 100,
         scheduled: false,
       );
-      final drafts = [for (final draft in server) _fromServer(draft), ...local]
-        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      final drafts = [for (final draft in server) _fromServer(draft)];
+      final serverIds = {
+        for (final draft in drafts)
+          if (draft.id != null) draft.id!,
+      };
+      // A local row shadowing a server draft is the fallback copy of that
+      // server row; the server copy wins and the shadow is not listed.
+      drafts.addAll(
+        local.where(
+          (draft) =>
+              draft.id == null ||
+              !serverIds.contains(_shadowedServerId(draft.id!)),
+        ),
+      );
+      drafts.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       return drafts;
     } catch (error) {
       if (error is MisskeyAuthenticationException) rethrow;
@@ -92,9 +105,9 @@ class DraftStore {
       try {
         return await _saveServer(draft);
       } catch (error) {
-        if (error is MisskeyAuthenticationException) rethrow;
-        // A transient failure must not lose the content: fall back to the
-        // local table (the server copy, if any, stays as an older draft).
+        // Auth failures included: an expired session must not lose typed
+        // content or escape as an unhandled error from the autosave paths.
+        // The realtime layer surfaces the expiry.
         logSilentFallback('draft_store.save.server', error);
       }
     }
@@ -104,6 +117,16 @@ class DraftStore {
   Future<void> delete(String id) async {
     if (id.startsWith(localPrefix)) {
       await dao.deleteById(id);
+      // A shadowed server row is deleted from the server too: the local
+      // fallback copy going away must not leave the older server copy behind.
+      final remainder = _shadowedServerId(id);
+      if (remainder == null || !draftsSupported) return;
+      try {
+        await client.notes.draftsDelete(draftId: remainder);
+      } catch (error) {
+        if (error is MisskeyAuthenticationException) rethrow;
+        logSilentFallback('draft_store.delete', error);
+      }
       return;
     }
     if (!draftsSupported) return;
@@ -115,16 +138,38 @@ class DraftStore {
     }
   }
 
+  /// The server id hidden in a shadow row (`local:<serverId>`), or null when
+  /// [localId] wraps a genuinely local UUID with no server counterpart.
+  static String? _shadowedServerId(String localId) {
+    final remainder = localId.substring(localPrefix.length);
+    return _localUuidPattern.hasMatch(remainder) ? null : remainder;
+  }
+
+  static final _localUuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-'
+    r'[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
+  );
+
   Future<String> _saveServer(ComposerDraft draft) async {
     final choices = _pollChoices(draft);
     final multiple = draft.pollMultiple ? true : null;
     final expiresAt = draft.pollExpiresAt?.millisecondsSinceEpoch;
     final scheduledAt = draft.scheduledAt?.millisecondsSinceEpoch;
     final isActuallyScheduled = draft.scheduledAt != null;
-    final id = draft.id;
-    if (id != null && !id.startsWith(localPrefix)) {
+    final storedId = draft.id;
+    // A local row may shadow a server draft (a fallback save kept the server
+    // id under [localPrefix]); recovering updates that row instead of
+    // creating a fork, and drops the shadow afterwards.
+    final shadowedServerId =
+        storedId != null && storedId.startsWith(localPrefix)
+        ? _shadowedServerId(storedId)
+        : null;
+    final updateTarget = storedId != null && !storedId.startsWith(localPrefix)
+        ? storedId
+        : shadowedServerId;
+    if (updateTarget != null) {
       final response = await client.notes.draftsUpdate(
-        draftId: id,
+        draftId: updateTarget,
         visibility: _updateVisibility(draft.visibility),
         visibleUserIds: _visibleUsers(draft),
         cw: draft.cw,
@@ -143,6 +188,9 @@ class DraftStore {
         scheduledAt: scheduledAt,
         isActuallyScheduled: isActuallyScheduled,
       );
+      if (storedId != null && updateTarget != storedId) {
+        await dao.deleteById(storedId);
+      }
       return response.updatedDraft.id;
     }
     final response = await client.notes.draftsCreate(
@@ -167,11 +215,24 @@ class DraftStore {
     return response.createdDraft.id;
   }
 
+  /// Persists [draft] to the local fallback table regardless of the server's
+  /// availability - the content-preserving escape hatch when the session has
+  /// expired and the server copies are unreachable.
+  Future<String> saveLocal(ComposerDraft draft) => _saveLocal(draft);
+
   Future<String> _saveLocal(ComposerDraft draft) async {
     final existing = draft.id;
-    final id = existing != null && existing.startsWith(localPrefix)
-        ? existing
-        : '$localPrefix${const Uuid().v4()}';
+    final String id;
+    if (existing != null && existing.startsWith(localPrefix)) {
+      id = existing;
+    } else if (existing != null) {
+      // A server-backed draft whose save just failed: keep its id under the
+      // local prefix so the next successful save updates that server row in
+      // place instead of forking a second copy of the draft.
+      id = '$localPrefix$existing';
+    } else {
+      id = '$localPrefix${const Uuid().v4()}';
+    }
     // Local rows cannot carry attachments; see the class documentation.
     await dao.save(draft.copyWith(id: id, fileIds: const []));
     await dao.prune(accountId, keep: 50);

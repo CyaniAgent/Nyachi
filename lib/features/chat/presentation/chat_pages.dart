@@ -245,6 +245,14 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
   var _lastNewestId = '';
   var _autoLoading = false;
 
+  /// The reversed list's scroll extent at the end of the last frame; an
+  /// arrival at the offset-0 edge grows it by exactly one bubble.
+  double? _lastMaxScrollExtent;
+
+  /// Set in build when a new message id was observed; consumed by the
+  /// matching post-frame callback.
+  var _arrivalPending = false;
+
   @override
   void initState() {
     super.initState();
@@ -275,19 +283,29 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
     ref.read(chatThreadControllerProvider(widget.target).notifier).loadOlder();
   }
 
-  /// Pins the transcript to the newest message when one arrives and the user
-  /// is already near the bottom (offset 0 in the reversed list); a reader
-  /// scrolled up keeps their position.
-  void _pinToNewestIfNear() {
+  /// Stabilizes the transcript when a message arrives: near the bottom
+  /// (offset 0 in the reversed list) it pins to the newest; a reader scrolled
+  /// up keeps their position by compensating for the inserted bubble's
+  /// height — without this, the content under the reader slides by one
+  /// bubble per arrival.
+  void _stabilizeAfterArrival() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scroll.hasClients) return;
       final position = _scroll.position;
-      if (position.pixels > 240) return;
-      _scroll.animateTo(
-        0,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-      );
+      final previousMax = _lastMaxScrollExtent;
+      _lastMaxScrollExtent = position.maxScrollExtent;
+      if (!_arrivalPending) return;
+      _arrivalPending = false;
+      if (position.pixels <= 240) {
+        _scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+        return;
+      }
+      final inserted = position.maxScrollExtent - (previousMax ?? 0);
+      if (inserted > 0) position.jumpTo(position.pixels + inserted);
     });
   }
 
@@ -303,12 +321,14 @@ class _ChatThreadPageState extends ConsumerState<ChatThreadPage> {
     // The transcript renders reversed (offset 0 = newest message). Older
     // messages prepend at the far end and never move the viewport; only a
     // changed newest message id means a new arrival, which pins the bottom
-    // when the user is already near it so reading history is uninterrupted.
+    // when the user is already near it and otherwise compensates so reading
+    // history is uninterrupted.
     final newestId = state.items.isEmpty ? '' : state.items.last.id;
     if (newestId != _lastNewestId && _lastNewestId.isNotEmpty) {
-      _pinToNewestIfNear();
+      _arrivalPending = true;
     }
     _lastNewestId = newestId;
+    _stabilizeAfterArrival();
     if (!state.loadingOlder) _autoLoading = false;
     final centered = ProviderScope.containerOf(
       context,

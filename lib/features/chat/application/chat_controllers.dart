@@ -167,8 +167,17 @@ class ChatThreadController extends _$ChatThreadController {
     try {
       final page = await _repository.thread(_target);
       if (_disposed) return;
+      // Merging by id instead of replacing keeps pages the reader has already
+      // loaded: sending from mid-history must not teleport the transcript or
+      // drop the older messages.
+      final byId = {for (final item in state.items) item.id: item};
+      for (final item in page.items) {
+        byId[item.id] = item;
+      }
+      final merged = byId.values.toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
       state = state.copyWith(
-        items: page.items,
+        items: merged,
         loading: false,
         hasMore: page.hasMore,
         usingCache: false,

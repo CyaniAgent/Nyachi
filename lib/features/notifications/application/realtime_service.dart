@@ -47,6 +47,7 @@ class RealtimeService with WidgetsBindingObserver {
     required this.tokenProvider,
     this.onSessionExpired,
     this.clientFactory,
+    this.retainConnectionOnPause,
   });
 
   final Uri baseUri;
@@ -55,6 +56,12 @@ class RealtimeService with WidgetsBindingObserver {
   /// Invoked when the stream fails with an authentication error.
   final void Function()? onSessionExpired;
   final RealtimeClientFactory? clientFactory;
+
+  /// When it returns true, the [AppLifecycleState.paused] close is skipped and
+  /// the socket keeps running in the background - the Android foreground
+  /// service holds the process, so background notifications stay deliverable.
+  /// Null or false keeps the default pause-when-backgrounded discipline.
+  final bool Function()? retainConnectionOnPause;
 
   /// Channels joined on the current connection, keyed by a caller-chosen id so
   /// a late joiner can be added and removed while the socket stays open.
@@ -231,6 +238,9 @@ class RealtimeService with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
+      // The Android foreground service holds the process and the notification
+      // path needs this socket; closing here would defeat it.
+      if (retainConnectionOnPause?.call() == true) return;
       _foreground = false;
       _reconnectTimer?.cancel();
       unawaited(_closeConnection());
@@ -238,6 +248,9 @@ class RealtimeService with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       if (_disposed || _connecting || _closing) return;
       _foreground = true;
+      // A retained background connection is still live; only reconnect when
+      // the pause actually closed the socket.
+      if (_client != null) return;
       _attempt = 0;
       unawaited(_connect());
     }
