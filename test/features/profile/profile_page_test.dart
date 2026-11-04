@@ -252,14 +252,10 @@ void main() {
     // of its own, so count only the one between the two notes.)
     final firstRect = tester.getRect(find.text('first note body zzz1'));
     final secondRect = tester.getRect(find.text('second note body zzz2'));
-    final dividersBetween = find
-        .byType(Divider)
-        .evaluate()
-        .where((element) {
-          final rect = tester.getRect(find.byWidget(element.widget));
-          return rect.top >= firstRect.bottom && rect.bottom <= secondRect.top;
-        })
-        .length;
+    final dividersBetween = find.byType(Divider).evaluate().where((element) {
+      final rect = tester.getRect(find.byWidget(element.widget));
+      return rect.top >= firstRect.bottom && rect.bottom <= secondRect.top;
+    }).length;
     expect(dividersBetween, 1);
     expect(find.text('first note body zzz1'), findsOneWidget);
     expect(find.text('second note body zzz2'), findsOneWidget);

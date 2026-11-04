@@ -269,11 +269,9 @@ void main() {
   test('a shadow row is deduplicated against its server draft', () async {
     // A leftover shadow row from an older fallback, plus the live server row.
     await database.localDraftsDao.save(
-      _draft('hello v2').copyWith(
-        id: 'local:server-1',
-        accountId: 'account',
-        fileIds: const [],
-      ),
+      _draft(
+        'hello v2',
+      ).copyWith(id: 'local:server-1', accountId: 'account', fileIds: const []),
     );
     when(
       () => notes.draftsList(
