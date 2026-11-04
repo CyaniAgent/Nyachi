@@ -3,6 +3,51 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
+## [2.1.0-beta.3] - 2026-11-04
+
+### Codename
+
+Kumo
+
+Fixes on top of beta.2, all from hands-on use of the previous build.
+
+### Added
+
+- **System notifications from the realtime stream.** A notification that
+  arrives while the app is in the background now raises a Windows, Linux or
+  Android system notification, worded in the app's language. Tapping it brings
+  the window forward. Android's foreground service, which keeps the connection
+  alive, is now actually started instead of being left unstarted.
+- **Settings search and grouping.** The settings list is grouped by owner
+  (this server, this app, advanced) and the search field jumps straight to any
+  page.
+
+### Changed
+
+- **Settings now open from the account.** The top of settings is your account:
+  it leads to the account hub, which now also holds the profile, privacy, email
+  and security pages — everything that changes you on the server. They are no
+  longer separate top-level entries.
+- **Completions accept with Tab only.** Enter now always inserts a newline, so
+  typing a colon can never silently replace text with an emoji.
+
+### Fixed
+
+- **Profile banners and avatars fill their containers.** The banner spans the
+  full window instead of shrinking to the content column, keeps a readable
+  height on narrow windows, and the avatar image fills its circle. Applies to
+  both your own profile and other users'.
+- **The reaction button shows the reaction you followed.** Reacting to a note —
+  including by following someone else's reaction — no longer replaces the
+  emoji with a generic heart icon.
+- **Settings sub-pages open again.** Every settings destination is registered
+  with the router, so no entry lands on a not-found page.
+- **The emoji catalogue reports failures** instead of collapsing to the
+  built-in set, with a retry action.
+- **Remote custom emoji resolve in the reaction picker** through the note's
+  emoji map.
+- **Tab switching animates** on both narrow and wide layouts.
+
 ## [2.1.0-beta.2] - 2026-11-03
 
 ### Codename
