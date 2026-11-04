@@ -3,6 +3,39 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
+## [2.1.0-beta.4] - 2026-11-04
+
+### Codename
+
+Kumo
+
+A corrective release on top of beta.3: two review passes over the new code
+found ten real defects, all fixed here. beta.3's Android background
+notifications were effectively dead (the foreground service never started),
+which is the main reason to prefer this build.
+
+### Fixed
+
+- **Android background notifications work.** The foreground service never
+  actually started: the manifest lacked the plugin's `<service>` declaration.
+  The realtime socket also stayed open in the background now (it used to be
+  torn down on pause, leaving notifications without a source), and returning
+  to the foreground no longer opens a second connection.
+- **System notifications reach everyone and behave.** Devices set to a
+  language the app does not ship no longer kill every notification with an
+  error; notifications are skipped while the app is in the foreground instead
+  of duplicating the in-app list; same-title events no longer overwrite each
+  other in the system shade.
+- **Drafts no longer fork.** A transient failure while saving to the server
+  used to split one logical draft into permanently duplicated rows; the
+  fallback copy now keeps the server identity, recovery updates in place, and
+  the panel dedupes leftovers. An expired session on the autosave paths
+  preserves typed content in the local table instead of losing it.
+- **The chat transcript stays still.** A message arriving while you read
+  history no longer slides the text under you, and sending from mid-history
+  keeps the loaded pages instead of teleporting to the top.
+- **The profile header keeps the divider between the first two notes.**
+
 ## [2.1.0-beta.3] - 2026-11-04
 
 ### Codename
