@@ -32,8 +32,16 @@ class _FakeRepository implements NotificationRepository {
   var writes = 0;
   var marksRead = 0;
 
+  List<AccountNotificationsRequestIncludeTypesItem>? requestedTypes;
+
   @override
-  Future<NotificationPage> fetchPage({String? untilId}) => fetch!(untilId);
+  Future<NotificationPage> fetchPage({
+    String? untilId,
+    List<AccountNotificationsRequestIncludeTypesItem>? includeTypes,
+  }) {
+    requestedTypes = includeTypes;
+    return fetch!(untilId);
+  }
 
   @override
   Future<List<Notification>> readCache() async => cached;
@@ -169,5 +177,41 @@ void main() {
     // A reconnect replays the same push; the id guard keeps one row.
     controller.prepend(_notification('live-1'));
     expect(container.read(provider).items.map((n) => n.id), ['live-1', 'n1']);
+  });
+
+  test('applyFilter requests the matching include types', () async {
+    final repository = _FakeRepository();
+    repository.fetch = (_) async =>
+        NotificationPage(items: [_notification('m1')], hasMore: false);
+    final container = await _makeContainer(repository);
+
+    final provider = notificationListControllerProvider;
+    container.listen(provider, (_, _) {});
+    await container
+        .read(provider.notifier)
+        .applyFilter(NotificationFilter.mentions);
+    await pumpEventQueue();
+
+    expect(repository.requestedTypes, NotificationFilter.mentions.includeTypes);
+    final state = container.read(provider);
+    expect(state.filter, NotificationFilter.mentions);
+    expect(state.items.map((n) => n.id), ['m1']);
+    expect(state.initialLoading, isFalse);
+  });
+
+  test('a filtered-out live arrival is not inserted', () async {
+    final repository = _FakeRepository();
+    repository.fetch = (_) async => NotificationPage(items: [], hasMore: false);
+    final container = await _makeContainer(repository);
+
+    final provider = notificationListControllerProvider;
+    container.listen(provider, (_, _) {});
+    final controller = container.read(provider.notifier);
+    await controller.applyFilter(NotificationFilter.mentions);
+    await pumpEventQueue();
+
+    // A reaction does not belong in the mentions view; it stays on the server.
+    controller.prepend(_notification('r1'));
+    expect(container.read(provider).items, isEmpty);
   });
 }

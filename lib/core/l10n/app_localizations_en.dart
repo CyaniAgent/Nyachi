@@ -155,6 +155,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications => 'Notifications';
 
   @override
+  String get notificationsFilterAll => 'All';
+
+  @override
+  String get notificationsFilterMentions => 'Mentions';
+
+  @override
+  String get notificationsFilterReactions => 'Reactions';
+
+  @override
+  String get notificationsFilterBoosts => 'Boosts';
+
+  @override
+  String get notificationsFilterFollows => 'Follows';
+
+  @override
+  String get notificationsFilterSystem => 'System';
+
+  @override
   String get explore => 'Explore';
 
   @override
@@ -375,11 +393,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Receive notifications even when Nyachi is closed';
 
   @override
-  String get pushUnsupported => 'Not available in this build';
+  String get pushUnsupported => 'Web Push is web-only';
 
   @override
   String get pushUnsupportedHint =>
-      'Push notifications work in the web version of Nyachi.';
+      'Nyachi still raises system notifications through its resident connection (tray on desktop, foreground service on Android); browser push registration below is only needed in the web build.';
+
+  @override
+  String get pushSystemTitle => 'System notifications';
+
+  @override
+  String get pushSystemHint =>
+      'New events raise a system notification while Nyachi runs in the background: tray-hidden on desktop, foreground service on Android.';
 
   @override
   String get pushUnavailable => 'This server does not offer push';

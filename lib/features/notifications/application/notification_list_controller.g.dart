@@ -50,7 +50,7 @@ final class NotificationListControllerProvider
 }
 
 String _$notificationListControllerHash() =>
-    r'8ae6ae187f4558b6b03edbf97fe876ccb5a389cd';
+    r'5396db3081a31d0d275e06153d4a8d5a5c418565';
 
 /// Kept alive: the realtime service pushes notifications into this list even
 /// when no screen is listening, so it must not be disposed between visits.

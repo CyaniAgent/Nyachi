@@ -108,6 +108,7 @@ Future<void> _announce(Ref ref, Notification notification) async {
         eventId: notification.id,
         title: copy.title,
         body: copy.body,
+        category: notificationCategory(notification),
       );
 }
 

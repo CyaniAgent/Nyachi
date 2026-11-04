@@ -147,6 +147,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notifications => '通知';
 
   @override
+  String get notificationsFilterAll => '全部';
+
+  @override
+  String get notificationsFilterMentions => '提及与回复';
+
+  @override
+  String get notificationsFilterReactions => '回应';
+
+  @override
+  String get notificationsFilterBoosts => '转帖';
+
+  @override
+  String get notificationsFilterFollows => '关注';
+
+  @override
+  String get notificationsFilterSystem => '系统';
+
+  @override
   String get explore => '发现';
 
   @override
@@ -363,10 +381,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pushEnableHint => '即使 Nyachi 已关闭也能收到通知';
 
   @override
-  String get pushUnsupported => '当前版本不支持';
+  String get pushUnsupported => 'Web Push 仅限网页版';
 
   @override
-  String get pushUnsupportedHint => '推送通知仅在 Nyachi 网页版可用。';
+  String get pushUnsupportedHint =>
+      'Nyachi 仍会通过常驻连接弹出系统通知（桌面托盘、Android 前台服务）；下方的浏览器推送注册仅在网页版需要。';
+
+  @override
+  String get pushSystemTitle => '系统通知';
+
+  @override
+  String get pushSystemHint => 'Nyachi 在后台运行时（桌面托盘、Android 前台服务）为新事件弹出系统通知。';
 
   @override
   String get pushUnavailable => '该服务器未提供推送';

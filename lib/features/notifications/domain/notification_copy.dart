@@ -2,6 +2,8 @@
 
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
+import '../../../core/platform/residency.dart';
+
 import '../../../core/l10n/app_localizations.dart';
 
 /// Short human description of a notification's event, shared by the in-app
@@ -84,6 +86,59 @@ Note? notificationNote(Notification notification) {
   final title = actor == null ? label : '@${actor.username} $label';
   final note = notificationNote(notification);
   return (title: title, body: note?.text ?? '');
+}
+
+/// The Misskey notification type name, matching the API's own vocabulary.
+///
+/// Used for list filtering: the values line up with `includeTypes` on
+/// `i/notifications` and with `notificationRecieveConfig` keys.
+String? notificationTypeName(Notification notification) {
+  return switch (notification) {
+    NotificationNote() => 'note',
+    NotificationMention() => 'mention',
+    NotificationReply() => 'reply',
+    NotificationRenote() => 'renote',
+    NotificationRenoteGrouped() => 'renote',
+    NotificationQuote() => 'quote',
+    NotificationReaction() => 'reaction',
+    NotificationReactionGrouped() => 'reaction',
+    NotificationPollEnded() => 'pollEnded',
+    NotificationFollow() => 'follow',
+    NotificationReceiveFollowRequest() => 'receiveFollowRequest',
+    NotificationFollowRequestAccepted() => 'followRequestAccepted',
+    NotificationRoleAssigned() => 'roleAssigned',
+    NotificationChatRoomInvitationReceived() => 'chatRoomInvitationReceived',
+    NotificationAchievementEarned() => 'achievementEarned',
+    NotificationExportCompleted() => 'exportCompleted',
+    NotificationLogin() => 'login',
+    NotificationCreateToken() => 'createToken',
+    NotificationApp() => 'app',
+    NotificationScheduledNotePosted() => 'scheduledNotePosted',
+    NotificationScheduledNotePostFailed() => 'scheduledNotePostFailed',
+    _ => null,
+  };
+}
+
+/// Which system-notification channel an event class routes to.
+SystemNotificationCategory notificationCategory(Notification notification) {
+  return switch (notification) {
+    NotificationMention() ||
+    NotificationReply() ||
+    NotificationChatRoomInvitationReceived() =>
+      SystemNotificationCategory.direct,
+    NotificationNote() ||
+    NotificationRenote() ||
+    NotificationRenoteGrouped() ||
+    NotificationQuote() ||
+    NotificationReaction() ||
+    NotificationReactionGrouped() ||
+    NotificationPollEnded() ||
+    NotificationFollow() ||
+    NotificationReceiveFollowRequest() ||
+    NotificationFollowRequestAccepted() ||
+    NotificationScheduledNotePosted() => SystemNotificationCategory.activity,
+    _ => SystemNotificationCategory.system,
+  };
 }
 
 /// When the event happened.

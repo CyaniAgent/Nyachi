@@ -121,21 +121,42 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (!pushSupported)
+              // Non-web builds deliver notifications through the resident
+              // connection (tray on desktop, foreground service on Android);
+              // they get a status page, not a dead end.
+              if (!pushSupported) ...[
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.desktop_access_disabled_outlined),
+                  leading: Icon(
+                    Icons.notifications_active_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(l10n.pushSystemTitle),
+                  subtitle: Text(l10n.pushSystemHint),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.language_outlined),
                   title: Text(l10n.pushUnsupported),
                   subtitle: Text(l10n.pushUnsupportedHint),
-                )
-              else if (info != null && !info.serviceWorkerEnabled)
+                ),
+              ] else if (info != null && !info.serviceWorkerEnabled)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.block_outlined),
                   title: Text(l10n.pushUnavailable),
                   subtitle: Text(l10n.pushUnavailableHint),
                 )
-              else
+              else ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.notifications_active_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(l10n.pushSystemTitle),
+                  subtitle: Text(l10n.pushSystemHint),
+                ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _subscribed,
@@ -147,6 +168,7 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
                             ? unawaited(_enable())
                             : unawaited(_disable()),
                 ),
+              ],
             ],
           ),
         ),

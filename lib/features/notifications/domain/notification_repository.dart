@@ -10,7 +10,10 @@ class NotificationPage {
 }
 
 abstract interface class NotificationRepository {
-  Future<NotificationPage> fetchPage({String? untilId});
+  Future<NotificationPage> fetchPage({
+    String? untilId,
+    List<AccountNotificationsRequestIncludeTypesItem>? includeTypes,
+  });
 
   Future<List<Notification>> readCache();
 

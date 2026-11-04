@@ -370,6 +370,42 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notifications;
 
+  /// No description provided for @notificationsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get notificationsFilterAll;
+
+  /// No description provided for @notificationsFilterMentions.
+  ///
+  /// In en, this message translates to:
+  /// **'Mentions'**
+  String get notificationsFilterMentions;
+
+  /// No description provided for @notificationsFilterReactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get notificationsFilterReactions;
+
+  /// No description provided for @notificationsFilterBoosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Boosts'**
+  String get notificationsFilterBoosts;
+
+  /// No description provided for @notificationsFilterFollows.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows'**
+  String get notificationsFilterFollows;
+
+  /// No description provided for @notificationsFilterSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get notificationsFilterSystem;
+
   /// No description provided for @explore.
   ///
   /// In en, this message translates to:
@@ -805,14 +841,26 @@ abstract class AppLocalizations {
   /// No description provided for @pushUnsupported.
   ///
   /// In en, this message translates to:
-  /// **'Not available in this build'**
+  /// **'Web Push is web-only'**
   String get pushUnsupported;
 
   /// No description provided for @pushUnsupportedHint.
   ///
   /// In en, this message translates to:
-  /// **'Push notifications work in the web version of Nyachi.'**
+  /// **'Nyachi still raises system notifications through its resident connection (tray on desktop, foreground service on Android); browser push registration below is only needed in the web build.'**
   String get pushUnsupportedHint;
+
+  /// No description provided for @pushSystemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System notifications'**
+  String get pushSystemTitle;
+
+  /// No description provided for @pushSystemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New events raise a system notification while Nyachi runs in the background: tray-hidden on desktop, foreground service on Android.'**
+  String get pushSystemHint;
 
   /// No description provided for @pushUnavailable.
   ///

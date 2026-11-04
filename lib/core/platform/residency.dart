@@ -204,20 +204,40 @@ class ResidencyService {
   bool get notificationsSupported =>
       Platform.isAndroid || Platform.isWindows || Platform.isLinux;
 
-  static const _channel = AndroidNotificationDetails(
-    'nyachi_activity',
-    'Activity',
-    channelDescription: 'Mentions, replies and reactions',
-    importance: Importance.high,
-    priority: Priority.high,
-  );
+  /// Notification categories, so platforms that separate notifications by
+  /// channel (Android) let the user mute each class independently: direct
+  /// conversation beats a reaction for urgency, and system noise stays quiet.
+  static const _channels = {
+    SystemNotificationCategory.direct: AndroidNotificationDetails(
+      'nyachi_direct',
+      'Mentions and replies',
+      channelDescription: 'Replies to your notes and direct mentions',
+      importance: Importance.high,
+      priority: Priority.high,
+    ),
+    SystemNotificationCategory.activity: AndroidNotificationDetails(
+      'nyachi_activity',
+      'Activity',
+      channelDescription: 'Reactions, boosts and follows',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    ),
+    SystemNotificationCategory.system: AndroidNotificationDetails(
+      'nyachi_system',
+      'System',
+      channelDescription: 'Server and account events',
+      importance: Importance.low,
+      priority: Priority.low,
+    ),
+  };
 
   /// Raises a system notification for an event that arrived while the app was
   /// not in front of the user.
   ///
   /// [eventId] is the Misskey notification id: deriving the plugin id from it
   /// keeps same-title events (three reactions from one user) distinct instead
-  /// of overwriting each other.
+  /// of overwriting each other. [category] routes the toast to a channel the
+  /// user can mute per class on Android; other platforms ignore it.
   ///
   /// Best-effort like everything else here: a refused permission or a platform
   /// without a notification channel must not interrupt the realtime stream.
@@ -225,6 +245,7 @@ class ResidencyService {
     required String eventId,
     required String title,
     required String body,
+    SystemNotificationCategory category = SystemNotificationCategory.activity,
   }) async {
     if (!notificationsSupported || !_initialized) return;
     try {
@@ -232,7 +253,7 @@ class ResidencyService {
         id: eventId.hashCode & 0x7fffffff,
         title: title,
         body: body,
-        notificationDetails: const NotificationDetails(android: _channel),
+        notificationDetails: NotificationDetails(android: _channels[category]),
         payload: 'notifications',
       );
     } catch (error) {
@@ -312,4 +333,18 @@ ResidencyService residency(Ref ref) {
   final service = ResidencyService();
   ref.onDispose(() => unawaited(service.dispose()));
   return service;
+}
+
+/// The class of a system notification, mapped to a per-class channel where
+/// the platform supports one (Android).
+enum SystemNotificationCategory {
+  /// Mentions, replies, chat: conversation addressed to the user.
+  direct,
+
+  /// Reactions, boosts, follows, polls: background activity on the user's
+  /// content.
+  activity,
+
+  /// Server and account events: logins, exports, achievements, roles.
+  system,
 }

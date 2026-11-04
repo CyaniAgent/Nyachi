@@ -16,6 +16,7 @@ import '../../../core/network/silent_fallback.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../domain/notification_repository.dart';
+import '../domain/notification_copy.dart';
 
 part 'notification_list_controller.freezed.dart';
 part 'notification_list_controller.g.dart';
@@ -34,11 +35,15 @@ class MisskeyNotificationRepository implements NotificationRepository {
   static const _cacheKey = CacheManager.notificationsKey;
 
   @override
-  Future<NotificationPage> fetchPage({String? untilId}) async {
+  Future<NotificationPage> fetchPage({
+    String? untilId,
+    List<AccountNotificationsRequestIncludeTypesItem>? includeTypes,
+  }) async {
     final page = await client.account.notificationsPage(
       limit: 20,
       untilId: untilId,
       markAsRead: false,
+      includeTypes: includeTypes,
     );
     return NotificationPage(items: page.items, hasMore: page.hasMore);
   }
@@ -79,6 +84,63 @@ class MisskeyNotificationRepository implements NotificationRepository {
   Future<void> markAllAsRead() => client.notifications.markAllAsRead();
 }
 
+/// A type filter for the notifications list.
+///
+/// The user-facing groups bundle API types by meaning: "Mentions" covers
+/// mentions, replies and chat invitations, because all three address the
+/// reader directly; "system" keeps the server noise. `null` means no filter.
+enum NotificationFilter {
+  mentions('mentions'),
+  reactions('reactions'),
+  boosts('boosts'),
+  follows('follows'),
+  system('system');
+
+  const NotificationFilter(this.groupId);
+
+  /// Stable id for persisting the selected chip.
+  final String groupId;
+
+  /// The API type names this filter requests.
+  List<AccountNotificationsRequestIncludeTypesItem> get includeTypes =>
+      switch (this) {
+        NotificationFilter.mentions => const [
+          AccountNotificationsRequestIncludeTypesItem.mention,
+          AccountNotificationsRequestIncludeTypesItem.reply,
+          AccountNotificationsRequestIncludeTypesItem
+              .chatRoomInvitationReceived,
+        ],
+        NotificationFilter.reactions => const [
+          AccountNotificationsRequestIncludeTypesItem.reaction,
+          AccountNotificationsRequestIncludeTypesItem.pollEnded,
+        ],
+        NotificationFilter.boosts => const [
+          AccountNotificationsRequestIncludeTypesItem.renote,
+          AccountNotificationsRequestIncludeTypesItem.quote,
+        ],
+        NotificationFilter.follows => const [
+          AccountNotificationsRequestIncludeTypesItem.follow,
+          AccountNotificationsRequestIncludeTypesItem.receiveFollowRequest,
+          AccountNotificationsRequestIncludeTypesItem.followRequestAccepted,
+        ],
+        NotificationFilter.system => const [
+          AccountNotificationsRequestIncludeTypesItem.roleAssigned,
+          AccountNotificationsRequestIncludeTypesItem.achievementEarned,
+          AccountNotificationsRequestIncludeTypesItem.exportCompleted,
+          AccountNotificationsRequestIncludeTypesItem.login,
+          AccountNotificationsRequestIncludeTypesItem.createToken,
+          AccountNotificationsRequestIncludeTypesItem.app,
+        ],
+      };
+
+  /// Whether a live-arriving notification belongs to this view; grouped
+  /// variants carry the same API type name as their single-event twins.
+  bool accepts(Notification notification) {
+    final name = notificationTypeName(notification);
+    return name != null && includeTypes.any((type) => type.name == name);
+  }
+}
+
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   final active = ref.watch(sessionControllerProvider).active;
   if (active == null) throw StateError('No active account.');
@@ -99,6 +161,12 @@ abstract class NotificationListState with _$NotificationListState {
     @Default(true) bool hasMore,
     @Default(false) bool usingCache,
     @Default(false) bool markingRead,
+
+    /// The active type filter; null shows every notification. An arriving
+    /// event of a filtered-out type is held back from the list until the
+    /// filter is lifted, not dropped: a later refresh reloads it from the
+    /// server.
+    NotificationFilter? filter,
     AppFailure? error,
   }) = _NotificationListState;
 }
@@ -139,7 +207,9 @@ class NotificationListController extends _$NotificationListController {
     final hadItems = state.items.isNotEmpty;
     state = state.copyWith(refreshing: true, error: null);
     try {
-      final page = await _repository.fetchPage();
+      final page = await _repository.fetchPage(
+        includeTypes: state.filter?.includeTypes,
+      );
       if (_disposed) return;
       state = state.copyWith(
         items: page.items,
@@ -149,7 +219,12 @@ class NotificationListController extends _$NotificationListController {
         usingCache: false,
         error: null,
       );
-      await _repository.writeCache(page.items);
+      // The cache holds the unfiltered feed: it is only written when the list
+      // actually shows it, so lifting a filter cannot show filter-specific
+      // rows as cache.
+      if (state.filter == null) {
+        await _repository.writeCache(page.items);
+      }
     } catch (error) {
       if (_disposed) return;
       state = state.copyWith(
@@ -164,14 +239,37 @@ class NotificationListController extends _$NotificationListController {
   /// Inserts a notification pushed over the realtime stream.
   ///
   /// Sits at the head because the API returns newest first, and an id already
-  /// present is dropped so a reconnect replay cannot duplicate a row.
+  /// present is dropped so a reconnect replay cannot duplicate a row. A
+  /// filtered-out type is not inserted: the server still has it, and the
+  /// next unfiltered refresh reloads it.
   void prepend(Notification notification) {
     if (_disposed) return;
     if (state.items.any((item) => item.id == notification.id)) return;
+    if (_filterExcludes(notification)) return;
     state = state.copyWith(
       items: [notification, ...state.items],
       initialLoading: false,
     );
+  }
+
+  bool _filterExcludes(Notification notification) {
+    final filter = state.filter;
+    if (filter == null) return false;
+    return !filter.accepts(notification);
+  }
+
+  /// Switches the type filter and reloads; the filtered view is always fresh
+  /// from the server because the cache only stores the unfiltered feed.
+  Future<void> applyFilter(NotificationFilter? filter) async {
+    if (_disposed || state.filter == filter) return;
+    state = state.copyWith(
+      filter: filter,
+      items: const [],
+      hasMore: true,
+      initialLoading: true,
+      error: null,
+    );
+    await refresh();
   }
 
   Future<void> loadMore() async {
@@ -184,7 +282,10 @@ class NotificationListController extends _$NotificationListController {
     }
     state = state.copyWith(loadingMore: true, error: null);
     try {
-      final page = await _repository.fetchPage(untilId: state.items.last.id);
+      final page = await _repository.fetchPage(
+        untilId: state.items.last.id,
+        includeTypes: state.filter?.includeTypes,
+      );
       if (_disposed) return;
       final seen = <String>{};
       final merged = [
@@ -197,7 +298,9 @@ class NotificationListController extends _$NotificationListController {
         hasMore: page.hasMore,
         error: null,
       );
-      await _repository.writeCache(merged);
+      if (state.filter == null) {
+        await _repository.writeCache(merged);
+      }
     } catch (error) {
       if (_disposed) return;
       state = state.copyWith(loadingMore: false, error: mapFailure(error));

@@ -147,6 +147,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notifications => '通知';
 
   @override
+  String get notificationsFilterAll => 'すべて';
+
+  @override
+  String get notificationsFilterMentions => 'メンションと返信';
+
+  @override
+  String get notificationsFilterReactions => 'リアクション';
+
+  @override
+  String get notificationsFilterBoosts => 'ブースト';
+
+  @override
+  String get notificationsFilterFollows => 'フォロー';
+
+  @override
+  String get notificationsFilterSystem => 'システム';
+
+  @override
   String get explore => '探索';
 
   @override
@@ -363,10 +381,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pushEnableHint => 'Nyachi を閉じていても通知を受け取ります';
 
   @override
-  String get pushUnsupported => 'このビルドでは利用できません';
+  String get pushUnsupported => 'Web Push は Web 版のみ';
 
   @override
-  String get pushUnsupportedHint => 'プッシュ通知は Nyachi の Web 版で利用できます。';
+  String get pushUnsupportedHint =>
+      'Nyachi は常駐接続（デスクトップのトレイ、Androidのフォアグラウンドサービス）経由でもシステム通知を表示します。下のブラウザプッシュ登録は Web 版でのみ必要です。';
+
+  @override
+  String get pushSystemTitle => 'システム通知';
+
+  @override
+  String get pushSystemHint =>
+      'Nyachi がバックグラウンドで動作中（デスクトップのトレイ、Androidのフォアグラウンドサービス）に新規イベントのシステム通知を表示します。';
 
   @override
   String get pushUnavailable => 'このサーバーはプッシュに対応していません';

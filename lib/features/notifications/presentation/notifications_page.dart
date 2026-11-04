@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
@@ -50,7 +52,12 @@ class NotificationsPage extends ConsumerWidget {
         onRefresh: controller.refresh,
         child: ReadableWidth(
           centered: ref.watch(settingsControllerProvider).centerContent,
-          child: _body(context, ref, state, controller),
+          child: Column(
+            children: [
+              _FilterBar(state: state, controller: controller),
+              Expanded(child: _body(context, ref, state, controller)),
+            ],
+          ),
         ),
       ),
     );
@@ -135,7 +142,15 @@ class _NotificationTile extends StatelessWidget {
       leading: NyachiAvatar(
         url: actor?.avatarUrl,
         size: 40,
-        fallback: const Icon(Icons.notifications_outlined),
+        fallback: Icon(notificationTypeIcon(notification)),
+      ),
+      trailing: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Icon(
+          notificationTypeIcon(notification),
+          size: 16,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
       title: Text(
         actor?.name?.isNotEmpty == true ? '@${actor!.username} $label' : label,
@@ -155,4 +170,77 @@ class _NotificationTile extends StatelessWidget {
           : () => openDetail(context, NoteDetailLocation(note.id)),
     );
   }
+}
+
+/// The filter chips above the list: "All" plus one chip per event group.
+/// Selecting a chip reloads the list from the server with that filter.
+class _FilterBar extends StatelessWidget {
+  const _FilterBar({required this.state, required this.controller});
+
+  final NotificationListState state;
+  final NotificationListController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final filter = state.filter;
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(l10n.notificationsFilterAll),
+              selected: filter == null,
+              onSelected: (_) => unawaited(controller.applyFilter(null)),
+            ),
+          ),
+          for (final entry in NotificationFilter.values)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(switch (entry) {
+                  NotificationFilter.mentions =>
+                    l10n.notificationsFilterMentions,
+                  NotificationFilter.reactions =>
+                    l10n.notificationsFilterReactions,
+                  NotificationFilter.boosts => l10n.notificationsFilterBoosts,
+                  NotificationFilter.follows => l10n.notificationsFilterFollows,
+                  NotificationFilter.system => l10n.notificationsFilterSystem,
+                }),
+                selected: filter == entry,
+                onSelected: (_) => unawaited(controller.applyFilter(entry)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Icon for a notification's event class, kept consistent across the list.
+IconData notificationTypeIcon(Notification notification) {
+  return switch (notification) {
+    NotificationMention() || NotificationReply() => Icons.alternate_email,
+    NotificationChatRoomInvitationReceived() => Icons.chat_bubble_outline,
+    NotificationReaction() ||
+    NotificationReactionGrouped() => Icons.favorite_outline,
+    NotificationPollEnded() => Icons.bar_chart,
+    NotificationRenote() ||
+    NotificationRenoteGrouped() ||
+    NotificationQuote() => Icons.repeat,
+    NotificationFollow() => Icons.person_add_alt_outlined,
+    NotificationReceiveFollowRequest() => Icons.person_add_alt_outlined,
+    NotificationFollowRequestAccepted() => Icons.how_to_reg_outlined,
+    NotificationRoleAssigned() => Icons.workspace_premium_outlined,
+    NotificationAchievementEarned() => Icons.emoji_events_outlined,
+    NotificationExportCompleted() => Icons.file_download_outlined,
+    NotificationLogin() || NotificationCreateToken() => Icons.key_outlined,
+    NotificationApp() => Icons.apps_outlined,
+    NotificationNote() || NotificationScheduledNotePosted() => Icons.notes,
+    _ => Icons.notifications_outlined,
+  };
 }

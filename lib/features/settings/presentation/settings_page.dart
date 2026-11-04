@@ -75,7 +75,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         group: _SettingsGroup.server,
         icon: Icons.notifications_active_outlined,
         title: l10n.pushNotifications,
-        subtitle: l10n.pushEnable,
+        subtitle: l10n.pushSystemTitle,
         open: const SettingsPushLocation(),
       ),
       _SettingsEntry(
