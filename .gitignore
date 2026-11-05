@@ -51,3 +51,11 @@ app.*.map.json
 # Planning documents stay local-only: they change too often to belong in a
 # public repository, and the shipped-work record lives in the changelog.
 docs/ROADMAP.md
+
+# Generated sources stay out of version control: they are deterministic
+# (build_runner + gen-l10n reproduce them byte-for-byte) and committing them
+# caused repeated "forgot to regenerate" failures. Build after cloning:
+#   flutter pub get && flutter gen-l10n && dart run build_runner build
+lib/**/*.g.dart
+lib/**/*.freezed.dart
+lib/core/l10n/
