@@ -1,0 +1,33 @@
+# Line endings are normalized at the storage layer: git keeps LF, and the
+# worktree gets LF on every platform. The Linux/macOS CI runners and the whole
+# Dart toolchain expect LF, and a CRLF shell script fails outright with
+# `$'\r': command not found`.
+* text=auto eol=lf
+
+# Shell scripts stay LF even when an editor on Windows saves them with CRLF.
+*.sh text eol=lf
+
+# Windows-only scripts need CRLF to run, should one ever be added.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets: never diffed, never converted.
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.wasm binary
+*.jar binary
+*.zip binary
+*.so binary
+*.dll binary
+*.a binary
+*.exe binary
+*.mp3 binary
+*.mp4 binary
