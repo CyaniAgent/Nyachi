@@ -79,8 +79,6 @@ SharedPreferences, logs, or exceptions.
 - [Style guide](docs/STYLE_GUIDE.md)
 - [Code generation](docs/CODEGEN.md)
 - [Foundation ADR](docs/adr/0001-foundation.md)
-- [Roadmap](docs/ROADMAP.md) — pages expansion program: channels, antennas,
-  lists, and the remaining Misskey surfaces
 
 ## License and copyright
 

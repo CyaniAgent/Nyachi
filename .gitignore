@@ -47,3 +47,7 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 /android/build/
+
+# Planning documents stay local-only: they change too often to belong in a
+# public repository, and the shipped-work record lives in the changelog.
+docs/ROADMAP.md
