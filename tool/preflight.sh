@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# Runs the checks CI runs, before pushing. Catches the two failures that only
-# ever surfaced in CI:
-#
-#   - generated sources out of date (CI: `git diff --exit-code`), and
-#   - a lock file resolved against a mirror, which CI rewrites wholesale.
+# Runs the checks CI runs, before pushing. Generated sources are untracked
+# and regenerated here; the mirror check exists because CI rewrites a
+# pubspec.lock resolved against the mirror wholesale.
 #
 # Usage: tool/preflight.sh
 set -euo pipefail
@@ -18,16 +16,13 @@ export PUB_HOSTED_URL=https://pub.dev
 export FLUTTER_STORAGE_BASE_URL=https://storage.googleapis.com
 
 echo "==> pub get"
-flutter pub get >/dev/null
+flutter pub get
+
+echo "==> localizations"
+flutter gen-l10n
 
 echo "==> generated sources"
-flutter gen-l10n >/dev/null
-dart run build_runner build >/dev/null
-if ! git diff --quiet -- lib; then
-  echo "FAIL: generated sources are stale; commit them:" >&2
-  git diff --stat -- lib >&2
-  exit 1
-fi
+dart run build_runner build
 
 echo "==> mirror-free lock"
 if grep -q "pub.flutter-io.cn" pubspec.lock; then

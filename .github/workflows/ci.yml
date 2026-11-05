@@ -24,17 +24,23 @@ jobs:
           cache: true
       # cnativeapi's native-assets hook compiles on the host during pub get;
       # its build.dart needs pkg-config plus the GTK 3, X11 and Xi headers.
-      - run: |
+      - name: Install native build dependencies
+        run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev libx11-dev libxi-dev
-      - run: flutter pub get
-      - run: flutter gen-l10n
-      - run: dart run build_runner build
-      - run: git diff --exit-code
-      - run: dart format --output=none --set-exit-if-changed lib test
-      - run: flutter analyze
-      - run: flutter test
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Generate localizations
+        run: flutter gen-l10n
+      - name: Generate sources
+        run: dart run build_runner build
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
       - name: Verify Drift web assets
         run: |
           test -f web/sqlite3.wasm
@@ -42,10 +48,12 @@ jobs:
       # PWA offline caching is provided by web/nyachi_service_worker.js via
       # the custom web/flutter_bootstrap.js; Flutter's uninstaller stub is
       # emitted as a dead file and never registered.
-      - run: flutter build web --release
+      - name: Build web
+        run: flutter build web --release
       # The release ships a WebAssembly build alongside the JS one; compile it
       # here so a wasm-incompatible dependency fails CI, not a release.
-      - run: flutter build web --release --wasm -o build/web-wasm
+      - name: Build web (WebAssembly)
+        run: flutter build web --release --wasm -o build/web-wasm
 
   android-build:
     runs-on: ubuntu-latest
@@ -64,8 +72,14 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties', 'pubspec.lock') }}
           restore-keys: gradle-${{ runner.os }}-
-      - run: flutter pub get
-      - run: flutter build apk --debug
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Generate localizations
+        run: flutter gen-l10n
+      - name: Generate sources
+        run: dart run build_runner build
+      - name: Build Android APK
+        run: flutter build apk --debug
 
   macos-build:
     runs-on: macos-latest
@@ -86,9 +100,16 @@ jobs:
       # (flutter_inappwebview_macos declares 10.14 while its code needs
       # 10.15+), so build through CocoaPods, which follows the project's
       # 12.0 deployment target.
-      - run: flutter config --no-enable-swift-package-manager
-      - run: flutter pub get
+      - name: Prefer CocoaPods over Swift Package Manager
+        run: flutter config --no-enable-swift-package-manager
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Generate localizations
+        run: flutter gen-l10n
+      - name: Generate sources
+        run: dart run build_runner build
       # `flutter build macos` has no --no-codesign flag (that is `build ios`).
       # Without a signing identity the tool falls back to an unsigned build,
       # which is all this sanity job needs.
-      - run: flutter build macos --debug
+      - name: Build macOS app
+        run: flutter build macos --debug

@@ -23,19 +23,11 @@ Drift database/DAOs, and typed `go_router` routes. Do not enable
 - `lib/core/storage/app_database.g.dart`: Drift schema and DAOs.
 - `lib/app/router/routes.g.dart`: typed route data and `$appRoutes`.
 
-These files stay committed. `analysis_options.yaml` excludes them from linting;
-formatting still applies.
-
-## CI freshness check
-
-```sh
-flutter gen-l10n
-dart run build_runner build
-git diff --exit-code
-```
-
-Any generated diff means a source annotation changed without its output being
-committed.
+These files are NOT tracked. They are deterministic: the same sources produce
+the same bytes, and CI regenerates them before analyzing and testing, so a
+fresh clone must run the two generation commands before `flutter analyze` or
+`flutter test` (`tool/preflight.sh` does this automatically).
+`analysis_options.yaml` excludes them from linting; formatting still applies.
 
 ## Drift web assets
 

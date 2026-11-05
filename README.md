@@ -32,9 +32,10 @@ dart run build_runner build
 flutter run -d chrome        # or -d windows
 ```
 
-Generated Riverpod, Freezed, Drift, JSON, and typed-route files are committed.
-Do not add `*.g.dart` or `*.freezed.dart` to `.gitignore`. See
-[docs/CODEGEN.md](docs/CODEGEN.md).
+Generated Riverpod, Freezed, Drift, JSON, typed-route and localization files
+are NOT tracked: they are deterministic, and the three commands above
+regenerate them, so a fresh clone must run them before analysis or tests
+(`tool/preflight.sh` does the same). See [docs/CODEGEN.md](docs/CODEGEN.md).
 
 ## Verification
 
