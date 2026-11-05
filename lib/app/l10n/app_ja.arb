@@ -132,6 +132,8 @@
   "pushUnsupportedHint": "Nyachi は常駐接続（デスクトップのトレイ、Androidのフォアグラウンドサービス）経由でもシステム通知を表示します。下のブラウザプッシュ登録は Web 版でのみ必要です。",
   "pushSystemTitle": "システム通知",
   "pushSystemHint": "Nyachi がバックグラウンドで動作中（デスクトップのトレイ、Androidのフォアグラウンドサービス）に新規イベントのシステム通知を表示します。",
+  "pushSystemUnavailable": "このビルドではシステム通知を利用できません",
+  "pushSystemUnavailableHint": "通知はアプリ内リストに限られます。Web 版はブラウザプッシュに対応しています。",
   "pushUnavailable": "このサーバーはプッシュに対応していません",
   "pushUnavailableHint": "インスタンスのプッシュ用サービスワーカーが無効です。",
   "pushNoKey": "サーバーからプッシュ用の鍵が提供されませんでした",

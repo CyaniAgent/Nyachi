@@ -9,6 +9,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
 import '../../../core/network/instance_repository.dart';
+import '../../../core/platform/residency.dart';
 import '../../../core/push/web_push.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/l10n_ext.dart';
@@ -113,6 +114,9 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final info = ref.watch(instanceInfoProvider).value;
+    // macOS has no system-notification wiring yet (notificationsSupported is
+    // false there), so the page must not claim background delivery on it.
+    final systemSupported = ref.watch(residencyProvider).notificationsSupported;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.pushNotifications)),
       body: Center(
@@ -125,15 +129,23 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
               // connection (tray on desktop, foreground service on Android);
               // they get a status page, not a dead end.
               if (!pushSupported) ...[
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.notifications_active_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                if (systemSupported)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      Icons.notifications_active_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text(l10n.pushSystemTitle),
+                    subtitle: Text(l10n.pushSystemHint),
+                  )
+                else
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.notifications_off_outlined),
+                    title: Text(l10n.pushSystemUnavailable),
+                    subtitle: Text(l10n.pushSystemUnavailableHint),
                   ),
-                  title: Text(l10n.pushSystemTitle),
-                  subtitle: Text(l10n.pushSystemHint),
-                ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.language_outlined),

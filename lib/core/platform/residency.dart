@@ -207,6 +207,9 @@ class ResidencyService {
   /// Notification categories, so platforms that separate notifications by
   /// channel (Android) let the user mute each class independently: direct
   /// conversation beats a reaction for urgency, and system noise stays quiet.
+  /// The activity channel's id carries a v2 suffix: Android ignores
+  /// importance changes on an existing channel, so the downgrade from the
+  /// old high-importance `nyachi_activity` must land on a fresh id.
   static const _channels = {
     SystemNotificationCategory.direct: AndroidNotificationDetails(
       'nyachi_direct',
@@ -216,7 +219,7 @@ class ResidencyService {
       priority: Priority.high,
     ),
     SystemNotificationCategory.activity: AndroidNotificationDetails(
-      'nyachi_activity',
+      'nyachi_activity_v2',
       'Activity',
       channelDescription: 'Reactions, boosts and follows',
       importance: Importance.defaultImportance,

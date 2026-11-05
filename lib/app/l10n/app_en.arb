@@ -132,6 +132,8 @@
   "pushUnsupportedHint": "Nyachi still raises system notifications through its resident connection (tray on desktop, foreground service on Android); browser push registration below is only needed in the web build.",
   "pushSystemTitle": "System notifications",
   "pushSystemHint": "New events raise a system notification while Nyachi runs in the background: tray-hidden on desktop, foreground service on Android.",
+  "pushSystemUnavailable": "System notifications are not available in this build",
+  "pushSystemUnavailableHint": "Delivery is limited to the in-app list; the web build supports browser push.",
   "pushUnavailable": "This server does not offer push",
   "pushUnavailableHint": "The instance has its push service worker disabled.",
   "pushNoKey": "The server did not provide a push key",

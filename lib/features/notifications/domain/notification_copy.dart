@@ -136,7 +136,6 @@ SystemNotificationCategory notificationCategory(Notification notification) {
     NotificationFollow() ||
     NotificationReceiveFollowRequest() ||
     NotificationFollowRequestAccepted() ||
-    NotificationScheduledNotePosted() => SystemNotificationCategory.activity,
     _ => SystemNotificationCategory.system,
   };
 }

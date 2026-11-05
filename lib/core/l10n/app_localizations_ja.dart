@@ -395,6 +395,13 @@ class AppLocalizationsJa extends AppLocalizations {
       'Nyachi がバックグラウンドで動作中（デスクトップのトレイ、Androidのフォアグラウンドサービス）に新規イベントのシステム通知を表示します。';
 
   @override
+  String get pushSystemUnavailable => 'このビルドではシステム通知を利用できません';
+
+  @override
+  String get pushSystemUnavailableHint =>
+      '通知はアプリ内リストに限られます。Web 版はブラウザプッシュに対応しています。';
+
+  @override
   String get pushUnavailable => 'このサーバーはプッシュに対応していません';
 
   @override

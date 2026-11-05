@@ -862,6 +862,18 @@ abstract class AppLocalizations {
   /// **'New events raise a system notification while Nyachi runs in the background: tray-hidden on desktop, foreground service on Android.'**
   String get pushSystemHint;
 
+  /// No description provided for @pushSystemUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'System notifications are not available in this build'**
+  String get pushSystemUnavailable;
+
+  /// No description provided for @pushSystemUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery is limited to the in-app list; the web build supports browser push.'**
+  String get pushSystemUnavailableHint;
+
   /// No description provided for @pushUnavailable.
   ///
   /// In en, this message translates to:

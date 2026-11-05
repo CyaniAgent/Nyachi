@@ -132,6 +132,8 @@
   "pushUnsupportedHint": "Nyachi 仍会通过常驻连接弹出系统通知（桌面托盘、Android 前台服务）；下方的浏览器推送注册仅在网页版需要。",
   "pushSystemTitle": "系统通知",
   "pushSystemHint": "Nyachi 在后台运行时（桌面托盘、Android 前台服务）为新事件弹出系统通知。",
+  "pushSystemUnavailable": "当前构建不支持系统通知",
+  "pushSystemUnavailableHint": "通知仅限应用内列表；网页版支持浏览器推送。",
   "pushUnavailable": "该服务器未提供推送",
   "pushUnavailableHint": "实例已禁用推送服务工作者。",
   "pushNoKey": "服务器未提供推送公钥",

@@ -407,6 +407,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'New events raise a system notification while Nyachi runs in the background: tray-hidden on desktop, foreground service on Android.';
 
   @override
+  String get pushSystemUnavailable =>
+      'System notifications are not available in this build';
+
+  @override
+  String get pushSystemUnavailableHint =>
+      'Delivery is limited to the in-app list; the web build supports browser push.';
+
+  @override
   String get pushUnavailable => 'This server does not offer push';
 
   @override

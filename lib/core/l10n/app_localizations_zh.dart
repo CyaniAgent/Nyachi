@@ -394,6 +394,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pushSystemHint => 'Nyachi 在后台运行时（桌面托盘、Android 前台服务）为新事件弹出系统通知。';
 
   @override
+  String get pushSystemUnavailable => '当前构建不支持系统通知';
+
+  @override
+  String get pushSystemUnavailableHint => '通知仅限应用内列表；网页版支持浏览器推送。';
+
+  @override
   String get pushUnavailable => '该服务器未提供推送';
 
   @override

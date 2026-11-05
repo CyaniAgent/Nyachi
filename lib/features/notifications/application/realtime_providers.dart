@@ -97,10 +97,11 @@ Future<void> _announce(Ref ref, Notification notification) async {
       ? PlatformDispatcher.instance.locale
       : Locale(settings.localeCode);
   // The direct lookup throws for languages the app does not ship; resolve the
-  // request against the supported list the same way MaterialApp does.
-  final locale = basicLocaleListResolution(AppLocalizations.supportedLocales, [
+  // request against the supported list the same way MaterialApp does
+  // (preferredLocales first, supportedLocales second).
+  final locale = basicLocaleListResolution([
     requested,
-  ]);
+  ], AppLocalizations.supportedLocales);
   final copy = notificationCopy(lookupAppLocalizations(locale), notification);
   await ref
       .read(residencyProvider)

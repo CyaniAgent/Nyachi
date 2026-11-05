@@ -130,6 +130,8 @@ enum NotificationFilter {
           AccountNotificationsRequestIncludeTypesItem.login,
           AccountNotificationsRequestIncludeTypesItem.createToken,
           AccountNotificationsRequestIncludeTypesItem.app,
+          AccountNotificationsRequestIncludeTypesItem.scheduledNotePosted,
+          AccountNotificationsRequestIncludeTypesItem.scheduledNotePostFailed,
         ],
       };
 
@@ -205,12 +207,16 @@ class NotificationListController extends _$NotificationListController {
   Future<void> refresh() async {
     if (_disposed) return;
     final hadItems = state.items.isNotEmpty;
+    final filterAtRequest = state.filter;
     state = state.copyWith(refreshing: true, error: null);
     try {
       final page = await _repository.fetchPage(
-        includeTypes: state.filter?.includeTypes,
+        includeTypes: filterAtRequest?.includeTypes,
       );
       if (_disposed) return;
+      // Rapid chip taps can put two refreshes in flight; a response must not
+      // land under a chip the user selected after it was requested.
+      if (state.filter != filterAtRequest) return;
       state = state.copyWith(
         items: page.items,
         initialLoading: false,
@@ -280,13 +286,15 @@ class NotificationListController extends _$NotificationListController {
         state.items.isEmpty) {
       return;
     }
+    final filterAtRequest = state.filter;
     state = state.copyWith(loadingMore: true, error: null);
     try {
       final page = await _repository.fetchPage(
         untilId: state.items.last.id,
-        includeTypes: state.filter?.includeTypes,
+        includeTypes: filterAtRequest?.includeTypes,
       );
       if (_disposed) return;
+      if (state.filter != filterAtRequest) return;
       final seen = <String>{};
       final merged = [
         ...state.items,
