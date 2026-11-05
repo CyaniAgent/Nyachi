@@ -3,10 +3,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'web_image.dart';
+
 /// Network image with unified placeholder and error chrome.
 ///
 /// All in-app remote images go through this widget (or [nyachiImageProvider])
 /// so caching, placeholder, and failure states stay consistent.
+///
+/// On the web the canvas renderer fetches pixels, and a host without CORS
+/// headers refuses that fetch; the error branch therefore re-renders through a
+/// DOM `<img>` ([domImage]) so the picture still shows. Other targets keep the
+/// plain failure chrome, where a failed load is a genuine network failure.
 class NyachiImage extends StatelessWidget {
   const NyachiImage({
     required this.url,
@@ -30,10 +37,15 @@ class NyachiImage extends StatelessWidget {
       height: height,
       fit: fit,
       placeholder: (_, _) => ColoredBox(color: scheme.surfaceContainerHighest),
-      errorWidget: (_, _, _) => ColoredBox(
-        color: scheme.surfaceContainerHighest,
-        child: Icon(Icons.wifi_off, color: scheme.onSurfaceVariant),
-      ),
+      errorWidget: (_, _, _) {
+        if (hasDomImageFallback) {
+          return domImage(url: url, width: width, height: height, fit: fit);
+        }
+        return ColoredBox(
+          color: scheme.surfaceContainerHighest,
+          child: Icon(Icons.wifi_off, color: scheme.onSurfaceVariant),
+        );
+      },
     );
   }
 }

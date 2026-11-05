@@ -3,6 +3,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'web_image.dart';
+
 /// Circular avatar with unified placeholder and error chrome.
 ///
 /// Covers the app-wide avatar semantics: nullable URL with a fallback child,
@@ -70,14 +72,26 @@ class NyachiAvatar extends StatelessWidget {
                 height: size,
                 placeholder: (_, _) =>
                     ColoredBox(color: scheme.surfaceContainerHighest),
-                errorWidget: (_, _, _) => ColoredBox(
-                  color: scheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.person_outline,
-                    size: size * 0.5,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
+                errorWidget: (_, _, _) {
+                  // A CORS refusal on the web is not a broken URL: the DOM
+                  // image displays it, keeping avatars visible.
+                  if (hasDomImageFallback) {
+                    return domImage(
+                      url: url!,
+                      width: size,
+                      height: size,
+                      fit: BoxFit.cover,
+                    );
+                  }
+                  return ColoredBox(
+                    color: scheme.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.person_outline,
+                      size: size * 0.5,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  );
+                },
               ),
             ),
     );

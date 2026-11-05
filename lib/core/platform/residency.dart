@@ -35,19 +35,35 @@ class ResidencyService {
 
   /// Whether residency is active, i.e. closing the window hides it instead of
   /// quitting and the process keeps running.
-  bool get closeToTray =>
-      _initialized &&
-      (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+  bool get closeToTray => _initialized && !kIsWeb && _desktop;
+
+  /// True on the platforms that host a window and a tray.
+  ///
+  /// `dart:io`'s `Platform` throws on the web (`Platform._operatingSystem` is
+  /// unsupported there), so residency must decide from `defaultTargetPlatform`
+  /// and bail out on web before touching any platform API.
+  bool get _desktop =>
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
+
+  bool get _android => defaultTargetPlatform == TargetPlatform.android;
 
   /// Prepares the platform surfaces. Safe to call more than once.
   Future<void> initialize() async {
     if (_initialized) return;
-    if (Platform.isAndroid) {
+    // The web has no tray, no foreground service and no window manager, and
+    // every platform API below would throw there; there is nothing to do.
+    if (kIsWeb) {
+      _initialized = true;
+      return;
+    }
+    if (_android) {
       await _initializeAndroid();
       // The service is what keeps the websocket alive while the app is
       // backgrounded; without it notifications only arrive in the foreground.
       await startAndroidService();
-    } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    } else if (_desktop) {
       await _initializeDesktop();
     }
     _initialized = true;
@@ -126,18 +142,18 @@ class ResidencyService {
   }
 
   Future<void> showWindow() async {
-    if (Platform.isAndroid) return;
+    if (_android) return;
     await windowManager.show();
     await windowManager.focus();
   }
 
   Future<void> hideToTray() async {
-    if (Platform.isAndroid) return;
+    if (_android) return;
     await windowManager.hide();
   }
 
   Future<void> quit() async {
-    if (Platform.isAndroid) return;
+    if (_android) return;
     // The tray goes away with the process; only the window needs closing.
     await windowManager.destroy();
   }
@@ -166,7 +182,7 @@ class ResidencyService {
   /// needs the channel itself.
   Future<void> _initializeDesktopNotifications() async {
     try {
-      if (Platform.isWindows) {
+      if (defaultTargetPlatform == TargetPlatform.windows) {
         await _initializeNotifications(
           const InitializationSettings(
             windows: WindowsInitializationSettings(
@@ -176,7 +192,7 @@ class ResidencyService {
             ),
           ),
         );
-      } else if (Platform.isLinux) {
+      } else if (defaultTargetPlatform == TargetPlatform.linux) {
         await _initializeNotifications(
           const InitializationSettings(
             linux: LinuxInitializationSettings(defaultActionName: 'Open'),
@@ -201,8 +217,7 @@ class ResidencyService {
   ///
   /// macOS is excluded: this build has no macOS notification setup, and
   /// claiming otherwise would silently drop events.
-  bool get notificationsSupported =>
-      Platform.isAndroid || Platform.isWindows || Platform.isLinux;
+  bool get notificationsSupported => !kIsWeb && (_android || _desktop);
 
   /// Notification categories, so platforms that separate notifications by
   /// channel (Android) let the user mute each class independently: direct
@@ -266,7 +281,7 @@ class ResidencyService {
 
   /// Starts the Android foreground service that keeps the websocket alive.
   Future<void> startAndroidService() async {
-    if (!Platform.isAndroid) return;
+    if (!_android) return;
     try {
       FlutterForegroundTask.init(
         androidNotificationOptions: AndroidNotificationOptions(
@@ -297,7 +312,7 @@ class ResidencyService {
   var _androidServiceRunning = false;
 
   Future<void> stopAndroidService() async {
-    if (!Platform.isAndroid) return;
+    if (!_android) return;
     await FlutterForegroundTask.stopService();
     _androidServiceRunning = false;
   }
