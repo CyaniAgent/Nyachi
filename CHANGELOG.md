@@ -7,7 +7,7 @@ a `-beta.N` suffix marks a pre-release from the `develop` line.
 
 ### Codename
 
-Sora
+Kumo
 
 The Web build is usable for the first time: beta.4's Web release aborted on
 startup, and pictures from instances that send no CORS headers never rendered
