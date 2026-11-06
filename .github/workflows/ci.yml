@@ -36,6 +36,9 @@ jobs:
       # its build.dart needs pkg-config plus the GTK 3, X11 and Xi headers.
       - name: Install native build dependencies
         run: |
+          # apt refuses to run unless the archives directory exists with a
+          # partial/ child; a cold cache restores neither.
+          mkdir -p "$HOME/.cache/apt-archives/partial"
           APT="sudo apt-get -o Acquire::Retries=5
             -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
             -o Dir::Cache::archives=$HOME/.cache/apt-archives"
