@@ -42,6 +42,57 @@
       });
     }
   </script>
+  <style>
+    /* Splash shown until Flutter paints its first frame. flutter_bootstrap.js
+       removes #nyachi-splash; the fallback timer there guarantees it fades
+       even if the Flutter loader never starts, so it cannot trap the page. */
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #FEF7FF;
+    }
+    #nyachi-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 24px;
+      background: inherit;
+      z-index: 2147483647;
+      transition: opacity 220ms ease-out;
+    }
+    #nyachi-splash.nyachi-splash-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #nyachi-splash img {
+      width: 96px;
+      height: 96px;
+      border-radius: 24px;
+      animation: nyachi-breathe 1400ms ease-in-out infinite;
+    }
+    #nyachi-splash span {
+      font: 600 20px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        sans-serif;
+      letter-spacing: 0.04em;
+      color: #68548E;
+    }
+    @keyframes nyachi-breathe {
+      0%, 100% { transform: scale(0.96); opacity: 0.85; }
+      50% { transform: scale(1.04); opacity: 1; }
+    }
+    /* Match the app's dark surface instead of flashing a white page. */
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #141218; }
+      #nyachi-splash span { color: #D0BCFF; }
+    }
+    /* Honour a system request for less motion. */
+    @media (prefers-reduced-motion: reduce) {
+      #nyachi-splash img { animation: none; }
+    }
+  </style>
 </head>
 <body>
   <!--
@@ -52,6 +103,11 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <div id="nyachi-splash">
+    <img src="icons/Icon-192.png" alt="">
+    <span>Nyachi</span>
+  </div>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
