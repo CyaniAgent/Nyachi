@@ -83,12 +83,28 @@ void main() {
   testWidgets('search filters the entries', (tester) async {
     await _pump(tester, const SettingsPage());
 
-    await tester.enterText(find.byType(TextField), 'appear');
+    await tester.enterText(find.byType(SearchBar), 'appear');
     await tester.pump();
 
     expect(find.text('Appearance'), findsOneWidget);
     expect(find.text('Notifications'), findsNothing);
     expect(find.text('Cache management'), findsNothing);
+  });
+
+  testWidgets('the search bar sits above the entries without elevation', (
+    tester,
+  ) async {
+    await _pump(tester, const SettingsPage());
+
+    final searchBar = tester.widget<SearchBar>(find.byType(SearchBar));
+    // A flat bar blends into the page; the default Material shadow does not.
+    expect(searchBar.elevation?.resolve({}), 0);
+    expect(searchBar.leading, isA<Icon>());
+
+    // Above the first tile, not buried inside the scrolling list.
+    final barY = tester.getCenter(find.byType(SearchBar)).dy;
+    final tileY = tester.getCenter(find.text('Alice')).dy;
+    expect(barY, lessThan(tileY));
   });
 
   testWidgets('the account hub owns the user-scoped pages', (tester) async {

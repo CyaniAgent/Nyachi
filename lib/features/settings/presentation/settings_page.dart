@@ -115,62 +115,86 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final active = session.active;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
-      body: _SettingsBody(
+      body: Column(
         children: [
-          if (query.isEmpty) ...[
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-              leading: NyachiAvatar(
-                url: active?.avatarUrl,
-                size: 48,
-                fallback: Text(
-                  active?.username.characters.firstOrNull?.toUpperCase() ?? '?',
+          // The search bar sits above the scrolling list: filtering happens as
+          // you type, so results appear in place and no separate search page
+          // is needed.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
+                child: SearchBar(
+                  hintText: l10n.settingsSearchHint,
+                  leading: const Icon(Icons.search),
+                  elevation: const WidgetStatePropertyAll(0),
+                  backgroundColor: WidgetStatePropertyAll(
+                    Theme.of(context).colorScheme.surfaceContainerHighest,
+                  ),
+                  onChanged: (value) => setState(() => _query = value),
                 ),
               ),
-              title: Text(
-                active?.displayName ?? active?.username ?? l10n.noAccounts,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              subtitle: Text(l10n.settingsAccountAndServer),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () =>
-                  openDetail(context, const SettingsAccountsLocation()),
             ),
-            const SizedBox(height: 8),
-          ],
-          TextField(
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: l10n.settingsSearchHint,
-              isDense: true,
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: (value) => setState(() => _query = value),
           ),
-          if (visible.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(l10n.noSearchResults),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _SettingsBody(
+              children: [
+                if (query.isEmpty) ...[
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    leading: NyachiAvatar(
+                      url: active?.avatarUrl,
+                      size: 48,
+                      fallback: Text(
+                        active?.username.characters.firstOrNull
+                                ?.toUpperCase() ??
+                            '?',
+                      ),
+                    ),
+                    title: Text(
+                      active?.displayName ??
+                          active?.username ??
+                          l10n.noAccounts,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    subtitle: Text(l10n.settingsAccountAndServer),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        openDetail(context, const SettingsAccountsLocation()),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (visible.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(l10n.noSearchResults),
+                  ),
+                for (final group in _SettingsGroup.values)
+                  if (visible.any((entry) => entry.group == group)) ...[
+                    _SettingsSectionHeader(
+                      label: switch (group) {
+                        _SettingsGroup.app => l10n.settingsGroupApp,
+                        _SettingsGroup.server => l10n.settingsGroupServer,
+                        _SettingsGroup.advanced => l10n.settingsGroupAdvanced,
+                      },
+                    ),
+                    for (final entry in visible.where(
+                      (entry) => entry.group == group,
+                    ))
+                      _SettingsTile(
+                        icon: entry.icon,
+                        title: entry.title,
+                        subtitle: entry.subtitle,
+                        onTap:
+                            entry.onTap ??
+                            () => openDetail(context, entry.open!),
+                      ),
+                  ],
+              ],
             ),
-          for (final group in _SettingsGroup.values)
-            if (visible.any((entry) => entry.group == group)) ...[
-              _SettingsSectionHeader(
-                label: switch (group) {
-                  _SettingsGroup.app => l10n.settingsGroupApp,
-                  _SettingsGroup.server => l10n.settingsGroupServer,
-                  _SettingsGroup.advanced => l10n.settingsGroupAdvanced,
-                },
-              ),
-              for (final entry in visible.where(
-                (entry) => entry.group == group,
-              ))
-                _SettingsTile(
-                  icon: entry.icon,
-                  title: entry.title,
-                  subtitle: entry.subtitle,
-                  onTap: entry.onTap ?? () => openDetail(context, entry.open!),
-                ),
-            ],
+          ),
         ],
       ),
     );
