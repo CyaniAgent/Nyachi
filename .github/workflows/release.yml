@@ -137,11 +137,31 @@ jobs:
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
 
+      # Re-downloading a few hundred MB of GTK/mpv/dev packages per run both
+      # wastes minutes and exposes the build to a stalled mirror: the beta.5
+      # run sat in apt-get for over an hour. Keeping the downloaded .deb
+      # archives in the Actions cache turns the common case into a local
+      # install, and the acquire timeouts cap a dead mirror instead of
+      # letting it hang the job.
+      - name: Cache apt archives
+        if: matrix.target == 'linux-x64'
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          # The stock /var/cache/apt/archives is root-owned, so the cache
+          # action could not restore into it. apt writes its .deb downloads
+          # to this user-owned directory instead.
+          path: ~/.cache/apt-archives
+          key: apt-${{ runner.os }}-${{ hashFiles('.github/workflows/release.yml') }}
+          restore-keys: apt-${{ runner.os }}-
+
       - name: Install Linux build dependencies
         if: matrix.target == 'linux-x64'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config \
+          APT="sudo apt-get -o Acquire::Retries=5
+            -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
+            -o Dir::Cache::archives=$HOME/.cache/apt-archives"
+          $APT update
+          $APT install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libsecret-1-dev libjsoncpp-dev \
             libmpv-dev mpv
 
