@@ -11,6 +11,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/mfm/mfm_body.dart';
 import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/auth/session_controller.dart';
@@ -606,7 +607,7 @@ class _MessageBubble extends StatelessWidget {
                     item.fromUserId,
                 style: Theme.of(context).textTheme.labelSmall,
               ),
-            if (item.text?.isNotEmpty == true) Text(item.text!),
+            if (item.text?.isNotEmpty == true) MfmBody(text: item.text!),
             if (file != null) ...[
               const SizedBox(height: 4),
               _ChatFile(file: file, onVideo: onVideo),

@@ -14,7 +14,7 @@ import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
-import '../../notes/presentation/note_content.dart';
+import '../../../core/mfm/mfm_body.dart';
 import '../../notes/presentation/note_list.dart';
 import '../application/profile_providers.dart';
 
@@ -211,9 +211,10 @@ class _ProfileHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (user.description?.isNotEmpty == true) ...[
-                NoteContent(
+                MfmBody(
                   text: _normalizeDescription(user.description!),
                   emojis: user.emojis,
+                  detail: true,
                 ),
                 const SizedBox(height: 12),
               ],

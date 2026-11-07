@@ -18,7 +18,7 @@ import '../application/note_providers.dart';
 import 'reaction_chip.dart';
 import 'emoji_text.dart';
 import 'reaction_picker.dart';
-import 'note_content.dart';
+import '../../../core/mfm/mfm_body.dart';
 import 'note_media.dart';
 
 class NoteCard extends ConsumerStatefulWidget {
@@ -141,9 +141,10 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                   ],
                   if (showContent) ...[
                     if (note.text?.isNotEmpty == true)
-                      NoteContent(
+                      MfmBody(
                         text: note.text!,
                         emojis: note.emojis,
+                        detail: widget.detailMode,
                         style: widget.detailMode
                             ? Theme.of(context).textTheme.bodyLarge
                             : null,
@@ -639,7 +640,7 @@ class _EmbeddedNote extends StatelessWidget {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             if (note.text?.isNotEmpty == true)
-              NoteContent(text: note.text!, emojis: note.emojis),
+              MfmBody(text: note.text!, emojis: note.emojis),
             if (note.files?.isNotEmpty == true)
               NoteMedia(files: note.files!, noteId: note.id),
           ],

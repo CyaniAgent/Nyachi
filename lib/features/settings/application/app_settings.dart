@@ -46,6 +46,14 @@ class AppSettings {
     this.centerContent = true,
     this.defaultVisibility = 'public',
     this.defaultLocalOnly = false,
+    this.mfmMotionMode = 'detailOnly',
+    this.mfmMotionClasses = const {
+      'scale',
+      'translate',
+      'rotate',
+      'color',
+      'flicker',
+    },
   });
 
   final String themeMode;
@@ -66,6 +74,14 @@ class AppSettings {
   final String defaultVisibility;
   final bool defaultLocalOnly;
 
+  /// `all` / `detailOnly` / `off`: how much MFM motion plays. The default
+  /// keeps timelines static, because a feed of many notes would otherwise
+  /// repaint every frame.
+  final String mfmMotionMode;
+
+  /// Enabled [MfmMotionClass] names; an empty set means "everything".
+  final Set<String> mfmMotionClasses;
+
   AppSettings copyWith({
     String? themeMode,
     String? localeCode,
@@ -76,6 +92,8 @@ class AppSettings {
     bool? centerContent,
     String? defaultVisibility,
     bool? defaultLocalOnly,
+    String? mfmMotionMode,
+    Set<String>? mfmMotionClasses,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -87,6 +105,8 @@ class AppSettings {
       centerContent: centerContent ?? this.centerContent,
       defaultVisibility: defaultVisibility ?? this.defaultVisibility,
       defaultLocalOnly: defaultLocalOnly ?? this.defaultLocalOnly,
+      mfmMotionMode: mfmMotionMode ?? this.mfmMotionMode,
+      mfmMotionClasses: mfmMotionClasses ?? this.mfmMotionClasses,
     );
   }
 }
@@ -103,6 +123,8 @@ class SettingsController extends _$SettingsController {
   static const oobeCompletedKey = 'oobe.completed';
   static const defaultVisibilityKey = 'composer.defaultVisibility';
   static const defaultLocalOnlyKey = 'composer.defaultLocalOnly';
+  static const mfmMotionModeKey = 'mfm.motionMode';
+  static const mfmMotionClassesKey = 'mfm.motionClasses';
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
 
@@ -138,6 +160,10 @@ class SettingsController extends _$SettingsController {
       centerContent: prefs.getBool(centerContentKey) ?? true,
       defaultVisibility: prefs.getString(defaultVisibilityKey) ?? 'public',
       defaultLocalOnly: prefs.getBool(defaultLocalOnlyKey) ?? false,
+      mfmMotionMode: _parseMotionMode(prefs.getString(mfmMotionModeKey)),
+      mfmMotionClasses: _parseMotionClasses(
+        prefs.getStringList(mfmMotionClassesKey),
+      ),
     );
   }
 
@@ -211,5 +237,36 @@ class SettingsController extends _$SettingsController {
       if (tab.name == value) return tab;
     }
     return null;
+  }
+
+  static const _motionModes = {'all', 'detailOnly', 'off'};
+
+  String _parseMotionMode(String? raw) =>
+      raw != null && _motionModes.contains(raw) ? raw : 'detailOnly';
+
+  Set<String> _parseMotionClasses(List<String>? raw) {
+    const known = {'scale', 'translate', 'rotate', 'color', 'flicker'};
+    if (raw == null) return known;
+    return raw.where(known.contains).toSet();
+  }
+
+  Future<void> setMfmMotionMode(String mode) async {
+    final value = _parseMotionMode(mode);
+    state = state.copyWith(mfmMotionMode: value);
+    await _prefs.setString(mfmMotionModeKey, value);
+  }
+
+  Future<void> setMfmMotionClass(String motionClass, bool enabled) async {
+    final classes = {...state.mfmMotionClasses};
+    if (enabled) {
+      classes.add(motionClass);
+    } else {
+      classes.remove(motionClass);
+    }
+    state = state.copyWith(mfmMotionClasses: classes);
+    await _prefs.setStringList(
+      mfmMotionClassesKey,
+      classes.toList(growable: false),
+    );
   }
 }

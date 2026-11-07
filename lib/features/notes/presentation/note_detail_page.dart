@@ -16,7 +16,7 @@ import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
 import '../application/note_detail_controller.dart';
 import 'note_card.dart';
-import 'note_content.dart';
+import '../../../core/mfm/mfm_body.dart';
 
 class NoteDetailPage extends ConsumerStatefulWidget {
   const NoteDetailPage({required this.noteId, super.key});
@@ -230,9 +230,10 @@ class _AncestorTile extends StatelessWidget {
                         ),
                       )
                     else if (note.text?.isNotEmpty == true)
-                      NoteContent(
+                      MfmBody(
                         text: note.text!,
                         emojis: note.emojis,
+                        detail: true,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                   ],
@@ -312,9 +313,10 @@ class _ReplyTile extends StatelessWidget {
                   else if (note.text?.isNotEmpty == true)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: NoteContent(
+                      child: MfmBody(
                         text: note.text!,
                         emojis: note.emojis,
+                        detail: true,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),

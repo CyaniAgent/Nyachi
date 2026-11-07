@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/ui/l10n_ext.dart';
+import '../../../core/mfm/mfm_body.dart';
 import '../../../core/ui/network_image.dart';
 import '../data/announcement_repository.dart';
 
@@ -85,10 +86,9 @@ class _BannerTile extends StatelessWidget {
               children: [
                 if (announcement.title.isNotEmpty)
                   Text(announcement.title, style: theme.textTheme.titleSmall),
-                Text(
-                  announcement.text,
+                MfmBody(
+                  text: announcement.text,
                   maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall,
                 ),
               ],

@@ -9,6 +9,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/ui/avatar.dart';
+import '../../../core/mfm/mfm_body.dart';
 import '../../settings/application/app_settings.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
@@ -161,7 +162,7 @@ class _NotificationTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (note?.text != null && note!.text!.isNotEmpty)
-            Text(note.text!, maxLines: 2, overflow: TextOverflow.ellipsis),
+            MfmBody(text: note.text!, emojis: note.emojis, maxLines: 2),
           Text(relativeTime(context, notificationCreatedAt(notification))),
         ],
       ),

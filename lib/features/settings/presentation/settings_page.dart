@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/auth/session_controller.dart';
+import '../../../core/mfm/mfm_motion.dart';
 import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/network/instance_repository.dart';
@@ -551,6 +552,59 @@ class AppearanceSettingsPage extends ConsumerWidget {
                 DropdownMenuEntry(value: 'ja', label: l10n.languageJapanese),
               ],
             ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.animation),
+            title: Text(l10n.mfmMotionTitle),
+            subtitle: Text(l10n.mfmMotionSubtitle),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: SegmentedButton<String>(
+              segments: [
+                ButtonSegment(
+                  value: 'all',
+                  label: Text(l10n.mfmMotionAll),
+                  icon: const Icon(Icons.public),
+                ),
+                ButtonSegment(
+                  value: 'detailOnly',
+                  label: Text(l10n.mfmMotionDetailOn),
+                  icon: const Icon(Icons.notes),
+                ),
+                ButtonSegment(
+                  value: 'off',
+                  label: Text(l10n.mfmMotionOff),
+                  icon: const Icon(Icons.block),
+                ),
+              ],
+              selected: {settings.mfmMotionMode},
+              onSelectionChanged: (selection) =>
+                  controller.setMfmMotionMode(selection.first),
+            ),
+          ),
+          for (final motionClass in mfmMotionClasses)
+            SwitchListTile(
+              title: Text(switch (motionClass) {
+                MfmMotionClass.scale => l10n.mfmClassScale,
+                MfmMotionClass.translate => l10n.mfmClassTranslate,
+                MfmMotionClass.rotate => l10n.mfmClassRotate,
+                MfmMotionClass.color => l10n.mfmClassColor,
+                MfmMotionClass.flicker => l10n.mfmClassFlicker,
+              }),
+              value: settings.mfmMotionClasses.isEmpty
+                  ? true
+                  : settings.mfmMotionClasses.contains(motionClass.name),
+              onChanged: (value) =>
+                  controller.setMfmMotionClass(motionClass.name, value),
+            ),
+          ListTile(
+            leading: const Icon(Icons.help_outline),
+            title: Text(l10n.mfmHelpTitle),
+            subtitle: Text(l10n.mfmHelpSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => openDetail(context, const MfmHelpLocation()),
           ),
         ],
       ),

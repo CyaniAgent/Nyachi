@@ -15,6 +15,7 @@ import '../../features/oobe/presentation/oobe_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
 import '../../features/settings/presentation/cache_page.dart';
+import '../../features/settings/presentation/mfm_help_page.dart';
 import '../../features/settings/presentation/drive_settings_page.dart';
 import '../../features/settings/presentation/email_settings_page.dart';
 import '../../features/settings/presentation/licenses_page.dart';
@@ -321,6 +322,23 @@ class SettingsCacheRoute extends GoRouteData with $SettingsCacheRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const CacheSettingsPage();
+  }
+}
+
+@TypedGoRoute<SettingsMfmHelpRoute>(path: '/settings/mfm-help')
+class SettingsMfmHelpRoute extends GoRouteData with $SettingsMfmHelpRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsMfmHelpRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const MfmHelpPage();
   }
 }
 

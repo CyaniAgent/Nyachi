@@ -9,10 +9,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
+import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/core/ui/network_image.dart';
 import 'package:nyachi/features/notes/application/note_providers.dart';
 import 'package:nyachi/features/notes/domain/note_repository.dart';
 import 'package:nyachi/features/notes/presentation/note_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fixtures.dart';
 
@@ -31,9 +33,12 @@ void main() {
     required Note note,
     required LocalAccount account,
   }) async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
           activeAccountProvider.overrideWithValue(account),
           noteRepositoryProvider.overrideWithValue(repository),
         ],

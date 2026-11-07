@@ -289,7 +289,7 @@ void main() {
     expect(find.byIcon(Icons.check), findsOneWidget);
   });
 
-  testWidgets('the toolbar preview toggle swaps the editor for the preview', (
+  testWidgets('the toolbar preview toggle adds the preview under the editor', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1000, 1200);
@@ -308,23 +308,24 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.preview_outlined));
+    await tester.tap(find.byTooltip('Preview'));
     await tester.pumpAndSettle();
 
-    // Preview is a mode: the editor is replaced, not supplemented, and the
-    // footnote names what it does not render.
-    expect(find.byType(TextField), findsNothing);
-    expect(find.text('hello preview'), findsOneWidget);
+    // The preview is an extra card under the editor, not a mode: the text
+    // field stays, so the user keeps typing while reading the result.
+    expect(find.byType(TextField), findsWidgets);
+    expect(find.text('hello preview'), findsWidgets);
     expect(
-      find.text(
-        'The preview does not render attachments, polls or recipients.',
-      ),
+      find.text('The preview does not render attachments or polls.'),
       findsOneWidget,
     );
 
-    await tester.tap(find.byIcon(Icons.edit_outlined));
+    await tester.tap(find.byTooltip('Hide preview'));
     await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsOneWidget);
+    expect(
+      find.text('The preview does not render attachments or polls.'),
+      findsNothing,
+    );
   });
 
   testWidgets('a mention trigger opens the panel and inserts the handle', (

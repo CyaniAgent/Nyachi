@@ -10,6 +10,7 @@ import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
 import '../../features/settings/presentation/cache_page.dart';
+import '../../features/settings/presentation/mfm_help_page.dart';
 import '../../features/settings/presentation/drive_settings_page.dart';
 import '../../features/settings/presentation/email_settings_page.dart';
 import '../../features/settings/presentation/notification_settings_page.dart';
@@ -229,6 +230,16 @@ class SettingsCacheLocation extends DetailLocation {
 
   @override
   Widget build(BuildContext context) => const CacheSettingsPage();
+}
+
+class MfmHelpLocation extends DetailLocation {
+  const MfmHelpLocation();
+
+  @override
+  String get location => '/settings/mfm-help';
+
+  @override
+  Widget build(BuildContext context) => const MfmHelpPage();
 }
 
 class DriveDetailLocation extends DetailLocation {

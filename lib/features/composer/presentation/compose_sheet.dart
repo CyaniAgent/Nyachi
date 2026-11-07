@@ -17,7 +17,8 @@ import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../../drive/data/drive_repository.dart';
 import '../../notes/application/emoji_catalog.dart';
-import '../../notes/presentation/note_content.dart';
+import '../../../core/mfm/mfm_body.dart';
+import '../../settings/presentation/mfm_help_page.dart';
 import '../application/composer_controller.dart';
 import '../domain/completion_trigger.dart';
 import 'compose_page.dart';
@@ -228,82 +229,76 @@ class _ComposerBodyState extends ConsumerState<ComposerBody> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Preview is a mode, not an extra card: it replaces the
-                  // editor so what you see is what gets posted.
-                  if (state.showPreview)
-                    _PreviewCard(state: state)
-                  else ...[
-                    if (state.visibility ==
-                        NotesCreateRequestVisibility.specified)
-                      _RecipientChips(state: state, controller: controller),
-                    if (_hasCw)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: TextField(
-                          controller: _cw,
-                          autofocus: true,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          decoration: InputDecoration(
-                            hintText: l10n.contentWarningHint,
-                            isDense: true,
-                            border: const OutlineInputBorder(),
-                          ),
-                          onChanged: controller.setCw,
-                        ),
-                      ),
-                    Focus(
-                      // Arrows and Tab go to the panel before the field acts
-                      // on them; Enter is never consumed, so it inserts a
-                      // newline in the field as usual.
-                      onKeyEvent: (_, event) {
-                        final trigger = _trigger;
-                        if (trigger == null) return KeyEventResult.ignored;
-                        final consumed = handleCompletionKey(
-                          event: event,
-                          entryCount: completionEntries(ref, trigger).length,
-                          selectedIndex: _triggerIndex,
-                          onHighlight: (index) =>
-                              setState(() => _triggerIndex = index),
-                          onAccept: (index) {
-                            final entry = completionEntries(
-                              ref,
-                              trigger,
-                            )[index];
-                            _applyCompletion(entry);
-                          },
-                          onDismiss: () {
-                            _triggerDismissed = true;
-                            _closeTrigger();
-                          },
-                        );
-                        return consumed
-                            ? KeyEventResult.handled
-                            : KeyEventResult.ignored;
-                      },
+                  // The editor always stays visible; the preview is an extra
+                  // card under it rather than a mode that hides what you type.
+                  if (state.visibility ==
+                      NotesCreateRequestVisibility.specified)
+                    _RecipientChips(state: state, controller: controller),
+                  if (_hasCw)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: TextField(
-                        controller: _text,
-                        minLines: widget.expandContent ? 10 : 4,
-                        maxLines: null,
-                        autofocus: !_hasCw,
+                        controller: _cw,
+                        autofocus: true,
+                        style: Theme.of(context).textTheme.bodyMedium,
                         decoration: InputDecoration(
-                          hintText: l10n.composerHint,
-                          border: InputBorder.none,
+                          hintText: l10n.contentWarningHint,
+                          isDense: true,
+                          border: const OutlineInputBorder(),
                         ),
-                        onChanged: controller.setText,
+                        onChanged: controller.setCw,
                       ),
                     ),
-                    if (_trigger != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: CompletionPanel(
-                          trigger: _trigger!,
-                          selectedIndex: _triggerIndex,
-                          onSelected: _applyCompletion,
-                        ),
+                  Focus(
+                    // Arrows and Tab go to the panel before the field acts
+                    // on them; Enter is never consumed, so it inserts a
+                    // newline in the field as usual.
+                    onKeyEvent: (_, event) {
+                      final trigger = _trigger;
+                      if (trigger == null) return KeyEventResult.ignored;
+                      final consumed = handleCompletionKey(
+                        event: event,
+                        entryCount: completionEntries(ref, trigger).length,
+                        selectedIndex: _triggerIndex,
+                        onHighlight: (index) =>
+                            setState(() => _triggerIndex = index),
+                        onAccept: (index) {
+                          final entry = completionEntries(ref, trigger)[index];
+                          _applyCompletion(entry);
+                        },
+                        onDismiss: () {
+                          _triggerDismissed = true;
+                          _closeTrigger();
+                        },
+                      );
+                      return consumed
+                          ? KeyEventResult.handled
+                          : KeyEventResult.ignored;
+                    },
+                    child: TextField(
+                      controller: _text,
+                      minLines: widget.expandContent ? 10 : 4,
+                      maxLines: null,
+                      autofocus: !_hasCw,
+                      decoration: InputDecoration(
+                        hintText: l10n.composerHint,
+                        border: InputBorder.none,
                       ),
-                    if (state.showPoll)
-                      _PollEditor(state: state, controller: controller),
-                  ],
+                      onChanged: controller.setText,
+                    ),
+                  ),
+                  if (_trigger != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: CompletionPanel(
+                        trigger: _trigger!,
+                        selectedIndex: _triggerIndex,
+                        onSelected: _applyCompletion,
+                      ),
+                    ),
+                  if (state.showPoll)
+                    _PollEditor(state: state, controller: controller),
+                  if (state.showPreview) _PreviewCard(state: state),
                   if (state.fileIds.isNotEmpty)
                     _AttachmentChips(state: state, controller: controller),
                   if (state.scheduledAt != null)
@@ -628,6 +623,17 @@ class _MoreMenu extends ConsumerWidget {
             onPressed: () => unawaited(_pickSchedule(context)),
             child: Text(l10n.schedule),
           ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.help_outline),
+          onPressed: () async {
+            final navigator = Navigator.of(context);
+            navigator.pop();
+            await navigator.push<void>(
+              MaterialPageRoute<void>(builder: (_) => const MfmHelpPage()),
+            );
+          },
+          child: Text(l10n.mfmHelpTitle),
+        ),
         const Divider(height: 1),
         SubmenuButton(
           leadingIcon: const Icon(Icons.add_reaction_outlined),
@@ -806,10 +812,12 @@ class _ComposerToolbar extends StatelessWidget {
         ),
         const Spacer(),
         IconButton(
-          tooltip: state.showPreview ? l10n.editLabel : l10n.preview,
+          tooltip: state.showPreview ? l10n.previewHide : l10n.preview,
           onPressed: controller.togglePreview,
           icon: Icon(
-            state.showPreview ? Icons.edit_outlined : Icons.preview_outlined,
+            state.showPreview
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
             color: state.showPreview
                 ? Theme.of(context).colorScheme.primary
                 : null,
@@ -988,7 +996,7 @@ class _PreviewCard extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodySmall,
             )
           else
-            NoteContent(text: state.text, emojis: emojis),
+            MfmBody(text: state.text, emojis: emojis, detail: true),
           // The preview renders text, emoji and CW only: name the gaps so the
           // mode never claims to be the final note.
           Padding(
