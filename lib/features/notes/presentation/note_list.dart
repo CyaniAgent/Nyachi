@@ -85,39 +85,6 @@ class NoteList extends ConsumerWidget {
         (header == null || headerFullBleed ? 0 : 1);
     final footer = state.items.isNotEmpty && state.loadingMore ? 1 : 0;
     final headerWidget = header;
-    final list = _list(
-      ref: ref,
-      context: context,
-      state: state,
-      controller: controller,
-      l10n: l10n,
-      leading: leading,
-      trailing: trailing,
-      bannerCount: bannerCount,
-      footer: footer,
-      showEmpty: showEmpty,
-    );
-    if (headerWidget == null || !headerFullBleed) return list;
-    return Column(
-      children: [
-        headerWidget,
-        Expanded(child: list),
-      ],
-    );
-  }
-
-  Widget _list({
-    required WidgetRef ref,
-    required BuildContext context,
-    required NoteListState state,
-    required NoteListController controller,
-    required AppLocalizations l10n,
-    required double leading,
-    required double trailing,
-    required int bannerCount,
-    required int footer,
-    required bool showEmpty,
-  }) {
     return ScrollEdgeLoader(
       canLoad: () {
         final current = ref.read(noteListControllerProvider(source));
@@ -127,70 +94,97 @@ class NoteList extends ConsumerWidget {
             current.items.isNotEmpty;
       },
       onEdge: controller.loadMore,
-      child: ListView.separated(
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(leading, 4, trailing, 24),
-        itemCount:
-            state.items.length + bannerCount + footer + (showEmpty ? 1 : 0),
-        separatorBuilder: (context, index) =>
-            header != null && !headerFullBleed && index == 0
-            ? const SizedBox.shrink()
-            : const Divider(height: 1),
-        itemBuilder: (context, index) {
-          var cursor = 0;
-          if (header != null && !headerFullBleed) {
-            if (index == cursor) return header!;
-            cursor++;
-          }
-          if (state.usingCache) {
-            if (index == cursor) {
-              return _Banner(
-                icon: Icons.cloud_off_outlined,
-                text: l10n.usingCache,
-              );
-            }
-            cursor++;
-          }
-          if (state.error != null && state.items.isNotEmpty) {
-            if (index == cursor) {
-              return _Banner(
-                icon: Icons.error_outline,
-                text: state.error!.message(l10n),
-                action: FailureAction(
+        slivers: [
+          // A full-bleed header scrolls with the list instead of sitting above
+          // it: pinned, a profile header as tall as a phone screen leaves the
+          // notes a sliver of space with no way to reclaim it.
+          if (headerWidget != null && headerFullBleed)
+            SliverToBoxAdapter(child: headerWidget),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(leading, 4, trailing, 24),
+            sliver: SliverList.separated(
+              itemCount:
+                  state.items.length +
+                  bannerCount +
+                  footer +
+                  (showEmpty ? 1 : 0),
+              separatorBuilder: (context, index) =>
+                  header != null && !headerFullBleed && index == 0
+                  ? const SizedBox.shrink()
+                  : const Divider(height: 1),
+              itemBuilder: (context, index) => _row(
+                context: context,
+                state: state,
+                controller: controller,
+                l10n: l10n,
+                showEmpty: showEmpty,
+                index: index,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _row({
+    required BuildContext context,
+    required NoteListState state,
+    required NoteListController controller,
+    required AppLocalizations l10n,
+    required bool showEmpty,
+    required int index,
+  }) {
+    var cursor = 0;
+    if (header != null && !headerFullBleed) {
+      if (index == cursor) return header!;
+      cursor++;
+    }
+    if (state.usingCache) {
+      if (index == cursor) {
+        return _Banner(icon: Icons.cloud_off_outlined, text: l10n.usingCache);
+      }
+      cursor++;
+    }
+    if (state.error != null && state.items.isNotEmpty) {
+      if (index == cursor) {
+        return _Banner(
+          icon: Icons.error_outline,
+          text: state.error!.message(l10n),
+          action: FailureAction(
+            failure: state.error!,
+            onRetry: controller.refresh,
+          ),
+        );
+      }
+      cursor++;
+    }
+    if (showEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 120),
+        child: Center(
+          child: Column(
+            children: [
+              Text(emptyText ?? l10n.emptyTimeline),
+              if (state.error != null)
+                FailureAction(
                   failure: state.error!,
                   onRetry: controller.refresh,
                 ),
-              );
-            }
-            cursor++;
-          }
-          if (showEmpty) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 120),
-              child: Center(
-                child: Column(
-                  children: [
-                    Text(emptyText ?? l10n.emptyTimeline),
-                    if (state.error != null)
-                      FailureAction(
-                        failure: state.error!,
-                        onRetry: controller.refresh,
-                      ),
-                  ],
-                ),
-              ),
-            );
-          }
-          final noteIndex = index - cursor;
-          if (noteIndex < state.items.length) {
-            return NoteCard(note: state.items[noteIndex]);
-          }
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        },
-      ),
+            ],
+          ),
+        ),
+      );
+    }
+    final noteIndex = index - cursor;
+    if (noteIndex < state.items.length) {
+      return NoteCard(note: state.items[noteIndex]);
+    }
+    return const Padding(
+      padding: EdgeInsets.all(16),
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 }
