@@ -19,11 +19,53 @@ import '../../../core/ui/time_format.dart';
 import '../application/notification_list_controller.dart';
 import '../domain/notification_copy.dart';
 
-class NotificationsPage extends ConsumerWidget {
+class NotificationsPage extends ConsumerStatefulWidget {
   const NotificationsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsPage> createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends ConsumerState<NotificationsPage>
+    with SingleTickerProviderStateMixin {
+  /// One tab per filter plus "all", in the order the tabs render.
+  static const _tabs = <NotificationFilter?>[
+    null,
+    ...NotificationFilter.values,
+  ];
+
+  late final TabController _tabs2 = TabController(
+    length: _tabs.length,
+    vsync: this,
+    initialIndex: _indexOf(ref.read(notificationListControllerProvider).filter),
+  );
+
+  static int _indexOf(NotificationFilter? filter) =>
+      filter == null ? 0 : _tabs.indexOf(filter);
+
+  @override
+  void initState() {
+    super.initState();
+    // Tab presses are the filter: tapping "Reactions" asks the server for that
+    // type list, exactly as the old chip row did.
+    _tabs2.addListener(() {
+      if (_tabs2.indexIsChanging) return;
+      unawaited(
+        ref
+            .read(notificationListControllerProvider.notifier)
+            .applyFilter(_tabs[_tabs2.index]),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabs2.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = ref.watch(notificationListControllerProvider);
     final controller = ref.read(notificationListControllerProvider.notifier);
@@ -32,6 +74,15 @@ class NotificationsPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.notifications),
         actions: [
+          IconButton(
+            tooltip: state.unreadOnly
+                ? l10n.notificationsShowAll
+                : l10n.notificationsUnreadOnly,
+            onPressed: () => controller.setUnreadOnly(!state.unreadOnly),
+            icon: Icon(
+              state.unreadOnly ? Icons.filter_alt : Icons.filter_alt_outlined,
+            ),
+          ),
           IconButton(
             tooltip: l10n.markAllRead,
             onPressed: state.markingRead
@@ -48,17 +99,32 @@ class NotificationsPage extends ConsumerWidget {
             icon: const Icon(Icons.done_all),
           ),
         ],
+        bottom: TabBar(
+          controller: _tabs2,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          tabs: [
+            Tab(text: l10n.notificationsFilterAll),
+            for (final filter in NotificationFilter.values)
+              Tab(
+                text: switch (filter) {
+                  NotificationFilter.mentions =>
+                    l10n.notificationsFilterMentions,
+                  NotificationFilter.reactions =>
+                    l10n.notificationsFilterReactions,
+                  NotificationFilter.boosts => l10n.notificationsFilterBoosts,
+                  NotificationFilter.follows => l10n.notificationsFilterFollows,
+                  NotificationFilter.system => l10n.notificationsFilterSystem,
+                },
+              ),
+          ],
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: controller.refresh,
         child: ReadableWidth(
           centered: ref.watch(settingsControllerProvider).centerContent,
-          child: Column(
-            children: [
-              _FilterBar(state: state, controller: controller),
-              Expanded(child: _body(context, ref, state, controller)),
-            ],
-          ),
+          child: _body(context, state, controller),
         ),
       ),
     );
@@ -66,20 +132,32 @@ class NotificationsPage extends ConsumerWidget {
 
   Widget _body(
     BuildContext context,
-    WidgetRef ref,
     NotificationListState state,
     NotificationListController controller,
   ) {
     final l10n = context.l10n;
-    if (state.initialLoading && state.items.isEmpty) {
+    final boundary = state.readBoundary;
+    // "Unread" is everything that arrived after the last mark-all-read; the
+    // server exposes no per-notification read flag.
+    final items = state.unreadOnly && boundary != null
+        ? state.items
+              .where((item) => notificationCreatedAt(item).isAfter(boundary))
+              .toList(growable: false)
+        : state.items;
+    if (state.initialLoading && items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (state.items.isEmpty) {
+    if (items.isEmpty) {
       return ListView(
         children: [
           const SizedBox(height: 120),
           Center(
-            child: Text(state.error?.message(l10n) ?? l10n.emptyNotifications),
+            child: Text(
+              state.error?.message(l10n) ??
+                  (state.unreadOnly
+                      ? l10n.notificationsNoUnread
+                      : l10n.emptyNotifications),
+            ),
           ),
           if (state.error != null)
             Center(
@@ -98,10 +176,10 @@ class NotificationsPage extends ConsumerWidget {
       },
       onEdge: controller.loadMore,
       child: ListView.separated(
-        itemCount: state.items.length + 1,
+        itemCount: items.length + 1,
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
-          if (index == state.items.length) {
+          if (index == items.length) {
             if (state.loadingMore) {
               return const Padding(
                 padding: EdgeInsets.all(16),
@@ -121,7 +199,7 @@ class NotificationsPage extends ConsumerWidget {
             }
             return const SizedBox(height: 24);
           }
-          return _NotificationTile(notification: state.items[index]);
+          return _NotificationTile(notification: items[index]);
         },
       ),
     );
@@ -169,55 +247,6 @@ class _NotificationTile extends StatelessWidget {
       onTap: note == null
           ? null
           : () => openDetail(context, NoteDetailLocation(note.id)),
-    );
-  }
-}
-
-/// The filter chips above the list: "All" plus one chip per event group.
-/// Selecting a chip reloads the list from the server with that filter.
-class _FilterBar extends StatelessWidget {
-  const _FilterBar({required this.state, required this.controller});
-
-  final NotificationListState state;
-  final NotificationListController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final filter = state.filter;
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(l10n.notificationsFilterAll),
-              selected: filter == null,
-              onSelected: (_) => unawaited(controller.applyFilter(null)),
-            ),
-          ),
-          for (final entry in NotificationFilter.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(switch (entry) {
-                  NotificationFilter.mentions =>
-                    l10n.notificationsFilterMentions,
-                  NotificationFilter.reactions =>
-                    l10n.notificationsFilterReactions,
-                  NotificationFilter.boosts => l10n.notificationsFilterBoosts,
-                  NotificationFilter.follows => l10n.notificationsFilterFollows,
-                  NotificationFilter.system => l10n.notificationsFilterSystem,
-                }),
-                selected: filter == entry,
-                onSelected: (_) => unawaited(controller.applyFilter(entry)),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

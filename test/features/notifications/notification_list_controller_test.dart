@@ -9,8 +9,10 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/network/error_mapper.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
+import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/notifications/application/notification_list_controller.dart';
 import 'package:nyachi/features/notifications/domain/notification_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fixtures.dart';
 
@@ -77,8 +79,11 @@ Notification _notification(String id) {
 }
 
 Future<ProviderContainer> _makeContainer(_FakeRepository repository) async {
+  SharedPreferences.setMockInitialValues({});
+  final preferences = await SharedPreferences.getInstance();
   final container = ProviderContainer(
     overrides: [
+      sharedPreferencesProvider.overrideWithValue(preferences),
       sessionControllerProvider.overrideWith(
         () => _FakeSessionController(_account()),
       ),
@@ -213,5 +218,59 @@ void main() {
     // A reaction does not belong in the mentions view; it stays on the server.
     controller.prepend(_notification('r1'));
     expect(container.read(provider).items, isEmpty);
+  });
+
+  test(
+    'the read boundary starts at first use and moves on mark-all-read',
+    () async {
+      final repository = _FakeRepository();
+      repository.fetch = (_) async =>
+          NotificationPage(items: [], hasMore: false);
+      final container = await _makeContainer(repository);
+
+      final provider = notificationListControllerProvider;
+      container.listen(provider, (_, _) {});
+      container.read(provider);
+      await pumpEventQueue();
+
+      // A fresh account has no read history, so the boundary is created rather
+      // than left null: otherwise every historical notification would show as
+      // unread on the first visit.
+      final initial = container.read(provider).readBoundary;
+      expect(initial, isNotNull);
+      expect(container.read(provider).unreadOnly, isFalse);
+
+      final before = initial!;
+      await container.read(provider.notifier).markAllRead();
+      await pumpEventQueue();
+
+      final moved = container.read(provider).readBoundary!;
+      expect(moved.isAfter(before) || moved.isAtSameMomentAs(before), isTrue);
+      expect(repository.marksRead, 1);
+    },
+  );
+
+  test('unreadOnly is a view switch, not a refetch', () async {
+    final repository = _FakeRepository();
+    var fetches = 0;
+    repository.fetch = (_) async {
+      fetches++;
+      return NotificationPage(items: [_notification('n1')], hasMore: false);
+    };
+    final container = await _makeContainer(repository);
+
+    final provider = notificationListControllerProvider;
+    container.listen(provider, (_, _) {});
+    container.read(provider);
+    await pumpEventQueue();
+    final fetchesAfterLoad = fetches;
+
+    container.read(provider.notifier).setUnreadOnly(true);
+    await pumpEventQueue();
+
+    // The server keeps no read state to filter on, so switching the view must
+    // not cost a request.
+    expect(container.read(provider).unreadOnly, isTrue);
+    expect(fetches, fetchesAfterLoad);
   });
 }

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/cache/cache_manager.dart';
@@ -164,11 +165,19 @@ abstract class NotificationListState with _$NotificationListState {
     @Default(false) bool usingCache,
     @Default(false) bool markingRead,
 
-    /// The active type filter; null shows every notification. An arriving
-    /// event of a filtered-out type is held back from the list until the
-    /// filter is lifted, not dropped: a later refresh reloads it from the
-    /// server.
+    /// The active type tab; null shows every notification. An arriving event
+    /// of a filtered-out type is held back from the list until the filter is
+    /// lifted, not dropped: a later refresh reloads it from the server.
     NotificationFilter? filter,
+
+    /// Shows only notifications newer than [readBoundary].
+    @Default(false) bool unreadOnly,
+
+    /// Everything at or before this instant counts as read. The server keeps
+    /// no per-notification read flag — `i/notifications` takes `markAsRead`
+    /// as a side effect and returns no state — so the boundary is this
+    /// client's record of the last "mark all read", persisted per account.
+    DateTime? readBoundary,
     AppFailure? error,
   }) = _NotificationListState;
 }
@@ -187,11 +196,33 @@ class NotificationListController extends _$NotificationListController {
     final active = ref.watch(sessionControllerProvider).active;
     if (active == null) throw StateError('No active account.');
     _repository = ref.watch(notificationRepositoryProvider);
+    _readBoundaryKey = '$_readBoundaryKeyPrefix${active.id}';
     unawaited(Future<void>.microtask(_hydrate));
     return const NotificationListState();
   }
 
+  static const _readBoundaryKeyPrefix = 'notifications.readAt.';
+  late String _readBoundaryKey;
+
+  SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
+
+  /// Reads the stored boundary, creating one at install time so an account
+  /// that never pressed "mark all read" does not open with every historical
+  /// notification flagged as unread.
+  Future<DateTime> _loadBoundary() async {
+    final stored = _prefs.getInt(_readBoundaryKey);
+    if (stored != null) {
+      return DateTime.fromMillisecondsSinceEpoch(stored);
+    }
+    final now = DateTime.now();
+    await _prefs.setInt(_readBoundaryKey, now.millisecondsSinceEpoch);
+    return now;
+  }
+
   Future<void> _hydrate() async {
+    final boundary = await _loadBoundary();
+    if (_disposed) return;
+    state = state.copyWith(readBoundary: boundary);
     final cached = await _repository.readCache();
     if (_disposed) return;
     if (cached.isNotEmpty) {
@@ -202,6 +233,13 @@ class NotificationListController extends _$NotificationListController {
       );
     }
     await refresh();
+  }
+
+  /// Switches the unread-only view. Purely client-side: the server has no read
+  /// state to ask about, so the list is not reloaded.
+  void setUnreadOnly(bool value) {
+    if (_disposed || state.unreadOnly == value) return;
+    state = state.copyWith(unreadOnly: value);
   }
 
   Future<void> refresh() async {
@@ -320,8 +358,10 @@ class NotificationListController extends _$NotificationListController {
     state = state.copyWith(markingRead: true, error: null);
     try {
       await _repository.markAllAsRead();
+      final now = DateTime.now();
+      await _prefs.setInt(_readBoundaryKey, now.millisecondsSinceEpoch);
       if (_disposed) return true;
-      state = state.copyWith(markingRead: false);
+      state = state.copyWith(markingRead: false, readBoundary: now);
       await refresh();
       return true;
     } catch (error) {
