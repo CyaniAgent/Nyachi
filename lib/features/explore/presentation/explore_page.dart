@@ -18,7 +18,11 @@ import '../../notes/presentation/note_list.dart';
 import '../application/explore_controllers.dart';
 
 class ExplorePage extends ConsumerStatefulWidget {
-  const ExplorePage({super.key});
+  const ExplorePage({this.initialQuery, super.key});
+
+  /// A query carried in from elsewhere (an MFM `$[search ...]` function, say),
+  /// so the page opens on its results instead of the trends.
+  final String? initialQuery;
 
   @override
   ConsumerState<ExplorePage> createState() => _ExplorePageState();
@@ -27,6 +31,16 @@ class ExplorePage extends ConsumerStatefulWidget {
 class _ExplorePageState extends ConsumerState<ExplorePage> {
   final _text = TextEditingController();
   var _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialQuery;
+    if (initial != null && initial.isNotEmpty) {
+      _query = initial;
+      _text.text = initial;
+    }
+  }
 
   @override
   void dispose() {

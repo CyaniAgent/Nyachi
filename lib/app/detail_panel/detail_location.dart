@@ -6,6 +6,7 @@ import '../../features/auth/presentation/login_page.dart';
 import '../../features/chat/domain/chat_models.dart';
 import '../../features/chat/presentation/chat_pages.dart';
 import '../../features/composer/presentation/compose_page.dart';
+import '../../features/explore/presentation/explore_page.dart';
 import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
@@ -128,6 +129,18 @@ class TagDetailLocation extends DetailLocation {
 
   @override
   Widget build(BuildContext context) => TagTimelinePage(tag: tag);
+}
+
+class SearchDetailLocation extends DetailLocation {
+  const SearchDetailLocation(this.query);
+
+  final String query;
+
+  @override
+  String get location => '/search/${Uri.encodeComponent(query)}';
+
+  @override
+  Widget build(BuildContext context) => ExplorePage(initialQuery: query);
 }
 
 class ComposeDetailLocation extends DetailLocation {

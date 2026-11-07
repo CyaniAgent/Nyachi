@@ -501,6 +501,7 @@ class SettingsPushRoute extends GoRouteData with $SettingsPushRoute {
     TypedStatefulShellBranch<ExploreBranchData>(
       routes: <TypedRoute<RouteData>>[
         TypedGoRoute<ExploreRoute>(path: '/explore'),
+        TypedGoRoute<SearchRoute>(path: '/search/:query'),
       ],
     ),
     TypedStatefulShellBranch<ChatBranchData>(
@@ -581,6 +582,17 @@ class ExploreRoute extends GoRouteData with $ExploreRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const ExplorePage();
+  }
+}
+
+class SearchRoute extends GoRouteData with $SearchRoute {
+  const SearchRoute(this.query);
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return ExplorePage(initialQuery: query);
   }
 }
 

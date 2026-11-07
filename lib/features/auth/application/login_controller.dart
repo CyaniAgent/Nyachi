@@ -10,6 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/error_mapper.dart';
+import '../../../core/platform/device_identity.dart';
+import '../../../core/storage/storage_providers.dart';
 import 'compliance_controller.dart';
 
 part 'login_controller.freezed.dart';
@@ -37,17 +39,21 @@ bool isMiAuthPending(MisskeyApiException error) {
 }
 
 class MiAuthService {
-  MiAuthService(String host)
+  MiAuthService(String host, {required this.clientName})
     : _client = MisskeyClient.fromHost(host, authMode: MisskeyAuthMode.none);
 
   final MisskeyClient _client;
+
+  /// Shown by the server in the permission screen and in the account's app
+  /// list, so it names this installation rather than the app alone.
+  final String clientName;
 
   String createSessionId() => _client.miAuth.createSessionId();
 
   Uri authorizationUri(String sessionId) {
     return _client.miAuth.buildAuthorizationUri(
       sessionId: sessionId,
-      name: 'Nyachi',
+      name: clientName,
       permissions: miAuthPermissions,
     );
   }
@@ -122,7 +128,10 @@ class LoginController extends _$LoginController {
     state = const LoginState(busy: true);
     MiAuthService? service;
     try {
-      service = MiAuthService(normalizeHost(host));
+      final clientName = await DeviceIdentity.clientNameFor(
+        ref.read(sharedPreferencesProvider),
+      );
+      service = MiAuthService(normalizeHost(host), clientName: clientName);
       _service?.close();
       _service = service;
       final sessionId = service.createSessionId();

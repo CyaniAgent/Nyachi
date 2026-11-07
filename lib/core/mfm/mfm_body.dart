@@ -140,9 +140,7 @@ class _MfmBodyState extends ConsumerState<MfmBody> {
   }
 
   void _openSearch(String query) {
-    _openUrl(
-      'https://www.google.com/search?q=${Uri.encodeQueryComponent(query)}',
-    );
+    openDetail(context, SearchDetailLocation(query));
   }
 
   Future<void> _openMention(String username, String? host) async {
