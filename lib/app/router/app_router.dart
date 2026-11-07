@@ -51,11 +51,25 @@ GoRouter appRouter(Ref ref) {
         routes: authenticatedRoutes,
       ),
     ],
-    redirect: (context, state) => authRedirect(
-      ref.read(sessionControllerProvider),
-      state.matchedLocation,
-      oobeCompleted: ref.read(settingsControllerProvider).oobeCompleted,
-    ),
+    redirect: (context, state) {
+      final session = ref.read(sessionControllerProvider);
+      final target = authRedirect(
+        session,
+        state.matchedLocation,
+        oobeCompleted: ref.read(settingsControllerProvider).oobeCompleted,
+      );
+      if (target != null && target != state.matchedLocation) {
+        // A redirect is the only way the app leaves a location the user did
+        // not navigate away from; naming the cause makes a reload that loses
+        // its path diagnosable instead of mysterious.
+        debugPrint(
+          '[router] ${state.matchedLocation} -> $target '
+          '(initialized=${session.initialized}, '
+          'authenticated=${session.isAuthenticated})',
+        );
+      }
+      return target;
+    },
     errorBuilder: (context, state) {
       return Scaffold(
         appBar: AppBar(),

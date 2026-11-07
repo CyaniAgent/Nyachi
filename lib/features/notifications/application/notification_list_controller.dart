@@ -22,6 +22,14 @@ import '../domain/notification_copy.dart';
 part 'notification_list_controller.freezed.dart';
 part 'notification_list_controller.g.dart';
 
+/// One page as it came off the wire, plus how many rows the server sent.
+class _ParsedPage {
+  const _ParsedPage({required this.items, required this.received});
+
+  final List<Notification> items;
+  final int received;
+}
+
 class MisskeyNotificationRepository implements NotificationRepository {
   MisskeyNotificationRepository({
     required this.client,
@@ -34,19 +42,57 @@ class MisskeyNotificationRepository implements NotificationRepository {
   final String accountId;
 
   static const _cacheKey = CacheManager.notificationsKey;
+  static const _pageSize = 20;
 
+  /// Fetches one page, tolerating notification types this build cannot model.
+  ///
+  /// The SDK parses the whole list in one pass (`Notification.fromJson`
+  /// throws `FormatException` for a type it does not know), so a single new
+  /// server-side type failed the entire page — which is why only the "All"
+  /// tab broke while every filtered tab, asking for known types only, worked.
+  /// Skipping the row and naming it on the console keeps the rest readable.
   @override
   Future<NotificationPage> fetchPage({
     String? untilId,
     List<AccountNotificationsRequestIncludeTypesItem>? includeTypes,
   }) async {
-    final page = await client.account.notificationsPage(
-      limit: 20,
-      untilId: untilId,
-      markAsRead: false,
-      includeTypes: includeTypes,
+    final page = await client.postParsed<_ParsedPage>(
+      'i/notifications',
+      body: AccountNotificationsRequest(
+        limit: _pageSize,
+        untilId: untilId,
+        markAsRead: false,
+        includeTypes: includeTypes,
+      ).toJson(),
+      requiresAuth: true,
+      parser: _parseNotifications,
     );
-    return NotificationPage(items: page.items, hasMore: page.hasMore);
+    // Cursor pagination: a full page means the server had at least that many.
+    // Counted before filtering, or a skipped row would look like the end.
+    return NotificationPage(
+      items: page.items,
+      hasMore: page.received >= _pageSize,
+    );
+  }
+
+  _ParsedPage _parseNotifications(Object? data) {
+    if (data is! List) {
+      throw const FormatException('i/notifications did not return a list.');
+    }
+    final parsed = <Notification>[];
+    for (final item in data) {
+      final map = item is Map<String, dynamic>
+          ? item
+          : Map<String, dynamic>.from(item as Map);
+      try {
+        parsed.add(Notification.fromJson(map));
+      } catch (error) {
+        debugPrint(
+          '[notifications] skipped unsupported type "${map['type']}": $error',
+        );
+      }
+    }
+    return _ParsedPage(items: parsed, received: data.length);
   }
 
   @override
