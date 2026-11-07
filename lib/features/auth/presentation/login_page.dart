@@ -62,9 +62,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _commitHost() {
     try {
       final normalized = normalizeHost(_host.text.trim());
+      // A half-typed name is not an instance: probing it would fire a doomed
+      // request on every blur. Submitting still tries it, and reports the real
+      // error if it does not resolve.
+      final probeable = isPlausibleHost(normalized);
       setState(() {
         if (normalized != _normalizedHost) _instanceUnchecked = false;
-        _normalizedHost = normalized;
+        _normalizedHost = probeable ? normalized : null;
       });
     } on FormatException {
       setState(() {

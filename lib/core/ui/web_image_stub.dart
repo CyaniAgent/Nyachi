@@ -12,3 +12,6 @@ Widget webImageFallback({
   double? height,
   BoxFit? fit,
 }) => const SizedBox.shrink();
+
+/// Non-web: cross-origin is not a concept for the image pipeline here.
+bool webIsCrossOrigin(String url) => false;

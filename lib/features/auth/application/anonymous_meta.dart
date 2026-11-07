@@ -4,6 +4,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/auth/session_controller.dart';
+import '../../../core/network/client_provider.dart';
 
 part 'anonymous_meta.g.dart';
 
@@ -18,6 +19,7 @@ part 'anonymous_meta.g.dart';
 Future<MetaLite> anonymousMeta(Ref ref, String host) async {
   final client = MisskeyClient.fromHost(
     normalizeHost(host),
+    dio: createApiDio(),
     authMode: MisskeyAuthMode.none,
   );
   ref.onDispose(client.close);

@@ -65,34 +65,47 @@ class NyachiAvatar extends StatelessWidget {
                   color: scheme.onSurfaceVariant,
                 ))
           : SizedBox.expand(
-              child: CachedNetworkImage(
-                imageUrl: url!,
-                fit: BoxFit.cover,
-                width: size,
-                height: size,
-                placeholder: (_, _) =>
-                    ColoredBox(color: scheme.surfaceContainerHighest),
-                errorWidget: (_, _, _) {
-                  // A CORS refusal on the web is not a broken URL: the DOM
-                  // image displays it, keeping avatars visible.
-                  if (hasDomImageFallback) {
-                    return domImage(
-                      url: url!,
+              child: needsDomImage(url!)
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ColoredBox(color: scheme.surfaceContainerHighest),
+                        domImage(
+                          url: url!,
+                          width: size,
+                          height: size,
+                          fit: BoxFit.cover,
+                        ),
+                      ],
+                    )
+                  : CachedNetworkImage(
+                      imageUrl: url!,
+                      fit: BoxFit.cover,
                       width: size,
                       height: size,
-                      fit: BoxFit.cover,
-                    );
-                  }
-                  return ColoredBox(
-                    color: scheme.surfaceContainerHighest,
-                    child: Icon(
-                      Icons.person_outline,
-                      size: size * 0.5,
-                      color: scheme.onSurfaceVariant,
+                      placeholder: (_, _) =>
+                          ColoredBox(color: scheme.surfaceContainerHighest),
+                      errorWidget: (_, _, _) {
+                        // A CORS refusal on the web is not a broken URL: the DOM
+                        // image displays it, keeping avatars visible.
+                        if (hasDomImageFallback) {
+                          return domImage(
+                            url: url!,
+                            width: size,
+                            height: size,
+                            fit: BoxFit.cover,
+                          );
+                        }
+                        return ColoredBox(
+                          color: scheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.person_outline,
+                            size: size * 0.5,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
     );
     if (showStatus) {

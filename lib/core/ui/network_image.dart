@@ -31,6 +31,16 @@ class NyachiImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // Cross-origin images cannot be decoded through the canvas at all, so ask
+    // the browser instead of trying and failing first.
+    if (needsDomImage(url)) {
+      return Stack(
+        children: [
+          ColoredBox(color: scheme.surfaceContainerHighest),
+          domImage(url: url, width: width, height: height, fit: fit),
+        ],
+      );
+    }
     return CachedNetworkImage(
       imageUrl: url,
       width: width,

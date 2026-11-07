@@ -229,3 +229,18 @@ String normalizeHost(String input) {
   }
   return uri.authority.toLowerCase();
 }
+
+/// Whether [host] is complete enough to be worth a network request.
+///
+/// A single-label name like `h` passes URL parsing, so the login page used to
+/// fire `/api/meta` at it the moment the field lost focus, which fails
+/// instantly with `ERR_NAME_NOT_RESOLVED` while the user is still typing the
+/// domain. Hosts that can plausibly resolve — a dotted name, `localhost`, an
+/// IP literal — still probe; anything else waits until the user submits.
+bool isPlausibleHost(String host) {
+  final name = host.split(':').first;
+  if (name == 'localhost') return true;
+  if (name.startsWith('[')) return true;
+  if (RegExp(r'^\d{1,3}(\.\d{1,3}){3}$').hasMatch(name)) return true;
+  return name.contains('.');
+}

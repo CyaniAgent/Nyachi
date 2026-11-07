@@ -20,4 +20,25 @@ void main() {
   test('invalid host fails before any client is built', () {
     expect(() => normalizeHost(''), throwsFormatException);
   });
+
+  group('isPlausibleHost', () {
+    test('a dotted name is worth probing', () {
+      expect(isPlausibleHost('misskey.io'), isTrue);
+      expect(isPlausibleHost('social.example.co.jp:8443'), isTrue);
+    });
+
+    test('localhost and IP literals are worth probing', () {
+      expect(isPlausibleHost('localhost'), isTrue);
+      expect(isPlausibleHost('localhost:3000'), isTrue);
+      expect(isPlausibleHost('192.168.1.5:3000'), isTrue);
+      expect(isPlausibleHost('[::1]:3000'), isTrue);
+    });
+
+    test('a half-typed single label is not', () {
+      // Typing "h" and blurring used to request https://h/api/meta, which
+      // fails with ERR_NAME_NOT_RESOLVED before the user finished typing.
+      expect(isPlausibleHost('h'), isFalse);
+      expect(isPlausibleHost('misskey'), isFalse);
+    });
+  });
 }

@@ -10,6 +10,20 @@ import '../storage/storage_providers.dart';
 
 part 'client_provider.g.dart';
 
+/// A Dio prepared for this platform, for `MisskeyClient` construction.
+///
+/// The SDK writes an unconditional `User-Agent` onto the dio it is handed
+/// (misskey_dart_api `client.dart:33`), and browsers reject that as a
+/// forbidden header: every request logs "Refused to set unsafe header" and
+/// dio's CORS heuristic treats it as a preflight trigger. Removing it after
+/// construction is the only place that works, so every client in the app is
+/// built from this factory rather than a bare `Dio()`.
+Dio createApiDio() {
+  final dio = Dio();
+  if (kIsWeb) dio.options.headers.remove('User-Agent');
+  return dio;
+}
+
 @Riverpod(keepAlive: true)
 MisskeyClient misskeyClient(Ref ref) {
   final active = ref.watch(sessionControllerProvider).active;
@@ -17,23 +31,11 @@ MisskeyClient misskeyClient(Ref ref) {
     throw StateError('No active account.');
   }
   final tokens = ref.watch(tokenStoreProvider);
-  final dio = Dio();
   final client = MisskeyClient.fromHost(
     active.host,
     tokenProvider: () => tokens.read(active.id),
-    dio: dio,
+    dio: createApiDio(),
   );
-  if (kIsWeb) {
-    // Browsers refuse script-set User-Agent (a forbidden header name per the
-    // Fetch spec): XHR silently ignores it and logs "Refused to set unsafe
-    // header" for every request, so the SDK's unconditional User-Agent
-    // (misskey_dart_api client.dart) is dead weight on web. dio's CORS
-    // heuristic additionally flags it as a preflight trigger — a false
-    // positive per the spec (forbidden headers are stripped first), but it
-    // produces console noise on every request. Strip it on web, keep it on
-    // native. Revisit if/when the SDK handles web itself.
-    dio.options.headers.remove('User-Agent');
-  }
   ref.onDispose(client.close);
   return client;
 }

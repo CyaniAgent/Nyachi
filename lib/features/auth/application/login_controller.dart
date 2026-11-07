@@ -9,6 +9,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_controller.dart';
+import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
 import '../../../core/platform/device_identity.dart';
 import '../../../core/storage/storage_providers.dart';
@@ -40,7 +41,11 @@ bool isMiAuthPending(MisskeyApiException error) {
 
 class MiAuthService {
   MiAuthService(String host, {required this.clientName})
-    : _client = MisskeyClient.fromHost(host, authMode: MisskeyAuthMode.none);
+    : _client = MisskeyClient.fromHost(
+        host,
+        dio: createApiDio(),
+        authMode: MisskeyAuthMode.none,
+      );
 
   final MisskeyClient _client;
 
@@ -65,6 +70,7 @@ class MiAuthService {
   Future<MeDetailed> meForToken(String token) async {
     final authenticated = MisskeyClient.fromHost(
       _client.baseUri.toString(),
+      dio: createApiDio(),
       accessToken: token,
     );
     try {
@@ -195,7 +201,11 @@ class LoginController extends _$LoginController {
     MisskeyClient? client;
     try {
       final normalized = normalizeHost(host);
-      client = MisskeyClient.fromHost(normalized, accessToken: trimmed);
+      client = MisskeyClient.fromHost(
+        normalized,
+        dio: createApiDio(),
+        accessToken: trimmed,
+      );
       final me = await client.account.me();
       await ref
           .read(sessionControllerProvider.notifier)

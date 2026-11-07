@@ -17,3 +17,11 @@ Widget domImage({
   double? height,
   BoxFit? fit,
 }) => webImageFallback(url: url, width: width, height: height, fit: fit);
+
+/// Whether [url] must skip the canvas path entirely.
+///
+/// A cross-origin image cannot be fetched for decoding unless the host sends
+/// CORS headers, and most Misskey media hosts do not. Loading it through the
+/// canvas first would therefore fail every time and log a policy error before
+/// the DOM fallback ran, so cross-origin images go straight to the browser.
+bool needsDomImage(String url) => webImageSupported && webIsCrossOrigin(url);

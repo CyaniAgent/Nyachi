@@ -16,6 +16,16 @@ import 'package:web/web.dart' as web;
 /// The DOM fallback exists on this target.
 const bool webImageSupported = true;
 
+/// Whether [url] comes from a different origin than the page.
+///
+/// Relative URLs are the page's own origin by definition; a host that differs
+/// from the document's cannot be read back through the canvas without CORS.
+bool webIsCrossOrigin(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null || uri.host.isEmpty) return false;
+  return uri.host != Uri.base.host;
+}
+
 /// View types already registered, keyed by URL and fit; the registry throws on
 /// a duplicate type, and each widget rebuild must not register a new one.
 final _registered = <String>{};
