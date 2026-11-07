@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -291,6 +289,10 @@ class _BlockBuilder {
   /// `U+FFFC` for the whole widget.
   var _suppressPending = 0;
 
+  /// Current `x2`/`x3`/`x4` nesting depth; the frontend halves the multiplier
+  /// once and ignores it beyond that.
+  var _scaleDepth = 0;
+
   _Built build(List<MfmNode> nodes) {
     final widgets = <Widget>[];
     final inline = <MfmNode>[];
@@ -338,15 +340,16 @@ class _BlockBuilder {
         return Padding(
           padding: padding,
           child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  width: 4,
+                  color: style.color ?? theme.colorScheme.onSurface,
+                  width: 3,
                 ),
               ),
             ),
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsets.fromLTRB(12, 6, 0, 6),
             child: Text.rich(TextSpan(style: style, children: inner)),
           ),
         );
@@ -511,9 +514,16 @@ class _BlockBuilder {
           inherited: base.copyWith(fontWeight: FontWeight.bold),
         );
       case MfmSmall():
+        // The frontend renders <small> at 70% opacity, so it dims as well as
+        // shrinking.
         return _spans(
           node.children ?? const [],
-          inherited: base.copyWith(fontSize: (base.fontSize ?? 14) * 0.8),
+          inherited: base.copyWith(
+            fontSize: (base.fontSize ?? 14) * 0.8,
+            color: (base.color ?? theme.colorScheme.onSurface).withValues(
+              alpha: 0.7,
+            ),
+          ),
         );
       case MfmStrike():
         return _spans(
@@ -609,25 +619,30 @@ class _BlockBuilder {
   }
 
   List<InlineSpan> _fn(MfmFn node, TextStyle base) {
-    final scaled = mfmScaleFactor(node);
+    final scaled = mfmScaleFactor(node, depth: _scaleDepth);
     if (scaled != null) {
-      return _spans(
-        node.children ?? const [],
-        inherited: base.copyWith(fontSize: (base.fontSize ?? 14) * scaled),
-      );
+      _scaleDepth += 1;
+      try {
+        return _spans(
+          node.children ?? const [],
+          inherited: base.copyWith(fontSize: (base.fontSize ?? 14) * scaled),
+        );
+      } finally {
+        _scaleDepth -= 1;
+      }
     }
 
     final color = mfmParseColor(node.args['color']);
     if (node.name == 'fg') {
       return _spans(
         node.children ?? const [],
-        inherited: color == null ? base : base.copyWith(color: color),
+        inherited: base.copyWith(color: color),
       );
     }
     if (node.name == 'bg') {
       return _spans(
         node.children ?? const [],
-        inherited: color == null ? base : base.copyWith(backgroundColor: color),
+        inherited: base.copyWith(backgroundColor: color),
       );
     }
     if (node.name == 'font') {
@@ -635,6 +650,10 @@ class _BlockBuilder {
       final family = switch (key) {
         'serif' => 'serif',
         'monospace' => 'monospace',
+        'cursive' => 'cursive',
+        'fantasy' => 'fantasy',
+        'emoji' => 'emoji',
+        'math' => 'math',
         _ => null,
       };
       return _spans(
@@ -649,17 +668,26 @@ class _BlockBuilder {
       final children = node.children ?? const <MfmNode>[];
       final child = _innerSpans(children, base);
       _queuePlaceholder(_plainOf(children));
-      final dx = double.tryParse('${node.args['x'] ?? 0}') ?? 0;
-      final dy = double.tryParse('${node.args['y'] ?? 0}') ?? 0;
-      final deg = double.tryParse('${node.args['deg'] ?? 0}') ?? 0;
-      final sx = double.tryParse('${node.args['x'] ?? 1}') ?? 1;
-      final sy = double.tryParse('${node.args['y'] ?? 1}') ?? 1;
+      final dxArg = double.tryParse('${node.args['x'] ?? 0}') ?? 0;
+      final dyArg = double.tryParse('${node.args['y'] ?? 0}') ?? 0;
+      // `position` is expressed in em, so it scales with the text.
+      final em = dxArg * (base.fontSize ?? 14);
+      final emY = dyArg * (base.fontSize ?? 14);
+      final deg = double.tryParse('${node.args['deg'] ?? 90}') ?? 90;
+      final sx = (double.tryParse('${node.args['x'] ?? 1}') ?? 1).clamp(
+        0.0,
+        5.0,
+      );
+      final sy = (double.tryParse('${node.args['y'] ?? 1}') ?? 1).clamp(
+        0.0,
+        5.0,
+      );
       return [
         WidgetSpan(
           alignment: PlaceholderAlignment.middle,
           child: switch (node.name) {
             'position' => Transform.translate(
-              offset: Offset(dx, dy),
+              offset: Offset(em, emY),
               child: _rich(child, base),
             ),
             'rotate' => Transform.rotate(
@@ -696,31 +724,56 @@ class _BlockBuilder {
 
     final spec = mfmEffectOf(node);
     if (spec != null) {
-      if (spec.effect == MfmEffect.jackOLantern) {
-        return _spans(
-          node.children ?? const [],
-          inherited: base.copyWith(color: const Color(0xFFFF9800)),
-        );
+      final children = node.children ?? const <MfmNode>[];
+      if (spec.effect == MfmEffect.blur) {
+        // Blur is a filter, not a cycle: it is blurred at rest and clears on
+        // hover/press, so it renders the same whether motion is on or off.
+        final child = _innerSpans(children, base);
+        _queuePlaceholder(_plainOf(children));
+        return [
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: MfmBlurred(style: base, child: child),
+          ),
+        ];
       }
       if (!policy.allows(spec.motionClass)) {
-        // Static but still present: the words stay, the movement does not.
-        if (spec.effect == MfmEffect.blur) {
-          final children = node.children ?? const <MfmNode>[];
-          final child = _innerSpans(children, base);
-          _queuePlaceholder(_plainOf(children));
-          return [
-            WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                child: _rich(child, base),
+        // Each effect degrades to the part the stylesheet keeps when animation
+        // is disabled: tada keeps its 150% size, rainbow keeps a gradient, and
+        // the transform-only effects keep plain text.
+        switch (spec.effect) {
+          case MfmEffect.tada:
+            return _spans(
+              children,
+              inherited: base.copyWith(fontSize: (base.fontSize ?? 14) * 1.5),
+            );
+          case MfmEffect.rainbow:
+            final child = _innerSpans(children, base);
+            _queuePlaceholder(_plainOf(children));
+            return [
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [
+                      Color(0xFFFF0000),
+                      Color(0xFFFFA500),
+                      Color(0xFFFFFF00),
+                      Color(0xFF00FF00),
+                      Color(0xFF00FFFF),
+                      Color(0xFF0000FF),
+                      Color(0xFFFF00FF),
+                    ],
+                    stops: [0, 0.17, 0.33, 0.5, 0.67, 0.83, 1],
+                  ).createShader(bounds),
+                  child: _rich(child, base),
+                ),
               ),
-            ),
-          ];
+            ];
+          default:
+            return _spans(children, inherited: base);
         }
-        return _spans(node.children ?? const [], inherited: base);
       }
-      final children = node.children ?? const <MfmNode>[];
       final child = _innerSpans(children, base);
       _queuePlaceholder(_plainOf(children));
       return [

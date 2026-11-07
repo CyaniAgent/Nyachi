@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mfm_parser/mfm_parser.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/mfm/mfm_body.dart';
 import 'package:nyachi/core/mfm/mfm_document.dart';
@@ -167,6 +168,86 @@ void main() {
       ]),
       'first\n:wave: second',
     );
+  });
+
+  testWidgets('x3 is 400%, not 300%', (tester) async {
+    await _pump(tester, r'$[x3 big]');
+
+    // The stylesheet steps 200% / 400% / 600%, so x3 is 4× the base size
+    // rather than the 3× a linear reading of the name suggests.
+    final root = _rootSpan(tester);
+    final base = root.style!.fontSize!;
+    final span = root.children!.whereType<TextSpan>().firstWhere(
+      (span) => span.text == 'big',
+    );
+    expect(span.style!.fontSize, closeTo(base * 4, 0.01));
+  });
+
+  testWidgets('nested scaling is halved once then ignored', (tester) async {
+    await _pump(tester, r'$[x2 $[x2 x]]');
+
+    final root = _rootSpan(tester);
+    final base = root.style!.fontSize!;
+    final span = root.children!.whereType<TextSpan>().firstWhere(
+      (span) => span.text == 'x',
+    );
+    // outer 2×, then (2/2 + 0.5) = 1.5× inside it.
+    expect(span.style!.fontSize, closeTo(base * 3, 0.01));
+  });
+
+  testWidgets('an invalid colour falls back to red', (tester) async {
+    await _pump(tester, r'$[fg.color=nope red]');
+
+    final span = _rootSpan(tester).children!
+        .whereType<TextSpan>()
+        .firstWhere((span) => span.text == 'red');
+    expect(span.style!.color, const Color(0xFFFF0000));
+  });
+
+  group('mfmEffectOf', () {
+    MfmFn fn(String name, [Map<String, dynamic> args = const {}]) =>
+        MfmFn(name: name, args: args, children: const []);
+
+    test('durations match the stylesheet defaults', () {
+      expect(mfmEffectOf(fn('spin'))!.duration.inMilliseconds, 1500);
+      expect(mfmEffectOf(fn('jump'))!.duration.inMilliseconds, 750);
+      expect(mfmEffectOf(fn('bounce'))!.duration.inMilliseconds, 750);
+      expect(mfmEffectOf(fn('shake'))!.duration.inMilliseconds, 500);
+      expect(mfmEffectOf(fn('twitch'))!.duration.inMilliseconds, 500);
+      expect(mfmEffectOf(fn('jelly'))!.duration.inMilliseconds, 1000);
+      expect(mfmEffectOf(fn('tada'))!.duration.inMilliseconds, 1000);
+      expect(mfmEffectOf(fn('rainbow'))!.duration.inMilliseconds, 1000);
+    });
+
+    test('a speed argument overrides the default', () {
+      expect(
+        mfmEffectOf(fn('spin', {'speed': '3s'}))!.duration.inMilliseconds,
+        3000,
+      );
+    });
+
+    test('an invalid speed is ignored rather than trusted', () {
+      // The frontend only accepts `Ns`, so `speed=fast` must not reach the
+      // animation as a duration.
+      expect(
+        mfmEffectOf(fn('spin', {'speed': 'fast'}))!.duration.inMilliseconds,
+        1500,
+      );
+    });
+
+    test('spin flags map to direction and axis', () {
+      final reverse = mfmEffectOf(fn('spin', {'left': true}))!;
+      expect(reverse.reverse, isTrue);
+      final alternate = mfmEffectOf(fn('spin', {'alternate': true}))!;
+      expect(alternate.alternate, isTrue);
+      expect(mfmEffectOf(fn('spin', {'x': true}))!.axisX, isTrue);
+      expect(mfmEffectOf(fn('spin', {'y': true}))!.axisY, isTrue);
+    });
+
+    test('non-motion functions have no effect', () {
+      expect(mfmEffectOf(fn('fg', {'color': 'ff0000'})), isNull);
+      expect(mfmEffectOf(fn('unknown')), isNull);
+    });
   });
 
   group('restoreEmojiPlaceholders', () {
