@@ -61,6 +61,32 @@ class InstanceInfo {
       version: version,
     );
   }
+
+  // Value equality is load-bearing: [instanceInfo] compares a background
+  // refresh against the cached value and re-invalidates itself when they
+  // differ. Without this, every refresh looked like a change and the provider
+  // rebuilt forever — two requests per rebuild, for as long as the app ran.
+  @override
+  bool operator ==(Object other) =>
+      other is InstanceInfo &&
+      other.name == name &&
+      other.themeColor == themeColor &&
+      other.maxNoteTextLength == maxNoteTextLength &&
+      other.urlPreviewEnabled == urlPreviewEnabled &&
+      other.draftsSupported == draftsSupported &&
+      other.serviceWorkerEnabled == serviceWorkerEnabled &&
+      other.version == version;
+
+  @override
+  int get hashCode => Object.hash(
+    name,
+    themeColor,
+    maxNoteTextLength,
+    urlPreviewEnabled,
+    draftsSupported,
+    serviceWorkerEnabled,
+    version,
+  );
 }
 
 class InstanceRepository {

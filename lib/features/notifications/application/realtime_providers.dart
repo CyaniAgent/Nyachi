@@ -60,13 +60,15 @@ RealtimeService? realtimeService(Ref ref) {
       // A fresh arrival means the unread badge changed even if this client
       // cannot see which note it refers to; refresh so the list matches.
       onConnected: () => unawaited(
-        ref.read(notificationListControllerProvider.notifier).refresh(),
+        ref.read(notificationListControllerProvider(null).notifier).refresh(),
       ),
     ),
   );
   final pushed = notifications.stream.listen((body) {
     final notification = Notification.fromJson(body);
-    ref.read(notificationListControllerProvider.notifier).prepend(notification);
+    ref
+        .read(notificationListControllerProvider(null).notifier)
+        .prepend(notification);
     // A system notification only makes sense when the user is not already
     // looking at the list; the in-app list is the same information.
     unawaited(_announce(ref, notification));

@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'dart:async';
-
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../core/ui/avatar.dart';
 import '../../../core/mfm/mfm_body.dart';
-import '../../settings/application/app_settings.dart';
+import '../../../core/ui/avatar.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/failure_action.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
+import '../../settings/application/app_settings.dart';
 import '../application/notification_list_controller.dart';
+import '../application/notification_unread.dart';
 import '../domain/notification_copy.dart';
 
 class NotificationsPage extends ConsumerStatefulWidget {
@@ -29,66 +28,70 @@ class NotificationsPage extends ConsumerStatefulWidget {
 class _NotificationsPageState extends ConsumerState<NotificationsPage>
     with SingleTickerProviderStateMixin {
   /// One tab per filter plus "all", in the order the tabs render.
-  static const _tabs = <NotificationFilter?>[
+  static const filters = <NotificationFilter?>[
     null,
     ...NotificationFilter.values,
   ];
 
-  late final TabController _tabs2 = TabController(
-    length: _tabs.length,
+  late final TabController _tabController = TabController(
+    length: filters.length,
     vsync: this,
-    initialIndex: _indexOf(ref.read(notificationListControllerProvider).filter),
   );
 
-  static int _indexOf(NotificationFilter? filter) =>
-      filter == null ? 0 : _tabs.indexOf(filter);
+  /// The visible tab. Tracked separately from the controller so the app bar's
+  /// actions follow the tab without rebuilding on every animation frame.
+  var _index = 0;
 
   @override
   void initState() {
     super.initState();
-    // Tab presses are the filter: tapping "Reactions" asks the server for that
-    // type list, exactly as the old chip row did.
-    _tabs2.addListener(() {
-      if (_tabs2.indexIsChanging) return;
-      unawaited(
-        ref
-            .read(notificationListControllerProvider.notifier)
-            .applyFilter(_tabs[_tabs2.index]),
-      );
+    // TabBarView has no page-changed callback; the controller's index is the
+    // source of truth once a swipe settles.
+    _tabController.addListener(() {
+      if (_tabController.index != _index) {
+        setState(() => _index = _tabController.index);
+      }
     });
   }
 
   @override
   void dispose() {
-    _tabs2.dispose();
+    _tabController.dispose();
     super.dispose();
+  }
+
+  void _select(int index) {
+    if (index == _index) return;
+    setState(() => _index = index);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final state = ref.watch(notificationListControllerProvider);
-    final controller = ref.read(notificationListControllerProvider.notifier);
-
+    final unread = ref.watch(notificationUnreadProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.notifications),
         actions: [
           IconButton(
-            tooltip: state.unreadOnly
+            tooltip: unread.unreadOnly
                 ? l10n.notificationsShowAll
                 : l10n.notificationsUnreadOnly,
-            onPressed: () => controller.setUnreadOnly(!state.unreadOnly),
+            onPressed: () => ref
+                .read(notificationUnreadProvider.notifier)
+                .setUnreadOnly(!unread.unreadOnly),
             icon: Icon(
-              state.unreadOnly ? Icons.filter_alt : Icons.filter_alt_outlined,
+              unread.unreadOnly ? Icons.filter_alt : Icons.filter_alt_outlined,
             ),
           ),
           IconButton(
             tooltip: l10n.markAllRead,
-            onPressed: state.markingRead
+            onPressed: unread.markingRead
                 ? null
                 : () async {
-                    final ok = await controller.markAllRead();
+                    final ok = await ref
+                        .read(notificationUnreadProvider.notifier)
+                        .markAllRead();
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -100,9 +103,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage>
           ),
         ],
         bottom: TabBar(
-          controller: _tabs2,
+          controller: _tabController,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
+          onTap: _select,
           tabs: [
             Tab(text: l10n.notificationsFilterAll),
             for (final filter in NotificationFilter.values)
@@ -120,12 +124,47 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage>
           ],
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: controller.refresh,
-        child: ReadableWidth(
-          centered: ref.watch(settingsControllerProvider).centerContent,
-          child: _body(context, state, controller),
-        ),
+      // A TabBarView rather than swapping the body by hand: swiping between
+      // categories is the expected gesture, and it animates with the framework's
+      // own page transition instead of an instant replacement.
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          for (final filter in filters) _NotificationsSurface(filter: filter),
+        ],
+      ),
+    );
+  }
+}
+
+/// One category's list. Each tab owns its own state, so two of them can be on
+/// screen during a swipe.
+class _NotificationsSurface extends ConsumerWidget {
+  const _NotificationsSurface({required this.filter});
+
+  final NotificationFilter? filter;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(notificationListControllerProvider(filter));
+    final controller = ref.read(
+      notificationListControllerProvider(filter).notifier,
+    );
+    final unread = ref.watch(notificationUnreadProvider);
+    final boundary = unread.boundary;
+    // "Unread" is everything that arrived after the last mark-all-read; the
+    // server exposes no per-notification read flag.
+    final items = unread.unreadOnly && boundary != null
+        ? state.items
+              .where((item) => notificationCreatedAt(item).isAfter(boundary))
+              .toList(growable: false)
+        : state.items;
+
+    return RefreshIndicator(
+      onRefresh: controller.refresh,
+      child: ReadableWidth(
+        centered: ref.watch(settingsControllerProvider).centerContent,
+        child: _body(context, state, controller, items, unread.unreadOnly),
       ),
     );
   }
@@ -134,16 +173,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage>
     BuildContext context,
     NotificationListState state,
     NotificationListController controller,
+    List<Notification> items,
+    bool unreadOnly,
   ) {
     final l10n = context.l10n;
-    final boundary = state.readBoundary;
-    // "Unread" is everything that arrived after the last mark-all-read; the
-    // server exposes no per-notification read flag.
-    final items = state.unreadOnly && boundary != null
-        ? state.items
-              .where((item) => notificationCreatedAt(item).isAfter(boundary))
-              .toList(growable: false)
-        : state.items;
     if (state.initialLoading && items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -154,7 +187,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage>
           Center(
             child: Text(
               state.error?.message(l10n) ??
-                  (state.unreadOnly
+                  (unreadOnly
                       ? l10n.notificationsNoUnread
                       : l10n.emptyNotifications),
             ),
@@ -170,10 +203,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage>
       );
     }
     return ScrollEdgeLoader(
-      canLoad: () {
-        final current = ref.read(notificationListControllerProvider);
-        return current.hasMore && !current.loadingMore && !current.refreshing;
-      },
+      canLoad: () => state.hasMore && !state.loadingMore && !state.refreshing,
       onEdge: controller.loadMore,
       child: ListView.separated(
         itemCount: items.length + 1,
@@ -270,7 +300,9 @@ IconData notificationTypeIcon(Notification notification) {
     NotificationExportCompleted() => Icons.file_download_outlined,
     NotificationLogin() || NotificationCreateToken() => Icons.key_outlined,
     NotificationApp() => Icons.apps_outlined,
-    NotificationNote() || NotificationScheduledNotePosted() => Icons.notes,
-    _ => Icons.notifications_outlined,
+    NotificationNote() => Icons.notes,
+    NotificationScheduledNotePosted() ||
+    NotificationScheduledNotePostFailed() => Icons.schedule,
+    NotificationTest() => Icons.science_outlined,
   };
 }

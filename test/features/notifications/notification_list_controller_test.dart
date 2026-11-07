@@ -11,6 +11,7 @@ import 'package:nyachi/core/network/error_mapper.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/notifications/application/notification_list_controller.dart';
+import 'package:nyachi/features/notifications/application/notification_unread.dart';
 import 'package:nyachi/features/notifications/domain/notification_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -94,6 +95,9 @@ Future<ProviderContainer> _makeContainer(_FakeRepository repository) async {
   return container;
 }
 
+/// The "All" tab.
+final _all = notificationListControllerProvider(null);
+
 void main() {
   test('hydrates cache then refreshes and writes back', () async {
     final repository = _FakeRepository(cached: [_notification('n1')]);
@@ -101,12 +105,11 @@ void main() {
     repository.fetch = (_) => firstPage.future;
     final container = await _makeContainer(repository);
 
-    final provider = notificationListControllerProvider;
-    container.listen(provider, (_, _) {});
-    container.read(provider);
+    container.listen(_all, (_, _) {});
+    container.read(_all);
     await pumpEventQueue();
 
-    var state = container.read(provider);
+    var state = container.read(_all);
     expect(state.items.map((n) => n.id), ['n1']);
     expect(state.usingCache, isTrue);
 
@@ -115,7 +118,7 @@ void main() {
     );
     await pumpEventQueue();
 
-    state = container.read(provider);
+    state = container.read(_all);
     expect(state.items.map((n) => n.id), ['n2']);
     expect(state.usingCache, isFalse);
     expect(state.initialLoading, isFalse);
@@ -130,12 +133,11 @@ void main() {
       repository.fetch = (_) async => throw Exception('offline');
       final container = await _makeContainer(repository);
 
-      final provider = notificationListControllerProvider;
-      container.listen(provider, (_, _) {});
-      await container.read(provider.notifier).refresh();
+      container.listen(_all, (_, _) {});
+      await container.read(_all.notifier).refresh();
       await pumpEventQueue(); // let build()'s hydrate settle as well
 
-      final state = container.read(provider);
+      final state = container.read(_all);
       expect(state.error?.kind, AppFailureKind.unknown);
       expect(state.refreshing, isFalse);
       expect(state.items.map((n) => n.id), ['n1']);
@@ -143,7 +145,7 @@ void main() {
     },
   );
 
-  test('markAllRead calls the repository and refreshes', () async {
+  test('markAllRead calls the repository and refreshes every tab', () async {
     final repository = _FakeRepository(cached: const []);
     var calls = 0;
     repository.fetch = (_) async {
@@ -152,16 +154,19 @@ void main() {
     };
     final container = await _makeContainer(repository);
 
-    final provider = notificationListControllerProvider;
-    container.listen(provider, (_, _) {});
+    container.listen(_all, (_, _) {});
     await pumpEventQueue(); // let build()'s hydrate refresh settle first
-    final callsAfterHydrate = calls;
 
-    final ok = await container.read(provider.notifier).markAllRead();
+    final ok = await container
+        .read(notificationUnreadProvider.notifier)
+        .markAllRead();
+    await pumpEventQueue();
 
     expect(ok, isTrue);
     expect(repository.marksRead, 1);
-    expect(calls, callsAfterHydrate + 1);
+    // Marking read invalidates the family, so the list reloads rather than
+    // showing rows the server now considers read.
+    expect(calls, greaterThan(1));
   });
 
   test('a pushed notification lands at the head without duplicating', () async {
@@ -170,38 +175,55 @@ void main() {
         NotificationPage(items: [_notification('n1')], hasMore: false);
     final container = await _makeContainer(repository);
 
-    final provider = notificationListControllerProvider;
-    container.listen(provider, (_, _) {});
+    container.listen(_all, (_, _) {});
     await pumpEventQueue();
-    expect(container.read(provider).items.map((n) => n.id), ['n1']);
+    expect(container.read(_all).items.map((n) => n.id), ['n1']);
 
-    final controller = container.read(provider.notifier);
+    final controller = container.read(_all.notifier);
     controller.prepend(_notification('live-1'));
-    expect(container.read(provider).items.map((n) => n.id), ['live-1', 'n1']);
+    expect(container.read(_all).items.map((n) => n.id), ['live-1', 'n1']);
 
     // A reconnect replays the same push; the id guard keeps one row.
     controller.prepend(_notification('live-1'));
-    expect(container.read(provider).items.map((n) => n.id), ['live-1', 'n1']);
+    expect(container.read(_all).items.map((n) => n.id), ['live-1', 'n1']);
   });
 
-  test('applyFilter requests the matching include types', () async {
+  test('a filtered tab requests only its own include types', () async {
     final repository = _FakeRepository();
     repository.fetch = (_) async =>
         NotificationPage(items: [_notification('m1')], hasMore: false);
     final container = await _makeContainer(repository);
 
-    final provider = notificationListControllerProvider;
-    container.listen(provider, (_, _) {});
-    await container
-        .read(provider.notifier)
-        .applyFilter(NotificationFilter.mentions);
+    final mentions = notificationListControllerProvider(
+      NotificationFilter.mentions,
+    );
+    container.listen(mentions, (_, _) {});
     await pumpEventQueue();
 
     expect(repository.requestedTypes, NotificationFilter.mentions.includeTypes);
-    final state = container.read(provider);
-    expect(state.filter, NotificationFilter.mentions);
+    final state = container.read(mentions);
     expect(state.items.map((n) => n.id), ['m1']);
     expect(state.initialLoading, isFalse);
+  });
+
+  test('a filtered tab does not read the unfiltered cache', () async {
+    // The cache holds the unfiltered feed; serving it to a filtered tab would
+    // show rows it excluded.
+    final repository = _FakeRepository(cached: [_notification('cached')]);
+    repository.fetch = (_) async =>
+        NotificationPage(items: const [], hasMore: false);
+    final container = await _makeContainer(repository);
+
+    final follows = notificationListControllerProvider(
+      NotificationFilter.follows,
+    );
+    container.listen(follows, (_, _) {});
+    await pumpEventQueue();
+
+    final state = container.read(follows);
+    expect(state.items, isEmpty);
+    expect(state.usingCache, isFalse);
+    expect(repository.writes, 0);
   });
 
   test('a filtered-out live arrival is not inserted', () async {
@@ -209,15 +231,15 @@ void main() {
     repository.fetch = (_) async => NotificationPage(items: [], hasMore: false);
     final container = await _makeContainer(repository);
 
-    final provider = notificationListControllerProvider;
-    container.listen(provider, (_, _) {});
-    final controller = container.read(provider.notifier);
-    await controller.applyFilter(NotificationFilter.mentions);
+    final mentions = notificationListControllerProvider(
+      NotificationFilter.mentions,
+    );
+    container.listen(mentions, (_, _) {});
     await pumpEventQueue();
 
     // A reaction does not belong in the mentions view; it stays on the server.
-    controller.prepend(_notification('r1'));
-    expect(container.read(provider).items, isEmpty);
+    container.read(mentions.notifier).prepend(_notification('r1'));
+    expect(container.read(mentions).items, isEmpty);
   });
 
   test(
@@ -228,24 +250,24 @@ void main() {
           NotificationPage(items: [], hasMore: false);
       final container = await _makeContainer(repository);
 
-      final provider = notificationListControllerProvider;
-      container.listen(provider, (_, _) {});
-      container.read(provider);
+      container.listen(notificationUnreadProvider, (_, _) {});
       await pumpEventQueue();
 
       // A fresh account has no read history, so the boundary is created rather
       // than left null: otherwise every historical notification would show as
       // unread on the first visit.
-      final initial = container.read(provider).readBoundary;
+      final initial = container.read(notificationUnreadProvider).boundary;
       expect(initial, isNotNull);
-      expect(container.read(provider).unreadOnly, isFalse);
+      expect(container.read(notificationUnreadProvider).unreadOnly, isFalse);
 
-      final before = initial!;
-      await container.read(provider.notifier).markAllRead();
+      await container.read(notificationUnreadProvider.notifier).markAllRead();
       await pumpEventQueue();
 
-      final moved = container.read(provider).readBoundary!;
-      expect(moved.isAfter(before) || moved.isAtSameMomentAs(before), isTrue);
+      final moved = container.read(notificationUnreadProvider).boundary!;
+      expect(
+        moved.isAfter(initial!) || moved.isAtSameMomentAs(initial),
+        isTrue,
+      );
       expect(repository.marksRead, 1);
     },
   );
@@ -259,18 +281,17 @@ void main() {
     };
     final container = await _makeContainer(repository);
 
-    final provider = notificationListControllerProvider;
-    container.listen(provider, (_, _) {});
-    container.read(provider);
+    container.listen(_all, (_, _) {});
+    container.listen(notificationUnreadProvider, (_, _) {});
     await pumpEventQueue();
     final fetchesAfterLoad = fetches;
 
-    container.read(provider.notifier).setUnreadOnly(true);
+    container.read(notificationUnreadProvider.notifier).setUnreadOnly(true);
     await pumpEventQueue();
 
     // The server keeps no read state to filter on, so switching the view must
     // not cost a request.
-    expect(container.read(provider).unreadOnly, isTrue);
+    expect(container.read(notificationUnreadProvider).unreadOnly, isTrue);
     expect(fetches, fetchesAfterLoad);
   });
 }

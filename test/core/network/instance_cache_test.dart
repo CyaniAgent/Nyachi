@@ -195,4 +195,26 @@ void main() {
 
     expect(await _repository(database).readCache(), isNull);
   });
+
+  test('identical metadata compares equal', () {
+    // instanceInfo re-invalidates itself when a background refresh differs
+    // from the cached value. Without value equality every refresh looked like
+    // a change, so the provider rebuilt forever — two requests per rebuild.
+    const a = InstanceInfo(
+      name: 'example',
+      themeColor: '#3f51b5',
+      maxNoteTextLength: 3000,
+      draftsSupported: true,
+    );
+    const b = InstanceInfo(
+      name: 'example',
+      themeColor: '#3f51b5',
+      maxNoteTextLength: 3000,
+      draftsSupported: true,
+    );
+
+    expect(a, b);
+    expect(a.hashCode, b.hashCode);
+    expect(a == b.copyWith(draftsSupported: false), isFalse);
+  });
 }

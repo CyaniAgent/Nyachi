@@ -130,6 +130,19 @@ void main() {
     );
   });
 
+  testWidgets('swiping moves to the next category', (tester) async {
+    final repository = _FakeRepository();
+    await _pump(tester, repository);
+
+    // The tabs are a TabBarView, so the gesture the platform expects works and
+    // the change animates instead of replacing the body.
+    await tester.drag(find.byType(TabBarView), const Offset(-500, 0));
+    await tester.pumpAndSettle();
+
+    expect(repository.requestedTypes, NotificationFilter.mentions.includeTypes);
+    expect(find.byType(TabBarView), findsOneWidget);
+  });
+
   testWidgets('the unread toggle narrows the list without refetching', (
     tester,
   ) async {
