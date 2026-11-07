@@ -244,7 +244,10 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final actor = notificationActor(notification);
+    final rawActor = notificationActor(notification);
+    // A server-raised row (`pollEnded`) carries a stand-in actor with no id;
+    // showing "@ $label" for it would read as a person.
+    final actor = rawActor != null && rawActor.id.isNotEmpty ? rawActor : null;
     final note = notificationNote(notification);
     final label = notificationLabel(l10n, notification);
     return ListTile(

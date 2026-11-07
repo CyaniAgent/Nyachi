@@ -22,13 +22,25 @@ import '../domain/notification_copy.dart';
 part 'notification_list_controller.freezed.dart';
 part 'notification_list_controller.g.dart';
 
-/// One page as it came off the wire, plus how many rows the server sent.
-class _ParsedPage {
-  const _ParsedPage({required this.items, required this.received});
+/// Rows per request. Also the threshold `hasMore` is derived from: a page the
+/// server filled is a page that may have more behind it.
+const _pageSize = 20;
 
-  final List<Notification> items;
-  final int received;
-}
+/// Stands in for the actor of a server-raised notification (`pollEnded`).
+///
+/// The row is still worth showing; only its "who" is absent. This is the
+/// minimum the generated `UserLite` decoder requires.
+const _placeholderUser = <String, dynamic>{
+  'id': '',
+  'name': null,
+  'username': '',
+  'host': null,
+  'avatarUrl': '',
+  'avatarBlurhash': null,
+  'avatarDecorations': <dynamic>[],
+  'emojis': <String, dynamic>{},
+  'onlineStatus': 'unknown',
+};
 
 class MisskeyNotificationRepository implements NotificationRepository {
   MisskeyNotificationRepository({
@@ -42,7 +54,6 @@ class MisskeyNotificationRepository implements NotificationRepository {
   final String accountId;
 
   static const _cacheKey = CacheManager.notificationsKey;
-  static const _pageSize = 20;
 
   /// Fetches one page, tolerating notification types this build cannot model.
   ///
@@ -56,7 +67,7 @@ class MisskeyNotificationRepository implements NotificationRepository {
     String? untilId,
     List<AccountNotificationsRequestIncludeTypesItem>? includeTypes,
   }) async {
-    final page = await client.postParsed<_ParsedPage>(
+    return client.postParsed<NotificationPage>(
       'i/notifications',
       body: AccountNotificationsRequest(
         limit: _pageSize,
@@ -65,34 +76,8 @@ class MisskeyNotificationRepository implements NotificationRepository {
         includeTypes: includeTypes,
       ).toJson(),
       requiresAuth: true,
-      parser: _parseNotifications,
+      parser: parseNotificationPage,
     );
-    // Cursor pagination: a full page means the server had at least that many.
-    // Counted before filtering, or a skipped row would look like the end.
-    return NotificationPage(
-      items: page.items,
-      hasMore: page.received >= _pageSize,
-    );
-  }
-
-  _ParsedPage _parseNotifications(Object? data) {
-    if (data is! List) {
-      throw const FormatException('i/notifications did not return a list.');
-    }
-    final parsed = <Notification>[];
-    for (final item in data) {
-      final map = item is Map<String, dynamic>
-          ? item
-          : Map<String, dynamic>.from(item as Map);
-      try {
-        parsed.add(Notification.fromJson(map));
-      } catch (error) {
-        debugPrint(
-          '[notifications] skipped unsupported type "${map['type']}": $error',
-        );
-      }
-    }
-    return _ParsedPage(items: parsed, received: data.length);
   }
 
   @override
@@ -137,6 +122,74 @@ class MisskeyNotificationRepository implements NotificationRepository {
 
   @override
   Future<void> markAllAsRead() => client.notifications.markAllAsRead();
+}
+
+/// Parses one `i/notifications` page, tolerating rows this build cannot model.
+///
+/// Top-level so the two failure modes the running app hit are testable
+/// without a server: a type the SDK does not know, and a server-raised row
+/// (`pollEnded`) that carries no actor.
+///
+/// `hasMore` counts the rows the server sent, not the rows that survived
+/// parsing: a skipped row would otherwise look like the end of the feed.
+NotificationPage parseNotificationPage(Object? data) {
+  if (data is! List) {
+    throw const FormatException('i/notifications did not return a list.');
+  }
+  final parsed = <Notification>[];
+  for (final item in data) {
+    final map = item is Map<String, dynamic>
+        ? Map<String, dynamic>.from(item)
+        : Map<String, dynamic>.from(item as Map);
+    try {
+      parsed.add(Notification.fromJson(_normalizeNotification(map)));
+    } catch (error) {
+      debugPrint(
+        '[notifications] skipped unsupported type "${map['type']}": $error',
+      );
+    }
+  }
+  return NotificationPage(items: parsed, hasMore: data.length >= _pageSize);
+}
+
+/// Fills in the containers a server notification may omit.
+///
+/// `pollEnded` is raised by the server itself, so its `user` is null and the
+/// embedded note carries no actor — but the generated models declare
+/// `UserLite.avatarDecorations`, `emojis` and `onlineStatus` as required
+/// collections, and the generated decoder then fails on the null. Supplying
+/// what the API means by omission keeps the row renderable instead of
+/// dropping a real notification.
+Map<String, dynamic> _normalizeNotification(Map<String, dynamic> json) {
+  if (json['user'] == null) {
+    // `pollEnded` and friends are raised by the server, with no actor at
+    // all; the models still require one.
+    json['user'] = Map<String, dynamic>.from(_placeholderUser);
+    json['userId'] = _placeholderUser['id'];
+  }
+  final user = json['user'];
+  if (user is Map) {
+    final normalizedUser = Map<String, dynamic>.from(user);
+    normalizedUser['avatarDecorations'] ??= <dynamic>[];
+    normalizedUser['emojis'] ??= <String, dynamic>{};
+    normalizedUser['onlineStatus'] ??= 'unknown';
+    json['user'] = normalizedUser;
+  }
+  final note = json['note'];
+  if (note is Map) {
+    final normalizedNote = Map<String, dynamic>.from(note);
+    normalizedNote['emojis'] ??= <String, dynamic>{};
+    final noteUser = normalizedNote['user'];
+    if (noteUser is Map) {
+      final normalizedUser = Map<String, dynamic>.from(noteUser);
+      normalizedUser['avatarDecorations'] ??= <dynamic>[];
+      normalizedUser['emojis'] ??= <String, dynamic>{};
+      normalizedUser['onlineStatus'] ??= 'unknown';
+      normalizedNote['user'] = normalizedUser;
+    }
+    json['note'] = normalizedNote;
+  }
+  return json;
 }
 
 /// A type filter for the notifications list.
