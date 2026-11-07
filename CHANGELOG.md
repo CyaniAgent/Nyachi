@@ -3,6 +3,67 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
+## [2.1.0-beta.6] - 2026-11-07
+
+### Codename
+
+Kumo
+
+Misskey Flavored Markdown is rendered now, everywhere text appears: notes,
+profiles, chat and announcements. Alongside it, notifications filter by tab
+with an unread view, and a profile header finally scrolls away instead of
+holding the notes to a slice of the screen.
+
+### Added
+
+- **MFM parsing and rendering.** Note bodies were plain text plus three
+  regexes, so bold, quotes, code blocks, maths and the effect functions all
+  appeared as their own source syntax. One renderer now handles the whole
+  grammar: inline content becomes selectable text spans, block constructs
+  (quote, code, maths, centring, search) lay themselves out, and unknown
+  syntax is shown as written rather than swallowed.
+- **Motion, matching the frontend's own definitions.** `$[spin]`, `$[jump]`,
+  `$[tada]`, `$[rainbow]` and the rest animate, with durations, keyframes and
+  argument rules taken from Misskey's renderer and stylesheet rather than
+  guessed — including the ones that are not what their names suggest: `x3` is
+  400%, `tada` is a 150% wobble, and `blur` is a static filter that clears on
+  hover. Settings › Appearance gains three modes (everywhere, detail only,
+  off) and five independently switchable effect classes. Timelines default to
+  static so a feed never repaints every frame.
+- **In-app search from `$[search ...]`.** The function searches the instance,
+  as the frontend does, instead of opening an external engine.
+- **An MFM cheat sheet**, reachable from Appearance and the composer's menu.
+  Every example renders through the real body, so it cannot drift from the
+  implementation.
+- **Notifications filter by tab, with an unread view.** The category chips
+  became tabs in the app bar, and a filter button narrows the list to what
+  arrived since the last mark-all-read.
+
+### Changed
+
+- **The composer preview sits under the text field** instead of replacing the
+  editor, so a note can be read and edited at once.
+- **An authorized client is named per installation**, e.g. `Nyachi (Windows ·
+  3f2a1b8c)`. Every device used to appear as `Nyachi` in the account's app
+  list, with no way to tell them apart or revoke just one. The id is drawn
+  locally; it is deliberately not a hardware identifier.
+
+### Fixed
+
+- **A profile header scrolls with its notes.** It was laid out beside the
+  list rather than in it, so on a phone it consumed most of the viewport and
+  the notes never got the space back.
+- **Note bodies are selectable and copyable.** A copied note keeps real URLs,
+  and an embedded custom emoji reads as its shortcode rather than an
+  unprintable placeholder.
+- **The Web console is quiet.** Three separate sources of noise: the SDK's
+  `User-Agent` refused on every request (only one client stripped it),
+  `/api/meta` requested for a half-typed host name, and two CORS errors per
+  cross-origin image before it appeared. Cross-origin images now go straight
+  to a DOM `<img>`.
+- **The MiAuth client builds its own requests behind the same header
+  handling**, so the above holds on the sign-in path too.
+
 ## [2.1.0-beta.5] - 2026-11-06
 
 ### Codename
