@@ -13,14 +13,29 @@ part 'client_provider.g.dart';
 /// A Dio prepared for this platform, for `MisskeyClient` construction.
 ///
 /// The SDK writes an unconditional `User-Agent` onto the dio it is handed
-/// (misskey_dart_api `client.dart:33`), and browsers reject that as a
-/// forbidden header: every request logs "Refused to set unsafe header" and
-/// dio's CORS heuristic treats it as a preflight trigger. Removing it after
-/// construction is the only place that works, so every client in the app is
-/// built from this factory rather than a bare `Dio()`.
-Dio createApiDio() {
+/// (misskey_dart_api `client.dart:33`), during its own constructor — after any
+/// caller could have removed it. Browsers reject that header: every request
+/// logs "Refused to set unsafe header" and dio's CORS heuristic treats it as a
+/// preflight trigger.
+///
+/// The strip therefore has to happen per request, in an interceptor: dio has
+/// already merged the base headers into [RequestOptions] by then, so removing
+/// it here is the last point before the browser adapter sets headers on the
+/// XHR.
+Dio createApiDio({bool stripUserAgent = kIsWeb}) {
   final dio = Dio();
-  if (kIsWeb) dio.options.headers.remove('User-Agent');
+  if (stripUserAgent) {
+    // Also drop it from the base options so nothing re-merges it.
+    dio.options.headers.remove('User-Agent');
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.headers.remove('User-Agent');
+          handler.next(options);
+        },
+      ),
+    );
+  }
   return dio;
 }
 

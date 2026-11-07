@@ -10,12 +10,15 @@
 //
 // Strategy:
 //   - install:  precache the app shell (entry points and icons)
-//   - fetch:    same-origin GET → stale-while-revalidate (offline keeps the
-//               last cached app; online visits refresh in the background)
+//   - fetch:    navigations and entry points (index.html, the bootstrap, the
+//               compiled app) are network-first — a cached copy of those pins
+//               the user to an old build, because Flutter emits `main.dart.js`
+//               under a fixed name. Everything else is same-origin GET →
+//               stale-while-revalidate.
 //   - cross-origin (Misskey media, API): network passthrough, never cached
 //   - activate: drop old cache versions
 
-const CACHE = 'nyachi-web-v1';
+const CACHE = 'nyachi-web-v2';
 
 const SHELL = [
   '/',
@@ -25,6 +28,17 @@ const SHELL = [
   'favicon.png',
   'icons/Icon-192.png',
   'icons/Icon-512.png',
+];
+
+// Files whose content decides which build runs. Serving these from cache is
+// what makes a deploy invisible: the HTML and the bootstrap have byte-stable
+// names, and `main.dart.js` is overwritten in place, so a cached copy keeps
+// running code the server no longer has.
+const NETWORK_FIRST = [
+  'index.html',
+  'flutter_bootstrap.js',
+  'flutter.js',
+  'main.dart.js',
 ];
 
 self.addEventListener('install', (event) => {
@@ -41,7 +55,9 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
+        Promise.all(
+          keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -53,10 +69,24 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Runtime cache: serve from cache when present, refresh in background.
+  const path = url.pathname.replace(/^.*\//, '');
+  const networkFirst =
+    request.mode === 'navigate' || NETWORK_FIRST.includes(path);
+
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(request, { ignoreSearch: true });
+      if (networkFirst) {
+        try {
+          const response = await fetch(request);
+          if (response.ok) cache.put(request, response.clone());
+          return response;
+        } catch (_) {
+          // Offline: the last build still starts.
+          return cached || Response.error();
+        }
+      }
+      // Runtime cache: serve from cache when present, refresh in background.
       const network = fetch(request)
         .then((response) => {
           if (response.ok) cache.put(request, response.clone());
