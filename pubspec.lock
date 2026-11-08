@@ -952,10 +952,11 @@ packages:
   misskey_dart_api:
     dependency: "direct main"
     description:
-      path: "../misskey_dart_api"
-      relative: true
-    source: path
-    version: "0.1.0"
+      name: misskey_dart_api
+      sha256: bca0f1b44f23bb0ae3b1dac92536309ae10331adfab494e01ab50c67407fac0b
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   mocktail:
     dependency: "direct dev"
     description:
