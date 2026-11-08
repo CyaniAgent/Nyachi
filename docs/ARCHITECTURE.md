@@ -111,3 +111,22 @@ The DOM element is presentation only — `pointer-events: none` plus a
 transparent platform-view hit test — so a tap on an image still reaches the
 Flutter widget that owns it (the viewer, the profile link). A DOM node painted
 over the canvas would otherwise swallow those taps.
+
+## Push notifications
+
+Misskey's `sw/register` is `secure: true`, and the server reads that as
+"the instance's own session, no access token at all"
+(`isSecure = user != null && token == null`). Every token-authenticated client
+— MiAuth, OAuth, or a pasted token — is refused with `ACCESS_DENIED`. Nyachi
+only ever holds tokens, so it cannot register browser push on any instance
+carrying that fix (December 2023, GHSA-7pxq-6xx9-xpgm). The settings page states
+this rather than offering a switch that cannot work.
+
+Delivery comes from the resident connection instead: tray on desktop,
+foreground service on Android. Anything beyond that needs the separate gateway.
+
+`sw/unregister` stays callable because it takes no credentials: since 2026.10 it
+identifies the record by `endpoint` + `auth` + `publickey`. Sending all three is
+also correct on older servers — their parameter schema never closed the object,
+so the extra properties were already ignored. That is how a subscription left
+behind by an earlier build is removed.

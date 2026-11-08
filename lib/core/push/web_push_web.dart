@@ -2,11 +2,10 @@
 
 import 'dart:async';
 import 'dart:js_interop';
-import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
 
-/// Whether this build can register for Web Push.
+/// Whether this build can reach the browser's Push API.
 ///
 /// Feature-detected rather than assumed: a secure context and a service worker
 /// container are both required before the Push API is reachable.
@@ -14,27 +13,16 @@ bool get pushSupported =>
     web.window.isSecureContext &&
     web.window.navigator.serviceWorker.isDefinedAndNotNull;
 
-/// Requests notification permission and subscribes the service worker.
+/// The subscription the browser already holds, or null when there is none.
 ///
-/// Returns null when the user declined, the browser cannot subscribe, or the
-/// instance offered no VAPID key - in every case there is nothing to register.
-Future<PushSubscription?> register({required String vapidPublicKey}) async {
-  final permission = (await web.Notification.requestPermission().toDart).toDart;
-  if (permission != 'granted') return null;
-
+/// Reading an existing subscription does not ask the user for anything — the
+/// page only ever inspects what is there, because registering a new one is not
+/// something a token-authenticated client can put to use: the server refuses
+/// `sw/register` outright.
+Future<PushSubscription?> currentSubscription() async {
   final registration = await web.window.navigator.serviceWorker.ready.toDart;
-  final manager = registration.pushManager;
-  final existing = await manager.getSubscription().toDart;
-  final subscription =
-      existing ??
-      await manager
-          .subscribe(
-            web.PushSubscriptionOptionsInit(
-              userVisibleOnly: true,
-              applicationServerKey: _decodeKey(vapidPublicKey),
-            ),
-          )
-          .toDart;
+  final subscription = await registration.pushManager.getSubscription().toDart;
+  if (subscription == null) return null;
   final p256dh = subscription.getKey('p256dh');
   final auth = subscription.getKey('auth');
   if (p256dh == null || auth == null) return null;
@@ -46,23 +34,10 @@ Future<PushSubscription?> register({required String vapidPublicKey}) async {
 }
 
 /// Drops the active push subscription, if any.
-Future<void> unregister() async {
+Future<void> dropSubscription() async {
   final registration = await web.window.navigator.serviceWorker.ready.toDart;
   final subscription = await registration.pushManager.getSubscription().toDart;
   await subscription?.unsubscribe().toDart;
-}
-
-/// Base64url VAPID key to the buffer `applicationServerKey` expects.
-JSArrayBuffer _decodeKey(String base64Url) {
-  final padding = (4 - base64Url.length % 4) % 4;
-  final normalized =
-      '${base64Url.replaceAll('-', '+').replaceAll('_', '/')}${'=' * padding}';
-  final binary = web.window.atob(normalized);
-  final bytes = Uint8List(binary.length);
-  for (var i = 0; i < binary.length; i++) {
-    bytes[i] = binary.codeUnitAt(i);
-  }
-  return bytes.buffer.toJS;
 }
 
 /// A key buffer back to the base64url the server stores.
@@ -76,7 +51,7 @@ String _encodeKey(JSArrayBuffer buffer) {
       .replaceAll('=', '');
 }
 
-/// A browser push subscription as the server expects it.
+/// A browser push subscription as the server stores it.
 class PushSubscription {
   const PushSubscription({
     required this.endpoint,

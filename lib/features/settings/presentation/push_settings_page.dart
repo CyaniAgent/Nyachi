@@ -1,24 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
-import '../../../core/network/instance_repository.dart';
 import '../../../core/platform/residency.dart';
 import '../../../core/push/web_push.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/ui/l10n_ext.dart';
 
-/// Enables browser push notifications for this account.
+/// Tells the user how notifications reach them, and why browser push cannot.
 ///
-/// Only meaningful on the web target and only when the instance both runs a
-/// service worker and publishes a VAPID key; every other case is stated
-/// outright instead of showing a control that cannot work.
+/// Misskey's `sw/register` is `secure: true`, which the server reads as "the
+/// instance's own session": every client that authenticates with an access
+/// token — MiAuth included — is refused with `ACCESS_DENIED`. Nyachi only ever
+/// holds tokens, so it has no browser-push path on any instance that carries
+/// the fix; saying so is the honest state of the feature, and offering a switch
+/// that cannot work would not be.
+///
+/// A subscription an older build left behind is still removable: the matching
+/// `sw/unregister` takes no credentials.
 class PushSettingsPage extends ConsumerStatefulWidget {
   const PushSettingsPage({super.key});
 
@@ -27,81 +30,51 @@ class PushSettingsPage extends ConsumerStatefulWidget {
 }
 
 class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
+  /// A subscription this browser still holds from an earlier build.
+  PushSubscription? _leftover;
+
   var _busy = false;
-  var _subscribed = false;
 
-  /// Endpoint of the live subscription, kept so disabling can name the exact
-  /// record to drop on the server.
-  String? _endpoint;
+  @override
+  void initState() {
+    super.initState();
+    if (pushSupported) _loadLeftover();
+  }
 
-  Future<void> _enable() async {
+  Future<void> _loadLeftover() async {
+    try {
+      final subscription = await currentSubscription();
+      if (!mounted || subscription == null) return;
+      setState(() => _leftover = subscription);
+    } on Object {
+      // Nothing to clean up if the browser will not answer.
+    }
+  }
+
+  Future<void> _removeLeftover() async {
+    final subscription = _leftover;
+    if (subscription == null || _busy) return;
     final l10n = context.l10n;
     setState(() => _busy = true);
     try {
-      // The public meta answer omits the VAPID key, so detail is requested
-      // explicitly; the extension exposing this is not part of the exported
-      // SDK surface, hence the direct call.
-      final meta = await ref
+      // Server first: a failed call must not leave a record pointing at a
+      // subscription that no longer exists.
+      await ref
           .read(misskeyClientProvider)
-          .postModel<MetaDetailed>(
-            'meta',
-            body: const {'detail': true},
-            parser: MetaDetailed.fromJson,
+          .account
+          .swUnregisterSubscription(
+            endpoint: subscription.endpoint,
+            auth: subscription.auth,
+            publickey: subscription.p256dh,
           );
-      final key = meta.swPublickey;
-      if (key == null || key.isEmpty) {
-        _report(l10n.pushNoKey);
-        return;
-      }
-      final subscription = await register(vapidPublicKey: key);
-      if (subscription == null) {
-        _report(l10n.pushDenied);
-        return;
-      }
-      // The server takes the browser endpoint plus the two subscription keys.
-      final client = ref.read(misskeyClientProvider);
-      await client.account.swRegister(
-        endpoint: subscription.endpoint,
-        auth: subscription.auth,
-        publickey: subscription.p256dh,
-      );
-      _endpoint = subscription.endpoint;
+      await dropSubscription();
       if (!mounted) return;
-      setState(() => _subscribed = true);
-      _report(l10n.pushEnabled);
+      setState(() => _leftover = null);
+      _report(l10n.pushLeftoverRemoved);
     } catch (error) {
       if (mounted) _report(mapFailure(error).message(l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _disable() async {
-    final l10n = context.l10n;
-    setState(() => _busy = true);
-    try {
-      // The browser is authoritative for the subscription itself; the server
-      // record is dropped afterwards so a failed call cannot leave the user
-      // believing push is still on when the browser stopped listening.
-      await unregister();
-      final endpoint = _endpoint;
-      if (endpoint != null) {
-        await ref
-            .read(misskeyClientProvider)
-            .account
-            .swUnregister(endpoint: endpoint);
-      }
-    } catch (_) {
-      // Best-effort server cleanup: the local state is corrected either way.
-    } finally {
-      _endpoint = null;
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _subscribed = false;
-        });
-      }
-      if (mounted) _report(l10n.pushDisabled);
     }
   }
 
@@ -113,7 +86,6 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final info = ref.watch(instanceInfoProvider).value;
     // macOS has no system-notification wiring yet (notificationsSupported is
     // false there), so the page must not claim background delivery on it.
     final systemSupported = ref.watch(residencyProvider).notificationsSupported;
@@ -128,38 +100,7 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
               // Non-web builds deliver notifications through the resident
               // connection (tray on desktop, foreground service on Android);
               // they get a status page, not a dead end.
-              if (!pushSupported) ...[
-                if (systemSupported)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.notifications_active_outlined,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    title: Text(l10n.pushSystemTitle),
-                    subtitle: Text(l10n.pushSystemHint),
-                  )
-                else
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.notifications_off_outlined),
-                    title: Text(l10n.pushSystemUnavailable),
-                    subtitle: Text(l10n.pushSystemUnavailableHint),
-                  ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.language_outlined),
-                  title: Text(l10n.pushUnsupported),
-                  subtitle: Text(l10n.pushUnsupportedHint),
-                ),
-              ] else if (info != null && !info.serviceWorkerEnabled)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.block_outlined),
-                  title: Text(l10n.pushUnavailable),
-                  subtitle: Text(l10n.pushUnavailableHint),
-                )
-              else ...[
+              if (systemSupported)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(
@@ -168,18 +109,38 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
                   ),
                   title: Text(l10n.pushSystemTitle),
                   subtitle: Text(l10n.pushSystemHint),
-                ),
-                SwitchListTile(
+                )
+              else
+                ListTile(
                   contentPadding: EdgeInsets.zero,
-                  value: _subscribed,
-                  title: Text(l10n.pushEnable),
-                  subtitle: Text(l10n.pushEnableHint),
-                  onChanged: _busy
-                      ? null
-                      : (value) => value
-                            ? unawaited(_enable())
-                            : unawaited(_disable()),
+                  leading: const Icon(Icons.notifications_off_outlined),
+                  title: Text(l10n.pushSystemUnavailable),
+                  subtitle: Text(l10n.pushSystemUnavailableHint),
                 ),
+              if (!pushSupported)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.language_outlined),
+                  title: Text(l10n.pushUnsupported),
+                  subtitle: Text(l10n.pushUnsupportedHint),
+                )
+              else ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.block_outlined),
+                  title: Text(l10n.pushBlockedTitle),
+                  subtitle: Text(l10n.pushBlockedHint),
+                ),
+                if (_leftover != null)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.cleaning_services_outlined),
+                    title: Text(l10n.pushLeftover),
+                    trailing: TextButton(
+                      onPressed: _busy ? null : _removeLeftover,
+                      child: Text(l10n.pushLeftoverRemove),
+                    ),
+                  ),
               ],
             ],
           ),

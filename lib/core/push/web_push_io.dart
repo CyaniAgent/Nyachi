@@ -4,26 +4,25 @@ library;
 
 import 'dart:async';
 
-/// Web Push registration, implemented only for the web target.
+/// Browser push subscription helpers, implemented only on the web target.
 ///
-/// Kept behind a conditional export so non-web builds carry no stub: on a
-/// non-web platform push is not a thing these helpers can do, and the caller
-/// checks [pushSupported] before offering it.
+/// Nyachi cannot register a browser push subscription: the server endpoint
+/// (`sw/register`) is `secure: true`, which in Misskey means the instance's own
+/// session — every token-authenticated client, MiAuth included, is refused.
+/// What remains is inspecting and removing a subscription an earlier build
+/// created, which is what these helpers do; `unregister` on the server side is
+/// credential-free, so it stays reachable.
 
-/// Whether this build can register for Web Push.
+/// Whether this build can reach the browser's Push API.
 bool get pushSupported => false;
 
-/// Requests notification permission and subscribes the service worker.
-///
-/// Returns the push endpoint and its keys, or null when the user declined,
-/// the browser has no push support, or the subscription failed.
-Future<PushSubscription?> register({required String vapidPublicKey}) async =>
-    throw UnsupportedError('Web Push is only available on the web target.');
+/// The subscription the browser already holds, or null when there is none.
+Future<PushSubscription?> currentSubscription() async => null;
 
 /// Drops the active push subscription, if any.
-Future<void> unregister() async {}
+Future<void> dropSubscription() async {}
 
-/// A browser push subscription as the server expects it.
+/// A browser push subscription as the server stores it.
 class PushSubscription {
   const PushSubscription({
     required this.endpoint,
