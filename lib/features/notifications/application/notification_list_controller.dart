@@ -55,13 +55,13 @@ class MisskeyNotificationRepository implements NotificationRepository {
 
   static const _cacheKey = CacheManager.notificationsKey;
 
-  /// Fetches one page, tolerating notification types this build cannot model.
+  /// Fetches one page, normalizing the payload before it is decoded.
   ///
-  /// The SDK parses the whole list in one pass (`Notification.fromJson`
-  /// throws `FormatException` for a type it does not know), so a single new
-  /// server-side type failed the entire page — which is why only the "All"
-  /// tab broke while every filtered tab, asking for known types only, worked.
-  /// Skipping the row and naming it on the console keeps the rest readable.
+  /// Two things the server does that the generated models do not accept: a
+  /// type newer than the SDK's pinned spec (now decoded as
+  /// `NotificationUnknown` rather than failing the page), and server-raised
+  /// rows such as `pollEnded` that omit the actor and the user's required
+  /// collections. See [parseNotificationPage].
   @override
   Future<NotificationPage> fetchPage({
     String? untilId,

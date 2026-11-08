@@ -165,5 +165,9 @@ DateTime notificationCreatedAt(Notification notification) {
     NotificationReactionGrouped(:final createdAt) => createdAt,
     NotificationRenoteGrouped(:final createdAt) => createdAt,
     NotificationTest(:final createdAt) => createdAt,
+    // A type newer than the SDK's spec: still has its own timestamp.
+    NotificationUnknown(:final raw) =>
+      DateTime.tryParse(raw['createdAt'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
   };
 }

@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/features/notifications/application/notification_list_controller.dart';
 
 import '../../support/fixtures.dart';
@@ -33,7 +34,7 @@ void main() {
     expect(page.items.single.id, 'p1');
   });
 
-  test('a notification type this build does not model is skipped', () {
+  test('a notification type newer than the SDK spec is kept', () {
     final page = parseNotificationPage([
       {
         'id': 'x1',
@@ -54,8 +55,10 @@ void main() {
       },
     ]);
 
-    // The unknown row cannot be modelled, but it must not take the page down.
-    expect(page.items.map((item) => item.id), ['r1']);
+    // The row is kept as an unknown variant instead of failing the page: the
+    // SDK decodes anything its pinned spec does not describe.
+    expect(page.items.map((item) => item.id), ['x1', 'r1']);
+    expect(page.items.first, isA<NotificationUnknown>());
   });
 
   test('user containers the server omits are filled in', () {

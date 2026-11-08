@@ -307,5 +307,8 @@ IconData notificationTypeIcon(Notification notification) {
     NotificationScheduledNotePosted() ||
     NotificationScheduledNotePostFailed() => Icons.schedule,
     NotificationTest() => Icons.science_outlined,
+    // A type newer than the SDK's spec: show it with a neutral mark rather
+    // than dropping a real notification.
+    NotificationUnknown() => Icons.notifications_none,
   };
 }

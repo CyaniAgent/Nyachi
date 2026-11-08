@@ -63,6 +63,12 @@ dev_dependencies:
   riverpod_generator: ^4.0.9
   riverpod_lint: ^3.1.9
 
+dependency_overrides:
+  # Temporary: the SDK fix for notification types newer than its pinned spec
+  # is not published yet. Remove once a release carrying it is on pub.dev.
+  misskey_dart_api:
+    path: ../misskey_dart_api
+
 
 flutter:
   uses-material-design: true
