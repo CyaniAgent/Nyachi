@@ -20,6 +20,7 @@ import 'emoji_text.dart';
 import 'reaction_picker.dart';
 import '../../../core/mfm/mfm_body.dart';
 import 'note_media.dart';
+import 'note_poll_view.dart';
 
 class NoteCard extends ConsumerStatefulWidget {
   const NoteCard({required this.note, this.detailMode = false, super.key});
@@ -148,6 +149,18 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                         style: widget.detailMode
                             ? Theme.of(context).textTheme.bodyLarge
                             : null,
+                      ),
+                    if (note.poll != null)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top: note.text?.isNotEmpty == true ? 10 : 0,
+                          bottom: 4,
+                        ),
+                        child: NotePollView(
+                          note: note,
+                          detailMode: widget.detailMode,
+                          onVote: (choices) => _vote(note, choices),
+                        ),
                       ),
                     if (note.files?.isNotEmpty == true)
                       Padding(
@@ -306,6 +319,21 @@ class _NoteCardState extends ConsumerState<NoteCard> {
   Future<void> _pickReaction(Note note) async {
     final reaction = await showReactionPicker(context, note: note);
     if (reaction != null && mounted) await _toggleReaction(note, reaction);
+  }
+
+  /// Casts the vote and republishes the note so every surface showing it
+  /// updates — the poll here, and the copy in the detail panel.
+  Future<void> _vote(Note note, List<int> choices) async {
+    try {
+      final updated = await ref
+          .read(noteRepositoryProvider)
+          .vote(note.id, choices);
+      if (!mounted) return;
+      ref.read(noteOverridesProvider.notifier).put(updated);
+    } catch (error) {
+      if (mounted) _showError(error);
+      rethrow;
+    }
   }
 
   Future<void> _loadMenuState(Note note) async {

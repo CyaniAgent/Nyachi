@@ -23,14 +23,15 @@ shared: core (auth, storage, network, ui, l10n), app (router, theme, detail pane
 
 ### Shared note rendering (documented exception)
 
-`NoteCard`, `NoteContent`, and `NoteMedia` are the feed rendering layer shared
-by the timeline, explore, profile, chat, and tag features. They stay in
-`features/notes/presentation/` because they open detail views through
-`openDetail`/`DetailLocation`, which is part of the app-level composition layer
-(`lib/app/detail_panel/`). Sinking them into `core/` would make `core` depend on
-`app`, inverting the dependency direction. Cross-feature imports of these
-widgets are therefore allowed; contracts (repository interfaces) still live in
-each feature's `domain/`.
+`NoteCard` and `NoteMedia` are the feed rendering layer shared by the
+timeline, explore, profile, chat, and tag features, together with the pieces a
+card composes: `NotePollView` (a note's poll, votable or read-only) and
+`ReactionChip`. They stay in `features/notes/presentation/` because they open
+detail views through `openDetail`/`DetailLocation`, which is part of the
+app-level composition layer (`lib/app/detail_panel/`). Sinking them into
+`core/` would make `core` depend on `app`, inverting the dependency direction.
+Cross-feature imports of these widgets are therefore allowed; contracts
+(repository interfaces) still live in each feature's `domain/`.
 
 ## Authentication and session
 

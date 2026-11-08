@@ -441,6 +441,19 @@
   "selectRecipients": "Recipients",
   "searchUsers": "Search users",
   "pollNeedsTwoChoices": "A poll needs at least two choices",
+  "pollVote": "Vote",
+  "pollSelectMultiple": "Select one or more answers",
+  "pollViewResults": "View results",
+  "pollBackToVote": "Back to voting",
+  "pollClosed": "The poll has closed",
+  "pollVoteCount": "{count, plural, =0{No votes yet} =1{1 vote} other{{count} votes}}",
+  "@pollVoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "charLimit": "{used} / {limit}",
   "@pollChoiceHint": {
     "placeholders": {

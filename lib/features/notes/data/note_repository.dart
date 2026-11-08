@@ -77,6 +77,14 @@ class MisskeyNoteRepository implements NoteRepository {
   }
 
   @override
+  Future<Note> vote(String noteId, List<int> choices) async {
+    for (final choice in choices) {
+      await client.notes.pollsVote(noteId: noteId, choice: choice);
+    }
+    return _refresh(noteId);
+  }
+
+  @override
   Future<void> favorite(String noteId) =>
       client.notes.favoritesCreate(noteId: noteId);
 

@@ -433,6 +433,19 @@
   "selectRecipients": "收件人",
   "searchUsers": "搜索用户",
   "pollNeedsTwoChoices": "投票至少需要两个选项",
+  "pollVote": "投票",
+  "pollSelectMultiple": "可选择多个答案",
+  "pollViewResults": "查看结果",
+  "pollBackToVote": "返回投票",
+  "pollClosed": "投票已结束",
+  "pollVoteCount": "{count, plural, =0{暂无投票} other{{count} 票}}",
+  "@pollVoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "charLimit": "{used} / {limit}",
   "@pollChoiceHint": {
     "placeholders": {

@@ -23,6 +23,13 @@ abstract interface class NoteRepository {
 
   Future<Note> renote(String noteId);
 
+  /// Casts a vote and returns the note as the server reports it afterwards.
+  ///
+  /// The endpoint takes one choice per call, so a multiple-answer poll is sent
+  /// as one request per selected index and refreshed once at the end — a
+  /// refresh per choice would repaint the poll mid-vote.
+  Future<Note> vote(String noteId, List<int> choices);
+
   Future<void> favorite(String noteId);
 
   Future<void> unfavorite(String noteId);

@@ -433,6 +433,19 @@
   "selectRecipients": "宛先",
   "searchUsers": "ユーザー検索",
   "pollNeedsTwoChoices": "アンケートには2つ以上の選択肢が必要です",
+  "pollVote": "投票する",
+  "pollSelectMultiple": "複数選択できます",
+  "pollViewResults": "結果を見る",
+  "pollBackToVote": "投票に戻る",
+  "pollClosed": "アンケートは終了しました",
+  "pollVoteCount": "{count, plural, =0{まだ投票はありません} other{{count}票}}",
+  "@pollVoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "charLimit": "{used} / {limit}",
   "@pollChoiceHint": {
     "placeholders": {

@@ -21,6 +21,7 @@ Note makeNote(
   DateTime? createdAt,
   String? text = 'hello',
   UserLite? user,
+  NotePoll? poll,
 }) {
   return Note(
     id: id,
@@ -35,5 +36,25 @@ Note makeNote(
     reactionCount: 0,
     renoteCount: 0,
     repliesCount: 0,
+    poll: poll,
+  );
+}
+
+NotePoll makePoll(
+  List<({String text, num votes, bool voted})> choices, {
+  bool multiple = false,
+  DateTime? expiresAt,
+}) {
+  return NotePoll(
+    multiple: multiple,
+    expiresAt: expiresAt,
+    choices: [
+      for (final choice in choices)
+        NotePollChoicesItem(
+          text: choice.text,
+          votes: choice.votes,
+          isVoted: choice.voted,
+        ),
+    ],
   );
 }
