@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../core/network/client_provider.dart';
 import '../../../core/network/error_mapper.dart';
@@ -62,7 +61,7 @@ class _PushSettingsPageState extends ConsumerState<PushSettingsPage> {
       await ref
           .read(misskeyClientProvider)
           .account
-          .swUnregisterSubscription(
+          .swUnregister(
             endpoint: subscription.endpoint,
             auth: subscription.auth,
             publickey: subscription.p256dh,

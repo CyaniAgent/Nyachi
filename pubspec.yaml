@@ -64,8 +64,9 @@ dev_dependencies:
   riverpod_lint: ^3.1.9
 
 dependency_overrides:
-  # Temporary: the SDK fix for notification types newer than its pinned spec
-  # is not published yet. Remove once a release carrying it is on pub.dev.
+  # Temporary: the local SDK carries the pinned OpenAPI 2026.10.1 surface, the
+  # unknown-notification fallback, and the corrected sw/unregister parameters —
+  # none of which are on pub.dev yet. Remove once a release ships with them.
   misskey_dart_api:
     path: ../misskey_dart_api
 
