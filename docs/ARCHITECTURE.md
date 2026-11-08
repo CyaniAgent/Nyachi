@@ -93,3 +93,21 @@ sub-page opens beside the list (double column on wide screens).
 
 `mapFailure` converts SDK, HTTP, and timeout failures into `AppFailure` kinds.
 Widgets render localized messages and never print request URLs or tokens.
+
+## Remote images on the web
+
+`NyachiImage` is the single entry point for remote images, and the Flutter
+pipeline is the normal path on every target: it decodes the bytes, so caching,
+placeholders and sizing behave the same everywhere.
+
+On the web that pipeline needs CORS headers on the media host. When a decode is
+refused, the error branch re-renders the picture through a DOM `<img>`
+(`lib/core/ui/web_image_web.dart`), which the browser loads regardless of
+CORS. The refusal is remembered per cross-origin host, because it is a property
+of the host's policy: retrying it for every image would repaint a placeholder
+over a picture the DOM copy can already show.
+
+The DOM element is presentation only — `pointer-events: none` plus a
+transparent platform-view hit test — so a tap on an image still reaches the
+Flutter widget that owns it (the viewer, the profile link). A DOM node painted
+over the canvas would otherwise swallow those taps.

@@ -10,10 +10,12 @@ import 'web_image.dart';
 /// All in-app remote images go through this widget (or [nyachiImageProvider])
 /// so caching, placeholder, and failure states stay consistent.
 ///
-/// On the web the canvas renderer fetches pixels, and a host without CORS
-/// headers refuses that fetch; the error branch therefore re-renders through a
-/// DOM `<img>` ([domImage]) so the picture still shows. Other targets keep the
-/// plain failure chrome, where a failed load is a genuine network failure.
+/// The Flutter pipeline is the normal path on every target. On the web the
+/// canvas renderer fetches pixels, and a host without CORS headers refuses
+/// that fetch; only then does the error branch re-render through a DOM `<img>`
+/// ([domImage]), which the browser loads regardless of CORS. Other targets
+/// keep the plain failure chrome, where a failed load is a genuine network
+/// failure.
 class NyachiImage extends StatelessWidget {
   const NyachiImage({
     required this.url,
@@ -31,9 +33,11 @@ class NyachiImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    // Cross-origin images cannot be decoded through the canvas at all, so ask
-    // the browser instead of trying and failing first.
-    if (needsDomImage(url)) {
+    // A host that already refused a decode will refuse the next one too;
+    // retrying only repaints the placeholder over a picture the DOM copy can
+    // show immediately. This is still the fallback: it is only reached after
+    // the Flutter pipeline failed for this origin.
+    if (imageOriginRefused(url)) {
       return Stack(
         children: [
           ColoredBox(color: scheme.surfaceContainerHighest),
@@ -49,6 +53,7 @@ class NyachiImage extends StatelessWidget {
       placeholder: (_, _) => ColoredBox(color: scheme.surfaceContainerHighest),
       errorWidget: (_, _, _) {
         if (hasDomImageFallback) {
+          markImageOriginRefused(url);
           return domImage(url: url, width: width, height: height, fit: fit);
         }
         return ColoredBox(

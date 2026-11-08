@@ -65,7 +65,7 @@ class NyachiAvatar extends StatelessWidget {
                   color: scheme.onSurfaceVariant,
                 ))
           : SizedBox.expand(
-              child: needsDomImage(url!)
+              child: imageOriginRefused(url!)
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
@@ -86,9 +86,10 @@ class NyachiAvatar extends StatelessWidget {
                       placeholder: (_, _) =>
                           ColoredBox(color: scheme.surfaceContainerHighest),
                       errorWidget: (_, _, _) {
-                        // A CORS refusal on the web is not a broken URL: the DOM
-                        // image displays it, keeping avatars visible.
+                        // A CORS refusal on the web is not a broken URL: the
+                        // DOM image displays it, keeping avatars visible.
                         if (hasDomImageFallback) {
+                          markImageOriginRefused(url!);
                           return domImage(
                             url: url!,
                             width: size,
