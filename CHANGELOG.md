@@ -3,6 +3,60 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
+## [2.1.0-beta.7] - 2026-11-09
+
+### Codename
+
+Kumo
+
+Text is selectable wherever it is read, and every row that used to swallow a
+tap to allow that selection now carries its own control instead. Polls can be
+read and answered, notifications accept the rows the server actually sends, and
+announcements stop being a settings page.
+
+### Added
+
+- **Polls are rendered and votable.** A note's poll was invisible — the card
+  never read `note.poll`, so a poll looked like an empty note. Choices now
+  show, single-answer polls vote on tap, multi-answer polls collect a
+  selection, and results stay hidden until you answered, the poll closed, or
+  you asked to see them.
+- **Announcements are reachable from the timeline.** The entry is a button in
+  the home app bar, opening through the same detail surface as every other
+  page, instead of hiding at the bottom of Settings.
+
+### Changed
+
+- **Rows navigate from a control, not the whole surface.** Selectable text and
+  a tappable row compete for the same gesture, and selection wins, so the row
+  tap never arrived. Notification rows, the ancestor chain in a thread, replies
+  and announcement rows now put navigation in a chevron, which leaves the text
+  selectable everywhere.
+- **Announcements render as dense rows**, matching the rest of the app: no
+  card per entry, a divider between rows, and banner announcements keep only
+  their tinted band. Their bodies go through the MFM renderer, so links,
+  mentions and custom emoji appear as written.
+- **Browser push is stated as unavailable** rather than offered as a switch.
+  The registration endpoint is `secure: true`, which the server reads as "the
+  instance's own session, no access token", so a token-based client is
+  refused — the switch could never have worked. A subscription left in the
+  browser by an earlier build can still be removed.
+- **The SDK is `misskey_dart_api 0.2.0` from pub.dev**, pinned to Misskey
+  OpenAPI 2026.10.1, replacing the local path override.
+
+### Fixed
+
+- **A notification type newer than the SDK's spec no longer empties the list.**
+  The page decodes such a row instead of failing the response, so one unknown
+  type cannot take down every row around it.
+- **`pollEnded` notifications render.** A poll ending is raised by the server,
+  so the row carries no actor and omits the collections the model requires;
+  both are now accepted.
+- **Images on the Web do not eat taps.** The DOM `<img>` used for cross-origin
+  pictures became the event target, so tapping a note image or an avatar did
+  nothing. It is now `pointer-events: none` and hit-tests transparent, which
+  routes the pointer to the Flutter widget that owns the tap.
+
 ## [2.1.0-beta.6] - 2026-11-07
 
 ### Codename
