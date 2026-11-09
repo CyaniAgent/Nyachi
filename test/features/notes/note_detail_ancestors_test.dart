@@ -113,4 +113,21 @@ void main() {
     // Only the focused note remains, so nothing renders above it.
     expect(find.text('No replies yet'), findsOneWidget);
   });
+
+  testWidgets('ancestor text stays selectable, the chevron navigates', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _FakeRepository(
+        note: makeNote('n3', text: 'third'),
+        ancestors: [makeNote('n1', text: 'first')],
+      ),
+    );
+
+    // The chain is reading material: its text must not be sacrificed to a row
+    // tap, so selection stays and the jump is an explicit control.
+    expect(find.byType(SelectionArea), findsNWidgets(2));
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+  });
 }

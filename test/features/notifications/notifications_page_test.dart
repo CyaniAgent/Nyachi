@@ -153,13 +153,26 @@ void main() {
       ],
     );
     await _pump(tester, repository);
-    expect(find.byType(ListTile), findsNWidgets(2));
+    // One chevron per row that opens a note; that is the row-level affordance
+    // the list actually renders.
+    expect(find.byIcon(Icons.chevron_right), findsNWidgets(2));
 
     await tester.tap(find.byTooltip('Unread only'));
     await tester.pumpAndSettle();
 
     // Only the one newer than the stored boundary survives.
-    expect(find.byType(ListTile), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
     expect(find.byTooltip('Show all'), findsOneWidget);
+  });
+
+  testWidgets('a notification preview stays selectable', (tester) async {
+    final repository = _FakeRepository(
+      items: [_notification('new', createdAt: DateTime.utc(2026, 3))],
+    );
+    await _pump(tester, repository);
+
+    // The row is not a button any more: its preview keeps a SelectionArea, and
+    // the chevron carries the navigation, so both gestures work.
+    expect(find.byType(SelectionArea), findsOneWidget);
   });
 }

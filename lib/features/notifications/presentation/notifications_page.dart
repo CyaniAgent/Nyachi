@@ -250,42 +250,63 @@ class _NotificationTile extends StatelessWidget {
     final actor = rawActor != null && rawActor.id.isNotEmpty ? rawActor : null;
     final note = notificationNote(notification);
     final label = notificationLabel(l10n, notification);
-    return ListTile(
-      leading: NyachiAvatar(
-        url: actor?.avatarUrl,
-        size: 40,
-        fallback: Icon(notificationTypeIcon(notification)),
-      ),
-      trailing: Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Icon(
-          notificationTypeIcon(notification),
-          size: 16,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
-      title: Text(
-        actor?.name?.isNotEmpty == true ? '@${actor!.username} $label' : label,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Column(
+    // The row itself is not tappable: the note preview keeps its selection, and
+    // the chevron is the only thing that opens the note.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (note?.text != null && note!.text!.isNotEmpty)
-            MfmBody(
-              text: note.text!,
-              emojis: note.emojis,
-              maxLines: 2,
-              // The row opens the note; a selection would take that tap.
-              selectable: false,
+          NyachiAvatar(
+            url: actor?.avatarUrl,
+            size: 40,
+            fallback: Icon(notificationTypeIcon(notification)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  actor?.name?.isNotEmpty == true
+                      ? '@${actor!.username} $label'
+                      : label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                if (note?.text != null && note!.text!.isNotEmpty)
+                  MfmBody(text: note.text!, emojis: note.emojis, maxLines: 2),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(
+                      notificationTypeIcon(notification),
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      relativeTime(
+                        context,
+                        notificationCreatedAt(notification),
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          Text(relativeTime(context, notificationCreatedAt(notification))),
+          ),
+          if (note != null)
+            IconButton(
+              tooltip: l10n.noteDetail,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.chevron_right, size: 20),
+              onPressed: () => openDetail(context, NoteDetailLocation(note.id)),
+            ),
         ],
       ),
-      onTap: note == null
-          ? null
-          : () => openDetail(context, NoteDetailLocation(note.id)),
     );
   }
 }

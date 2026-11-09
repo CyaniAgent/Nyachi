@@ -173,8 +173,8 @@ class _RepliesSection extends StatelessWidget {
 
 /// One ancestor in the chain above the focused note.
 ///
-/// Tapping it pushes its own detail page, so a chain is walked step by step
-/// instead of expanded in place.
+/// Its chevron pushes that note's own detail page, so a chain is walked step by
+/// step instead of expanded in place.
 class _AncestorTile extends StatelessWidget {
   const _AncestorTile({required this.note});
 
@@ -183,66 +183,88 @@ class _AncestorTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: () => openDetail(context, NoteDetailLocation(note.id)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-        // IntrinsicHeight gives the reference line a definite height to
-        // stretch into; a bare stretch inside a scroll view has none.
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // The reference line: the visual join into the note below.
-              SizedBox(
-                width: 24,
-                child: Center(
-                  child: Container(
-                    width: 2,
-                    constraints: const BoxConstraints(minHeight: 32),
-                    color: scheme.outlineVariant,
-                  ),
+    final l10n = context.l10n;
+    // Navigation is an explicit control rather than the whole row: the body is
+    // selectable text, and selection claims the tap it would otherwise need.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      // IntrinsicHeight gives the reference line a definite height to stretch
+      // into; a bare stretch inside a scroll view has none.
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // The reference line: the visual join into the note below.
+            SizedBox(
+              width: 24,
+              child: Center(
+                child: Container(
+                  width: 2,
+                  constraints: const BoxConstraints(minHeight: 32),
+                  color: scheme.outlineVariant,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        NyachiAvatar(url: note.user.avatarUrl, size: 20),
-                        const SizedBox(width: 6),
-                        Expanded(
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => openDetail(
+                          context,
+                          UserDetailLocation(note.user.id),
+                        ),
+                        child: NyachiAvatar(url: note.user.avatarUrl, size: 20),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => openDetail(
+                            context,
+                            UserDetailLocation(note.user.id),
+                          ),
                           child: Text(
                             note.user.name ?? note.user.username,
                             style: Theme.of(context).textTheme.bodySmall,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ],
-                    ),
-                    if (note.cw?.isNotEmpty == true)
-                      Text(
-                        note.cw!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      )
-                    else if (note.text?.isNotEmpty == true)
-                      MfmBody(
-                        text: note.text!,
-                        emojis: note.emojis,
-                        detail: true,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        // The row opens this note; selecting would eat the tap.
-                        selectable: false,
                       ),
-                  ],
-                ),
+                      IconButton(
+                        tooltip: l10n.noteDetail,
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 32,
+                          height: 32,
+                        ),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.chevron_right, size: 18),
+                        onPressed: () =>
+                            openDetail(context, NoteDetailLocation(note.id)),
+                      ),
+                    ],
+                  ),
+                  if (note.cw?.isNotEmpty == true)
+                    Text(
+                      note.cw!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    )
+                  else if (note.text?.isNotEmpty == true)
+                    MfmBody(
+                      text: note.text!,
+                      emojis: note.emojis,
+                      detail: true,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -257,122 +279,132 @@ class _ReplyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return InkWell(
-      onTap: () => openDetail(context, NoteDetailLocation(note.id)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GestureDetector(
-              onTap: () =>
-                  openDetail(context, UserDetailLocation(note.user.id)),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundImage: nyachiImageProvider(note.user.avatarUrl),
-              ),
+    // No row-level tap: the body is selectable, and selecting it would consume
+    // the tap that navigation used to ride on. The chevron is the affordance.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => openDetail(context, UserDetailLocation(note.user.id)),
+            child: CircleAvatar(
+              radius: 16,
+              backgroundImage: nyachiImageProvider(note.user.avatarUrl),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          note.user.name ?? note.user.username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '@${note.user.username}',
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        note.user.name ?? note.user.username,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        relativeTime(context, note.createdAt),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  if (note.cw?.isNotEmpty == true)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        note.cw!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    )
-                  else if (note.text?.isNotEmpty == true)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: MfmBody(
-                        text: note.text!,
-                        emojis: note.emojis,
-                        detail: true,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.outline,
+                    const SizedBox(width: 6),
+                    Text(
+                      '@${note.user.username}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      relativeTime(context, note.createdAt),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: l10n.noteDetail,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 32,
+                        height: 32,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        compactCount(context, note.repliesCount),
-                        style: Theme.of(context).textTheme.bodySmall,
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.chevron_right, size: 18),
+                      onPressed: () =>
+                          openDetail(context, NoteDetailLocation(note.id)),
+                    ),
+                  ],
+                ),
+                if (note.cw?.isNotEmpty == true)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      note.cw!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
                       ),
-                      const SizedBox(width: 12),
-                      Icon(
-                        Icons.repeat,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        compactCount(context, note.renoteCount),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(width: 12),
-                      Icon(
-                        Icons.add_reaction_outlined,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        compactCount(context, note.reactionCount),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      if (note.repliesCount > 0) ...[
-                        const SizedBox(width: 12),
-                        Text(
-                          '${compactCount(context, note.repliesCount)} ${l10n.reply}',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
-                    ],
+                    ),
+                  )
+                else if (note.text?.isNotEmpty == true)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: MfmBody(
+                      text: note.text!,
+                      emojis: note.emojis,
+                      detail: true,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
-                ],
-              ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      compactCount(context, note.repliesCount),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      Icons.repeat,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      compactCount(context, note.renoteCount),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      Icons.add_reaction_outlined,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      compactCount(context, note.reactionCount),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (note.repliesCount > 0) ...[
+                      const SizedBox(width: 12),
+                      Text(
+                        '${compactCount(context, note.repliesCount)} ${l10n.reply}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
