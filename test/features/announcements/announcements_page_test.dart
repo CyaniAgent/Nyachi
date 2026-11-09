@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,16 +70,9 @@ void main() {
     expect(find.byType(Divider), findsOneWidget);
   });
 
-  testWidgets('announcement bodies do not take the row tap', (tester) async {
-    await _pump(tester, [_announcement()]);
-
-    // The row expands on tap; a SelectionArea inside it would win the gesture
-    // arena and the body would never expand.
-    expect(find.byType(SelectionArea), findsNothing);
-    expect(find.byType(MfmBody), findsOneWidget);
-  });
-
-  testWidgets('tapping a row expands it', (tester) async {
+  testWidgets('the body keeps its selection, the header toggles', (
+    tester,
+  ) async {
     await _pump(tester, [
       _announcement(
         text: 'Line one.\nLine two.\nLine three.\nLine four.\nLine five.',
@@ -89,9 +83,42 @@ void main() {
       find.descendant(of: find.byType(MfmBody), matching: find.byType(Text)),
     );
 
+    // Selecting inside the body must not be blocked by the row gesture, so the
+    // body is selectable and the toggle lives in the header only.
+    expect(find.byType(SelectionArea), findsOneWidget);
     expect(body().maxLines, 4);
+
     await tester.tap(find.text('Maintenance'));
     await tester.pumpAndSettle();
     expect(body().maxLines, isNull);
+
+    await tester.tap(find.text('Maintenance'));
+    await tester.pumpAndSettle();
+    expect(body().maxLines, 4);
+  });
+
+  testWidgets('a drag over the body does not collapse the row', (tester) async {
+    await _pump(tester, [
+      _announcement(
+        text: 'Line one.\nLine two.\nLine three.\nLine four.\nLine five.',
+      ),
+    ]);
+    await tester.tap(find.text('Maintenance'));
+    await tester.pumpAndSettle();
+
+    final start = tester.getTopLeft(find.byType(MfmBody)) + const Offset(4, 8);
+    final gesture = await tester.startGesture(
+      start,
+      kind: PointerDeviceKind.mouse,
+    );
+    await gesture.moveBy(const Offset(120, 0));
+    await gesture.moveBy(const Offset(120, 0));
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    final body = tester.widget<Text>(
+      find.descendant(of: find.byType(MfmBody), matching: find.byType(Text)),
+    );
+    expect(body.maxLines, isNull, reason: 'the row must stay expanded');
   });
 }

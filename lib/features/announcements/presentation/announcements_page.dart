@@ -135,14 +135,17 @@ class _AnnouncementTileState extends State<_AnnouncementTile> {
         : announcement.title;
     // A row rather than a card: the list is dense content, and the app does not
     // box each entry. The divider between rows is what separates them.
-    return InkWell(
-      onTap: () => setState(() => _expanded = !_expanded),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    //
+    // Only the header toggles. The body keeps its selection, so a drag inside
+    // the text selects instead of collapsing the row under the pointer.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Row(
               children: [
                 if (isDialog)
                   Padding(
@@ -165,23 +168,26 @@ class _AnnouncementTileState extends State<_AnnouncementTile> {
                     ),
                   ),
                 ],
+                const SizedBox(width: 4),
+                Icon(
+                  _expanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ],
             ),
-            const SizedBox(height: 6),
-            MfmBody(
-              text: announcement.text,
-              maxLines: _expanded ? null : 4,
-              // The row toggles on tap; selecting would take that tap.
-              selectable: false,
-            ),
-            if (_expanded)
-              if (announcement.imageUrl case final url?)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: NyachiImage(url: url, fit: BoxFit.contain),
-                ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          MfmBody(text: announcement.text, maxLines: _expanded ? null : 4),
+          if (_expanded)
+            if (announcement.imageUrl case final url?)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: NyachiImage(url: url, fit: BoxFit.contain),
+              ),
+        ],
       ),
     );
   }
