@@ -14,7 +14,6 @@ import '../../../core/ui/avatar.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/update/app_version.dart';
 import '../../../core/ui/l10n_ext.dart';
-import '../../announcements/presentation/announcements_page.dart';
 import 'accent_color_picker.dart';
 import 'contributors_page.dart';
 import 'licenses_page.dart';
@@ -85,15 +84,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         title: l10n.driveSpace,
         subtitle: l10n.openDrive,
         open: const SettingsDriveLocation(),
-      ),
-      _SettingsEntry(
-        group: _SettingsGroup.server,
-        icon: Icons.campaign_outlined,
-        title: l10n.instanceAnnouncements,
-        subtitle: l10n.settingsServerSubtitle,
-        onTap: () => Navigator.of(context).push<void>(
-          MaterialPageRoute<void>(builder: (_) => const AnnouncementsPage()),
-        ),
       ),
       _SettingsEntry(
         group: _SettingsGroup.advanced,

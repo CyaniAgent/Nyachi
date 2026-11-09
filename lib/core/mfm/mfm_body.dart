@@ -24,10 +24,14 @@ typedef MfmPlaceholder = ({int offset, String text});
 /// message, an announcement.
 ///
 /// Inline content becomes one `Text.rich` per contiguous run so text stays
-/// selectable and copyable; block-level constructs (quote, code, maths,
-/// centring) get their own widget so they can lay themselves out. The whole
-/// body sits in a single [SelectionArea], which is what lets a selection span
-/// a paragraph and the quote under it.
+/// copyable; block-level constructs (quote, code, maths, centring) get their
+/// own widget so they can lay themselves out. The body sits in one
+/// [SelectionArea] by default, which lets a selection span a paragraph and the
+/// quote under it.
+///
+/// That container also claims taps for its own selection gestures, so a body
+/// inside a tappable row must set [selectable] to false: otherwise tapping the
+/// text selects instead of opening what the row opens.
 class MfmBody extends ConsumerStatefulWidget {
   const MfmBody({
     required this.text,
@@ -35,6 +39,7 @@ class MfmBody extends ConsumerStatefulWidget {
     this.style,
     this.detail = false,
     this.maxLines,
+    this.selectable = true,
     super.key,
   });
 
@@ -53,6 +58,13 @@ class MfmBody extends ConsumerStatefulWidget {
   /// Clamps the body to this many lines and drops block layout; used by list
   /// rows that only preview a note.
   final int? maxLines;
+
+  /// Whether the body is wrapped in a [SelectionArea].
+  ///
+  /// False where an ancestor handles the tap: the selection gestures win the
+  /// arena against `InkWell` and `ListTile`, so text that can be selected
+  /// cannot also open the row it belongs to.
+  final bool selectable;
 
   @override
   ConsumerState<MfmBody> createState() => _MfmBodyState();
@@ -190,27 +202,18 @@ class _MfmBodyState extends ConsumerState<MfmBody> {
   @override
   Widget build(BuildContext context) {
     if (widget.text.isEmpty) return const SizedBox.shrink();
-    if (widget.maxLines != null) {
-      return SelectionArea(
-        contextMenuBuilder: _contextMenu,
-        onSelectionChanged: (content) => _selection = content?.plainText ?? '',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: _blocks,
-        ),
-      );
-    }
+    // The blocks already space themselves; a Column keeps them in one
+    // selection container.
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: _blocks,
+    );
+    if (!widget.selectable) return body;
     return SelectionArea(
       contextMenuBuilder: _contextMenu,
       onSelectionChanged: (content) => _selection = content?.plainText ?? '',
-      // The blocks already space themselves; a Column keeps them in one
-      // selection container.
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: _blocks,
-      ),
+      child: body,
     );
   }
 }

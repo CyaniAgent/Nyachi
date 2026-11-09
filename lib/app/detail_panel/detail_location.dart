@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../features/announcements/presentation/announcements_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/chat/domain/chat_models.dart';
 import '../../features/chat/presentation/chat_pages.dart';
@@ -79,6 +80,8 @@ sealed class DetailLocation {
         const SettingsDriveLocation(),
       'settings' when segments.length == 2 && segments[1] == 'push' =>
         const SettingsPushLocation(),
+      'announcements' when segments.length == 1 =>
+        const AnnouncementsDetailLocation(),
       'add-account' when segments.length == 1 => const AddAccountLocation(),
       _ => null,
     };
@@ -356,3 +359,14 @@ class AddAccountLocation extends DetailLocation {
 }
 
 String detailPathFor(DetailLocation location) => location.location;
+
+/// Instance announcements, reachable from the timeline as well as the bell.
+class AnnouncementsDetailLocation extends DetailLocation {
+  const AnnouncementsDetailLocation();
+
+  @override
+  String get location => '/announcements';
+
+  @override
+  Widget build(BuildContext context) => const AnnouncementsPage();
+}

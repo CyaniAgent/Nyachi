@@ -57,6 +57,37 @@ void main() {
     expect(_renderedText(tester), 'hello world');
   });
 
+  testWidgets('an unselectable body leaves the row tap alone', (tester) async {
+    // A SelectionArea wins the gesture arena against an ancestor InkWell, so a
+    // body inside a tappable row must not create one — otherwise tapping the
+    // text selects instead of opening the row.
+    SharedPreferences.setMockInitialValues({});
+    final shared = await SharedPreferences.getInstance();
+    var taps = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(shared)],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: InkWell(
+              onTap: () => taps++,
+              child: const MfmBody(text: 'row body', selectable: false),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(SelectionArea), findsNothing);
+    await tester.tap(find.byType(MfmBody));
+    await tester.pumpAndSettle();
+    expect(taps, 1);
+  });
+
   testWidgets('links and hashtags stay real text', (tester) async {
     await _pump(tester, 'see https://example.test/a #tag');
 

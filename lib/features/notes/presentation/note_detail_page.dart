@@ -235,6 +235,8 @@ class _AncestorTile extends StatelessWidget {
                         emojis: note.emojis,
                         detail: true,
                         style: Theme.of(context).textTheme.bodyMedium,
+                        // The row opens this note; selecting would eat the tap.
+                        selectable: false,
                       ),
                   ],
                 ),

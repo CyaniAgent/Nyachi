@@ -7,6 +7,7 @@ import 'package:misskey_dart_api/misskey_dart_api.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/mfm/mfm_body.dart';
 import '../../../core/ui/network_image.dart';
+import '../../../core/ui/content_width.dart';
 import '../data/announcement_repository.dart';
 
 /// Lists the instance announcements. The three server-side `display` kinds are
@@ -39,12 +40,21 @@ class AnnouncementsPage extends ConsumerWidget {
           final rest = items
               .where((item) => item.display != AnnouncementDisplay.banner)
               .toList();
-          return ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            children: [
-              for (final banner in banners) _BannerTile(announcement: banner),
-              for (final item in rest) _AnnouncementTile(announcement: item),
-            ],
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  for (final banner in banners)
+                    _BannerTile(announcement: banner),
+                  for (final (index, item) in rest.indexed) ...[
+                    if (index > 0) const Divider(height: 1),
+                    _AnnouncementTile(announcement: item),
+                  ],
+                ],
+              ),
+            ),
           );
         },
       ),
@@ -60,12 +70,14 @@ class _BannerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Banners keep their emphasis through the tinted band alone; a card around
+    // it would double the framing against the row style used below.
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(top: 12, bottom: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
@@ -117,62 +129,58 @@ class _AnnouncementTileState extends State<_AnnouncementTile> {
     final theme = Theme.of(context);
     final announcement = widget.announcement;
     final isDialog = announcement.display == AnnouncementDisplay.dialog;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: () => setState(() => _expanded = !_expanded),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  if (isDialog)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Icon(
-                        Icons.campaign_outlined,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  Expanded(
-                    child: Text(
-                      announcement.title.isEmpty
-                          ? MaterialLocalizations.of(context)
-                                .formatMediumDate(announcement.createdAt)
-                          : announcement.title,
-                      style: theme.textTheme.titleSmall,
-                    ),
-                  ),
-                  if (announcement.isRead != true)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                announcement.text,
-                maxLines: _expanded ? null : 4,
-                overflow: _expanded ? null : TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-              if (_expanded)
-                if (announcement.imageUrl case final url?)
+    final title = announcement.title.isEmpty
+        ? MaterialLocalizations.of(context)
+              .formatMediumDate(announcement.createdAt)
+        : announcement.title;
+    // A row rather than a card: the list is dense content, and the app does not
+    // box each entry. The divider between rows is what separates them.
+    return InkWell(
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (isDialog)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: NyachiImage(url: url, fit: BoxFit.contain),
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Icon(
+                      Icons.campaign_outlined,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
-            ],
-          ),
+                Expanded(child: Text(title, style: theme.textTheme.titleSmall)),
+                if (announcement.isRead != true) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 6),
+            MfmBody(
+              text: announcement.text,
+              maxLines: _expanded ? null : 4,
+              // The row toggles on tap; selecting would take that tap.
+              selectable: false,
+            ),
+            if (_expanded)
+              if (announcement.imageUrl case final url?)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: NyachiImage(url: url, fit: BoxFit.contain),
+                ),
+          ],
         ),
       ),
     );

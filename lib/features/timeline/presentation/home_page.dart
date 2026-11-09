@@ -107,6 +107,12 @@ class _HomePageState extends ConsumerState<HomePage>
                   icon: const Icon(Icons.refresh),
                 ),
                 IconButton(
+                  tooltip: l10n.announcements,
+                  onPressed: () =>
+                      openDetail(context, const AnnouncementsDetailLocation()),
+                  icon: const Icon(Icons.campaign_outlined),
+                ),
+                IconButton(
                   tooltip: l10n.compose,
                   onPressed: () =>
                       openDetail(context, const ComposeDetailLocation(null)),

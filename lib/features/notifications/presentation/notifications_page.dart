@@ -273,7 +273,13 @@ class _NotificationTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (note?.text != null && note!.text!.isNotEmpty)
-            MfmBody(text: note.text!, emojis: note.emojis, maxLines: 2),
+            MfmBody(
+              text: note.text!,
+              emojis: note.emojis,
+              maxLines: 2,
+              // The row opens the note; a selection would take that tap.
+              selectable: false,
+            ),
           Text(relativeTime(context, notificationCreatedAt(notification))),
         ],
       ),
