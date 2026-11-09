@@ -3,6 +3,32 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
+## [2.1.0-beta.8] - 2026-11-10
+
+### Codename
+
+Kumo
+
+Rows that must open something are buttons again, and the announcement list is
+an accordion. beta.7 moved navigation into a chevron on every row to keep the
+text selectable; that traded one finger-friendly target for a small unlabelled
+one, and screen readers announced a separate control per row. The split was
+the wrong trade for rows whose whole purpose is to be opened.
+
+### Changed
+
+- **A notification row is one tap target again.** The preview no longer offers
+  selection: a `SelectionArea` wins the gesture arena against the row, so the
+  tap could never arrive. This is the only text in the app that gives up
+  selection, and it buys a full-width target instead of a 20-pixel chevron.
+- **The thread's ancestor and reply rows are whole-row targets again**, for the
+  same reason: walking a chain should not depend on hitting a small icon.
+- **Announcements are an accordion.** The header toggles, and a labelled
+  Expand/Collapse control sits directly under the clipped text, where the
+  content actually ends. Both animate: the section grows through `AnimatedSize`
+  and the indicator rotates as it opens. The announcement body keeps its
+  selection, so copying a sentence out of one still works.
+
 ## [2.1.0-beta.7] - 2026-11-09
 
 ### Codename
@@ -27,11 +53,10 @@ announcements stop being a settings page.
 
 ### Changed
 
-- **Rows navigate from a control, not the whole surface.** Selectable text and
-  a tappable row compete for the same gesture, and selection wins, so the row
-  tap never arrived. Notification rows, the ancestor chain in a thread, replies
-  and announcement rows now put navigation in a chevron, which leaves the text
-  selectable everywhere.
+- **Rows navigated from a control rather than the whole surface.** Selectable
+  text and a tappable row compete for the same gesture, and selection wins, so
+  the row tap never arrived; the rows put navigation in a chevron instead.
+  beta.8 reverses this for notifications and thread rows — see its notes.
 - **Announcements render as dense rows**, matching the rest of the app: no
   card per entry, a divider between rows, and banner announcements keep only
   their tinted band. Their bodies go through the MFM renderer, so links,
