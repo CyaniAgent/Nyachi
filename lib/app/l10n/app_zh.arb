@@ -152,6 +152,8 @@
   "liveOffline": "实时更新已暂停",
   "sensitiveContent": "敏感内容",
   "showContent": "显示",
+  "expand": "展开",
+  "collapse": "收起",
   "reply": "回复",
   "renote": "转发",
   "reaction": "反应",

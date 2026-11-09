@@ -70,7 +70,7 @@ void main() {
     expect(find.byType(Divider), findsOneWidget);
   });
 
-  testWidgets('the body keeps its selection, the header toggles', (
+  testWidgets('the body keeps its selection, the accordion control toggles', (
     tester,
   ) async {
     await _pump(tester, [
@@ -84,17 +84,37 @@ void main() {
     );
 
     // Selecting inside the body must not be blocked by the row gesture, so the
-    // body is selectable and the toggle lives in the header only.
+    // body is selectable and the toggle sits below the text, where the clipping
+    // ends.
     expect(find.byType(SelectionArea), findsOneWidget);
     expect(body().maxLines, 4);
+    expect(find.text('Expand'), findsOneWidget);
 
-    await tester.tap(find.text('Maintenance'));
+    await tester.tap(find.text('Expand'));
     await tester.pumpAndSettle();
     expect(body().maxLines, isNull);
+    expect(find.text('Collapse'), findsOneWidget);
 
-    await tester.tap(find.text('Maintenance'));
+    await tester.tap(find.text('Collapse'));
     await tester.pumpAndSettle();
     expect(body().maxLines, 4);
+    expect(find.text('Expand'), findsOneWidget);
+  });
+
+  testWidgets('the accordion indicator rotates when it opens', (tester) async {
+    await _pump(tester, [
+      _announcement(
+        text: 'Line one.\nLine two.\nLine three.\nLine four.\nLine five.',
+      ),
+    ]);
+
+    AnimatedRotation rotation() =>
+        tester.widget<AnimatedRotation>(find.byType(AnimatedRotation));
+
+    expect(rotation().turns, 0);
+    await tester.tap(find.text('Expand'));
+    await tester.pumpAndSettle();
+    expect(rotation().turns, 0.5);
   });
 
   testWidgets('a drag over the body does not collapse the row', (tester) async {
@@ -103,7 +123,7 @@ void main() {
         text: 'Line one.\nLine two.\nLine three.\nLine four.\nLine five.',
       ),
     ]);
-    await tester.tap(find.text('Maintenance'));
+    await tester.tap(find.text('Expand'));
     await tester.pumpAndSettle();
 
     final start = tester.getTopLeft(find.byType(MfmBody)) + const Offset(4, 8);

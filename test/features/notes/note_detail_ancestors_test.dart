@@ -114,9 +114,7 @@ void main() {
     expect(find.text('No replies yet'), findsOneWidget);
   });
 
-  testWidgets('ancestor text stays selectable, the chevron navigates', (
-    tester,
-  ) async {
+  testWidgets('an ancestor row is one tap target', (tester) async {
     await _pump(
       tester,
       _FakeRepository(
@@ -125,9 +123,14 @@ void main() {
       ),
     );
 
-    // The chain is reading material: its text must not be sacrificed to a row
-    // tap, so selection stays and the jump is an explicit control.
-    expect(find.byType(SelectionArea), findsNWidgets(2));
-    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    // Walking the chain must not depend on hitting a small chevron: the row is
+    // the target, and a screen reader announces it as such. The ancestor body
+    // therefore gives up selection, which is the trade the gesture forces.
+    expect(find.byIcon(Icons.chevron_right), findsNothing);
+    expect(find.text('first'), findsOneWidget);
+    expect(
+      find.ancestor(of: find.text('first'), matching: find.byType(InkWell)),
+      findsOneWidget,
+    );
   });
 }

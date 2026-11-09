@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
+import 'package:nyachi/core/mfm/mfm_body.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/notifications/application/notification_list_controller.dart';
@@ -153,26 +154,30 @@ void main() {
       ],
     );
     await _pump(tester, repository);
-    // One chevron per row that opens a note; that is the row-level affordance
-    // the list actually renders.
-    expect(find.byIcon(Icons.chevron_right), findsNWidgets(2));
+    // One previewed row per notification.
+    expect(find.byType(MfmBody), findsNWidgets(2));
 
     await tester.tap(find.byTooltip('Unread only'));
     await tester.pumpAndSettle();
 
     // Only the one newer than the stored boundary survives.
-    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    expect(find.byType(MfmBody), findsOneWidget);
     expect(find.byTooltip('Show all'), findsOneWidget);
   });
 
-  testWidgets('a notification preview stays selectable', (tester) async {
+  testWidgets('a whole notification row is one tap target', (tester) async {
     final repository = _FakeRepository(
       items: [_notification('new', createdAt: DateTime.utc(2026, 3))],
     );
     await _pump(tester, repository);
 
-    // The row is not a button any more: its preview keeps a SelectionArea, and
-    // the chevron carries the navigation, so both gestures work.
-    expect(find.byType(SelectionArea), findsOneWidget);
+    // The row itself is the button: no chevron to hunt for, one target for a
+    // screen reader, and the preview gives up selection so the tap arrives.
+    expect(find.byIcon(Icons.chevron_right), findsNothing);
+    expect(find.byType(SelectionArea), findsNothing);
+    expect(
+      find.ancestor(of: find.byType(MfmBody), matching: find.byType(InkWell)),
+      findsOneWidget,
+    );
   });
 }

@@ -152,6 +152,8 @@
   "liveOffline": "ライブ更新は停止中",
   "sensitiveContent": "センシティブな内容",
   "showContent": "表示",
+  "expand": "展開",
+  "collapse": "折りたたむ",
   "reply": "返信",
   "renote": "リノート",
   "reaction": "リアクション",

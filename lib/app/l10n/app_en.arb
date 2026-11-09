@@ -152,6 +152,8 @@
   "liveOffline": "Live updates paused",
   "sensitiveContent": "Sensitive content",
   "showContent": "Show",
+  "expand": "Expand",
+  "collapse": "Collapse",
   "reply": "Reply",
   "renote": "Renote",
   "reaction": "Reaction",

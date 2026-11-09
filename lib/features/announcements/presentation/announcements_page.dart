@@ -127,68 +127,98 @@ class _AnnouncementTileState extends State<_AnnouncementTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final announcement = widget.announcement;
     final isDialog = announcement.display == AnnouncementDisplay.dialog;
     final title = announcement.title.isEmpty
         ? MaterialLocalizations.of(context)
               .formatMediumDate(announcement.createdAt)
         : announcement.title;
-    // A row rather than a card: the list is dense content, and the app does not
-    // box each entry. The divider between rows is what separates them.
-    //
-    // Only the header toggles. The body keeps its selection, so a drag inside
-    // the text selects instead of collapsing the row under the pointer.
+    // An accordion: the header toggles, and the text itself stays selectable so
+    // a drag inside it never collapses the row under the pointer. The control
+    // below the text repeats the toggle where the clipping actually is, and
+    // its chevron turns as the section opens.
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Row(
-              children: [
-                if (isDialog)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Icon(
-                      Icons.campaign_outlined,
-                      size: 18,
-                      color: theme.colorScheme.primary,
+            onTap: _toggle,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  if (isDialog)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Icon(
+                        Icons.campaign_outlined,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
+                  Expanded(
+                    child: Text(title, style: theme.textTheme.titleSmall),
                   ),
-                Expanded(child: Text(title, style: theme.textTheme.titleSmall)),
-                if (announcement.isRead != true) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
+                  if (announcement.isRead != true) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-                const SizedBox(width: 4),
-                Icon(
-                  _expanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MfmBody(
+                  text: announcement.text,
+                  maxLines: _expanded ? null : 4,
                 ),
+                if (_expanded)
+                  if (announcement.imageUrl case final url?)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: NyachiImage(url: url, fit: BoxFit.contain),
+                    ),
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          MfmBody(text: announcement.text, maxLines: _expanded ? null : 4),
-          if (_expanded)
-            if (announcement.imageUrl case final url?)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: NyachiImage(url: url, fit: BoxFit.contain),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _toggle,
+              icon: AnimatedRotation(
+                turns: _expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOutCubic,
+                child: const Icon(Icons.expand_more, size: 18),
               ),
+              label: Text(_expanded ? l10n.collapse : l10n.expand),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                foregroundColor: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  void _toggle() => setState(() => _expanded = !_expanded);
 }
