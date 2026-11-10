@@ -432,6 +432,7 @@
   "selectRecipients": "收件人",
   "searchUsers": "搜索用户",
   "pollNeedsTwoChoices": "投票至少需要两个选项",
+  "pollDuplicateChoices": "部分选项在去除空白后完全相同",
   "pollVote": "投票",
   "pollSelectMultiple": "可选择多个答案",
   "pollViewResults": "查看结果",

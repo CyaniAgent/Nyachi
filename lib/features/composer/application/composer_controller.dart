@@ -241,20 +241,43 @@ class ComposerController extends _$ComposerController {
 
   bool canPost() {
     final limit = maxLength();
-    final pollOk = !state.showPoll || validPollChoices().length >= 2;
+    final pollOk =
+        !state.showPoll ||
+        (validPollChoices().length >= 2 && !hasDuplicatePollChoices());
     return !state.posting &&
         state.text.trim().isNotEmpty &&
         state.text.runes.length <= limit &&
         pollOk;
   }
 
-  /// Non-empty poll choices, trimmed; empty when the poll is off.
-  List<String> validPollChoices() => state.showPoll
-      ? state.pollChoices
-            .map((choice) => choice.trim())
-            .where((choice) => choice.isNotEmpty)
-            .toList()
-      : const [];
+  /// Whether two filled choices are the same once trimmed.
+  ///
+  /// [validPollChoices] collapses them, so a count alone cannot tell the UI —
+  /// or this check — why a two-row poll is still unusable.
+  bool hasDuplicatePollChoices() {
+    final filled = [
+      for (final raw in state.pollChoices)
+        if (raw.trim() case final choice when choice.isNotEmpty) choice,
+    ];
+    return filled.length != filled.toSet().length;
+  }
+
+  /// Non-empty poll choices, trimmed and de-duplicated; empty when the poll is
+  /// off.
+  ///
+  /// The server's schema declares `uniqueItems` on this list, so a repeat is
+  /// rejected outright with `INVALID_PARAM` instead of being merged. Trimming
+  /// first matters too: two choices that differ only by whitespace are the same
+  /// choice to a reader and a duplicate to the schema.
+  List<String> validPollChoices() {
+    if (!state.showPoll) return const [];
+    final seen = <String>{};
+    return [
+      for (final raw in state.pollChoices)
+        if (raw.trim() case final choice when choice.isNotEmpty)
+          if (seen.add(choice)) choice,
+    ];
+  }
 
   /// Restores the newest stored draft for this composer's context (same
   /// replyId); other drafts stay reachable through the avatar panel.

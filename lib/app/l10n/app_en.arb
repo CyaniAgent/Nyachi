@@ -440,6 +440,7 @@
   "selectRecipients": "Recipients",
   "searchUsers": "Search users",
   "pollNeedsTwoChoices": "A poll needs at least two choices",
+  "pollDuplicateChoices": "Some choices are identical once trimmed",
   "pollVote": "Vote",
   "pollSelectMultiple": "Select one or more answers",
   "pollViewResults": "View results",

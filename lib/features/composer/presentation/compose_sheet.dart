@@ -849,6 +849,10 @@ class _PollEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final valid = controller.validPollChoices().length;
+    // The controller collapses duplicates on the way out, so the count alone
+    // under-reports why the post is blocked: two filled rows can still be one
+    // choice.
+    final hasDuplicates = controller.hasDuplicatePollChoices();
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
@@ -885,11 +889,13 @@ class _PollEditor extends StatelessWidget {
                 ],
               ),
             ),
-          if (valid < 2)
+          if (valid < 2 || hasDuplicates)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                l10n.pollNeedsTwoChoices,
+                hasDuplicates
+                    ? l10n.pollDuplicateChoices
+                    : l10n.pollNeedsTwoChoices,
                 style: Theme.of(context).textTheme.bodySmall
                     ?.copyWith(color: Theme.of(context).colorScheme.error),
               ),

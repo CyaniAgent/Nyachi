@@ -240,6 +240,55 @@ void main() {
     },
   );
 
+  test('identical poll choices block the post instead of being sent', () async {
+    // The server declares `uniqueItems` on the choices list and rejects the
+    // whole request with INVALID_PARAM, so the composer must catch it first.
+    List<String>? sentChoices;
+    final scope = container(
+      sender:
+          ({
+            required text,
+            cw,
+            required visibility,
+            required localOnly,
+            replyId,
+            fileIds = const [],
+            pollChoices,
+            pollMultiple = false,
+            pollExpiresAt,
+            reactionAcceptance,
+            visibleUserIds = const [],
+            scheduledAt,
+          }) async {
+            sentChoices = pollChoices;
+          },
+    );
+    final provider = composerControllerProvider(null);
+    final sub = scope.listen(provider, (_, _) {});
+    final controller = scope.read(provider.notifier);
+
+    controller.setText('pick one');
+    controller.setShowPoll(true);
+    controller.setPollChoice(0, 'yes');
+    // Trailing space: the same choice to a reader, a duplicate to the schema.
+    controller.setPollChoice(1, ' yes ');
+
+    expect(controller.hasDuplicatePollChoices(), isTrue);
+    expect(controller.canPost(), isFalse);
+    expect(await controller.post(), isFalse);
+    expect(sentChoices, isNull);
+
+    // Making them distinct unblocks it, and the payload carries them trimmed.
+    controller.setPollChoice(1, 'no');
+    expect(controller.hasDuplicatePollChoices(), isFalse);
+    expect(controller.canPost(), isTrue);
+    expect(await controller.post(), isTrue);
+    expect(sentChoices, ['yes', 'no']);
+
+    sub.close();
+    scope.dispose();
+  });
+
   test(
     'a slow restore never overwrites what the user typed while waiting',
     () async {

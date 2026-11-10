@@ -432,6 +432,7 @@
   "selectRecipients": "宛先",
   "searchUsers": "ユーザー検索",
   "pollNeedsTwoChoices": "アンケートには2つ以上の選択肢が必要です",
+  "pollDuplicateChoices": "空白を除くと同一の選択肢があります",
   "pollVote": "投票する",
   "pollSelectMultiple": "複数選択できます",
   "pollViewResults": "結果を見る",
