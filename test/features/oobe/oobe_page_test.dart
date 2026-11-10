@@ -36,7 +36,10 @@ class _FakeLoginController extends LoginController {
   LoginState build() => const LoginState();
 
   @override
-  Future<bool> startMiAuth(String host) async => true;
+  Future<bool> startMiAuth(
+    String host, {
+    List<String> permissions = miAuthPermissions,
+  }) async => true;
 
   @override
   Future<bool> loginWithToken(String host, String token) async => true;
@@ -94,6 +97,21 @@ Future<void> _pumpWizard(WidgetTester tester) async {
   return;
 }
 
+/// Toggles the consent checkbox that belongs to [label].
+Future<void> _check(WidgetTester tester, String label) async {
+  final box = find.descendant(
+    of: find.ancestor(
+      of: find.textContaining(label),
+      matching: find.byType(Row),
+    ),
+    matching: find.byType(Checkbox),
+  );
+  await tester.ensureVisible(box.first);
+  await tester.pumpAndSettle();
+  await tester.tap(box.first);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('wizard walks welcome+language → done and persists completion', (
     tester,
@@ -124,16 +142,10 @@ void main() {
     expect(find.text('Misskey Hub'), findsOneWidget);
     expect(find.textContaining('Be nice'), findsNothing);
 
-    // Only the checkbox toggles consent now (text is inert).
-    final checkboxes = find.byType(Checkbox);
-    await tester.ensureVisible(checkboxes.first);
-    await tester.pumpAndSettle();
-    await tester.tap(checkboxes.first);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(checkboxes.at(1));
-    await tester.pumpAndSettle();
-    await tester.tap(checkboxes.at(1));
-    await tester.pumpAndSettle();
+    // Addressed by their own copy: the sign-in step also carries a
+    // permission-scope checkbox, so positions are no longer stable.
+    await _check(tester, '我已阅读并同意应用条款');
+    await _check(tester, '我已阅读并同意该实例的服务条款');
 
     // Fake MiAuth succeeds → wizard advances to appearance.
     final miAuthButton = find.byIcon(Icons.login);

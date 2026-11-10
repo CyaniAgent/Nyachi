@@ -13,6 +13,7 @@ extension L10nContext on BuildContext {
 extension AppFailureL10n on AppFailure {
   String message(AppLocalizations l10n) => switch (kind) {
     AppFailureKind.auth => l10n.errorAuth,
+    AppFailureKind.forbidden => l10n.errorForbidden,
     AppFailureKind.rateLimit => l10n.errorRateLimit,
     AppFailureKind.server => l10n.errorServer,
     AppFailureKind.network => l10n.errorNetwork,

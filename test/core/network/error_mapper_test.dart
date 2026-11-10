@@ -16,6 +16,12 @@ void main() {
       mapFailure(MisskeyApiException('expired', statusCode: 401)).kind,
       AppFailureKind.auth,
     );
+    // 403 means the token is valid but lacks the scope; treating it as an
+    // expired session would sign the user out over a missing permission.
+    expect(
+      mapFailure(MisskeyApiException('nope', statusCode: 403)).kind,
+      AppFailureKind.forbidden,
+    );
     expect(
       mapFailure(MisskeyApiException('slow down', statusCode: 429)).kind,
       AppFailureKind.rateLimit,

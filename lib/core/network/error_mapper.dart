@@ -5,7 +5,19 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
-enum AppFailureKind { auth, rateLimit, server, network, storage, unknown }
+enum AppFailureKind {
+  auth,
+
+  /// Authenticated, but the token lacks the scope the request needs: a 403
+  /// because the MiAuth grant did not include it. Kept apart from [auth]
+  /// because signing in again only helps if the wider scope is approved too.
+  forbidden,
+  rateLimit,
+  server,
+  network,
+  storage,
+  unknown,
+}
 
 class AppFailure {
   const AppFailure(this.kind, [this.cause]);
@@ -20,8 +32,13 @@ AppFailure mapFailure(Object error) {
   }
   if (error is MisskeyApiException) {
     final status = error.statusCode;
-    if (status == 401 || status == 403) {
+    if (status == 401) {
       return AppFailure(AppFailureKind.auth, error);
+    }
+    // 403 is scope, not identity: the server knows who this is and refuses the
+    // permission. Signing in again only helps with a wider grant.
+    if (status == 403) {
+      return AppFailure(AppFailureKind.forbidden, error);
     }
     if (status == 429) {
       return AppFailure(AppFailureKind.rateLimit, error);

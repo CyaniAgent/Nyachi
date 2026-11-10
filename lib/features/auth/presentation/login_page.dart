@@ -41,6 +41,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   var _appUnchecked = false;
   var _instanceUnchecked = false;
 
+  /// Whether the MiAuth grant covers every feature or only reading and posting.
+  /// Full by default: a narrower grant is a deliberate opt-in, since it makes
+  /// the features that need it fail later, one 403 at a time.
+  var _fullPermissions = true;
+
   @override
   void initState() {
     super.initState();
@@ -186,12 +191,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               onPressed: canLogin
                   ? () async {
                       if (!_complianceGate(l10n)) return;
-                      final ok = await controller.startMiAuth(_host.text);
+                      final ok = await controller.startMiAuth(
+                        _host.text,
+                        permissions: _fullPermissions
+                            ? miAuthPermissions
+                            : miAuthBasicPermissions,
+                      );
                       if (ok && context.mounted) _done();
                     }
                   : null,
               icon: const Icon(Icons.login),
               label: Text(l10n.miAuthLogin),
+            ),
+            CheckboxListTile(
+              value: _fullPermissions,
+              onChanged: (value) =>
+                  setState(() => _fullPermissions = value ?? true),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(
+                l10n.miAuthFullPermissions,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              subtitle: Text(
+                _fullPermissions
+                    ? l10n.miAuthFullPermissionsHint
+                    : l10n.miAuthBasicPermissionsHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
             _waitingSection(l10n, state, controller),
             _errorSection(l10n, state, scheme),

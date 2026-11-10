@@ -18,13 +18,28 @@ import 'compliance_controller.dart';
 part 'login_controller.freezed.dart';
 part 'login_controller.g.dart';
 
+/// Permissions requested when authorising through MiAuth.
+///
+/// Covers every endpoint the app reaches, not just reading: a missing entry
+/// does not fail at sign-in, it fails the first time that feature is used, as a
+/// bare 403 with no explanation. `notes/polls/vote` needs `write:votes`, for
+/// instance, which `write:notes` does not imply.
+///
+/// Keep this in step with the calls under `features/*/data`.
 const miAuthPermissions = [
   'read:account',
+  'write:account', // thread muting, user memo, drafts, profile edits
   'read:notes',
   'write:notes',
   'write:reactions',
+  'write:votes',
+  'write:favorites',
+  'write:report-abuse',
   'read:notifications',
   'write:notifications',
+  'read:following',
+  'read:blocking',
+  'read:mutes',
   'read:chat',
   'write:chat',
   'read:drive',
@@ -39,13 +54,31 @@ bool isMiAuthPending(MisskeyApiException error) {
   return false;
 }
 
+/// The minimum needed to read and post: timeline, notes, reactions, chat.
+///
+/// Offered to users who would rather not grant the rest; every feature that
+/// needs a wider scope then fails with a plain 403, which is the trade the
+/// choice names.
+const miAuthBasicPermissions = [
+  'read:account',
+  'read:notes',
+  'write:notes',
+  'write:reactions',
+  'read:notifications',
+  'read:chat',
+  'write:chat',
+];
+
 class MiAuthService {
-  MiAuthService(String host, {required this.clientName})
-    : _client = MisskeyClient.fromHost(
-        host,
-        dio: createApiDio(),
-        authMode: MisskeyAuthMode.none,
-      );
+  MiAuthService(
+    String host, {
+    required this.clientName,
+    this.permissions = miAuthPermissions,
+  }) : _client = MisskeyClient.fromHost(
+         host,
+         dio: createApiDio(),
+         authMode: MisskeyAuthMode.none,
+       );
 
   final MisskeyClient _client;
 
@@ -53,13 +86,16 @@ class MiAuthService {
   /// list, so it names this installation rather than the app alone.
   final String clientName;
 
+  /// What the authorization screen asks the user to approve.
+  final List<String> permissions;
+
   String createSessionId() => _client.miAuth.createSessionId();
 
   Uri authorizationUri(String sessionId) {
     return _client.miAuth.buildAuthorizationUri(
       sessionId: sessionId,
       name: clientName,
-      permissions: miAuthPermissions,
+      permissions: permissions,
     );
   }
 
@@ -125,7 +161,12 @@ class LoginController extends _$LoginController {
     }
   }
 
-  Future<bool> startMiAuth(String host) async {
+  /// [permissions] is what the server will show on its approval screen; the
+  /// caller chooses, so a narrower grant stays available.
+  Future<bool> startMiAuth(
+    String host, {
+    List<String> permissions = miAuthPermissions,
+  }) async {
     if (!_complianceSatisfied(host)) {
       state = const LoginState(error: AppFailure(AppFailureKind.auth));
       return false;
@@ -137,7 +178,11 @@ class LoginController extends _$LoginController {
       final clientName = await DeviceIdentity.clientNameFor(
         ref.read(sharedPreferencesProvider),
       );
-      service = MiAuthService(normalizeHost(host), clientName: clientName);
+      service = MiAuthService(
+        normalizeHost(host),
+        clientName: clientName,
+        permissions: permissions,
+      );
       _service?.close();
       _service = service;
       final sessionId = service.createSessionId();

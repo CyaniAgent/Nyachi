@@ -50,6 +50,21 @@ FilledButton _miAuthButton(WidgetTester tester) => tester.widget<FilledButton>(
   find.widgetWithText(FilledButton, 'Continue with MiAuth'),
 );
 
+/// Toggles the consent checkbox that belongs to [label].
+Future<void> _check(WidgetTester tester, String label) async {
+  final box = find.descendant(
+    of: find.ancestor(
+      of: find.textContaining(label),
+      matching: find.byType(Row),
+    ),
+    matching: find.byType(Checkbox),
+  );
+  await tester.ensureVisible(box.first);
+  await tester.pumpAndSettle();
+  await tester.tap(box.first);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('login page renders MiAuth and manual token controls', (
     tester,
@@ -83,17 +98,11 @@ void main() {
     // Host committed but no consent yet: still disabled.
     expect(_miAuthButton(tester).onPressed, isNull);
 
-    // App-level consent, then instance-level consent.
-    // Only the checkbox toggles consent now (text is inert).
-    final checkboxes = find.byType(Checkbox);
-    await tester.ensureVisible(checkboxes.first);
-    await tester.pumpAndSettle();
-    await tester.tap(checkboxes.first);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(checkboxes.at(1));
-    await tester.pumpAndSettle();
-    await tester.tap(checkboxes.at(1));
-    await tester.pumpAndSettle();
+    // App-level consent, then instance-level consent. Addressed by their own
+    // copy: the page also carries a permission-scope checkbox, so positions are
+    // no longer stable.
+    await _check(tester, 'I have read and agree to the app terms');
+    await _check(tester, 'I have read and agree to this instance');
 
     expect(_miAuthButton(tester).onPressed, isNotNull);
   });
