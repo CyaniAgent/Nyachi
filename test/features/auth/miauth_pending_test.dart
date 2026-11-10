@@ -42,14 +42,4 @@ void main() {
       expect(permission, matches(RegExp(r'^(read|write):')));
     }
   });
-
-  test('the basic grant is a strict subset and still posts', () {
-    expect(miAuthBasicPermissions, contains('write:notes'));
-    expect(miAuthBasicPermissions, contains('read:notes'));
-    expect(miAuthBasicPermissions, isNot(contains('write:votes')));
-    expect(
-      miAuthPermissions.toSet().containsAll(miAuthBasicPermissions),
-      isTrue,
-    );
-  });
 }

@@ -36,10 +36,7 @@ class _FakeLoginController extends LoginController {
   LoginState build() => const LoginState();
 
   @override
-  Future<bool> startMiAuth(
-    String host, {
-    List<String> permissions = miAuthPermissions,
-  }) async => true;
+  Future<bool> startMiAuth(String host) async => true;
 
   @override
   Future<bool> loginWithToken(String host, String token) async => true;

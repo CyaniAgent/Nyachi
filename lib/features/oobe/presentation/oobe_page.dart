@@ -219,9 +219,6 @@ class _OobeLoginStepState extends ConsumerState<_OobeLoginStep> {
   var _appUnchecked = false;
   var _instanceUnchecked = false;
 
-  /// Full MiAuth grant by default; see `LoginPage` for the trade-off.
-  var _fullPermissions = true;
-
   @override
   void initState() {
     super.initState();
@@ -332,35 +329,12 @@ class _OobeLoginStepState extends ConsumerState<_OobeLoginStep> {
                 FilledButton.icon(
                   onPressed: canLogin
                       ? () async {
-                          final ok = await controller.startMiAuth(
-                            _host.text,
-                            permissions: _fullPermissions
-                                ? miAuthPermissions
-                                : miAuthBasicPermissions,
-                          );
+                          final ok = await controller.startMiAuth(_host.text);
                           if (ok) _next();
                         }
                       : null,
                   icon: const Icon(Icons.login),
                   label: Text(l10n.miAuthLogin),
-                ),
-                CheckboxListTile(
-                  value: _fullPermissions,
-                  onChanged: (value) =>
-                      setState(() => _fullPermissions = value ?? true),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(
-                    l10n.miAuthFullPermissions,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  subtitle: Text(
-                    _fullPermissions
-                        ? l10n.miAuthFullPermissionsHint
-                        : l10n.miAuthBasicPermissionsHint,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
                 ),
                 _waitingSection(l10n, state, controller),
                 _errorSection(l10n, state, scheme),

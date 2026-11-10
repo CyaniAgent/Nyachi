@@ -54,31 +54,13 @@ bool isMiAuthPending(MisskeyApiException error) {
   return false;
 }
 
-/// The minimum needed to read and post: timeline, notes, reactions, chat.
-///
-/// Offered to users who would rather not grant the rest; every feature that
-/// needs a wider scope then fails with a plain 403, which is the trade the
-/// choice names.
-const miAuthBasicPermissions = [
-  'read:account',
-  'read:notes',
-  'write:notes',
-  'write:reactions',
-  'read:notifications',
-  'read:chat',
-  'write:chat',
-];
-
 class MiAuthService {
-  MiAuthService(
-    String host, {
-    required this.clientName,
-    this.permissions = miAuthPermissions,
-  }) : _client = MisskeyClient.fromHost(
-         host,
-         dio: createApiDio(),
-         authMode: MisskeyAuthMode.none,
-       );
+  MiAuthService(String host, {required this.clientName})
+    : _client = MisskeyClient.fromHost(
+        host,
+        dio: createApiDio(),
+        authMode: MisskeyAuthMode.none,
+      );
 
   final MisskeyClient _client;
 
@@ -86,16 +68,13 @@ class MiAuthService {
   /// list, so it names this installation rather than the app alone.
   final String clientName;
 
-  /// What the authorization screen asks the user to approve.
-  final List<String> permissions;
-
   String createSessionId() => _client.miAuth.createSessionId();
 
   Uri authorizationUri(String sessionId) {
     return _client.miAuth.buildAuthorizationUri(
       sessionId: sessionId,
       name: clientName,
-      permissions: permissions,
+      permissions: miAuthPermissions,
     );
   }
 
@@ -161,12 +140,7 @@ class LoginController extends _$LoginController {
     }
   }
 
-  /// [permissions] is what the server will show on its approval screen; the
-  /// caller chooses, so a narrower grant stays available.
-  Future<bool> startMiAuth(
-    String host, {
-    List<String> permissions = miAuthPermissions,
-  }) async {
+  Future<bool> startMiAuth(String host) async {
     if (!_complianceSatisfied(host)) {
       state = const LoginState(error: AppFailure(AppFailureKind.auth));
       return false;
@@ -178,11 +152,7 @@ class LoginController extends _$LoginController {
       final clientName = await DeviceIdentity.clientNameFor(
         ref.read(sharedPreferencesProvider),
       );
-      service = MiAuthService(
-        normalizeHost(host),
-        clientName: clientName,
-        permissions: permissions,
-      );
+      service = MiAuthService(normalizeHost(host), clientName: clientName);
       _service?.close();
       _service = service;
       final sessionId = service.createSessionId();
