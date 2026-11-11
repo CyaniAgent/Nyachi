@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../features/admin/presentation/admin_announcements_page.dart';
 import '../../features/admin/presentation/admin_content_page.dart';
+import '../../features/admin/presentation/admin_home_page.dart';
 import '../../features/admin/presentation/admin_instance_page.dart';
 import '../../features/admin/presentation/admin_invites_page.dart';
 import '../../features/admin/presentation/admin_reports_page.dart';
@@ -14,10 +15,10 @@ import '../../features/auth/presentation/login_page.dart';
 import '../../features/chat/domain/chat_models.dart';
 import '../../features/chat/presentation/chat_pages.dart';
 import '../../features/composer/presentation/compose_page.dart';
-import '../../features/explore/presentation/explore_page.dart';
 import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
+import '../../features/search/presentation/search_page.dart';
 import '../../features/settings/presentation/cache_page.dart';
 import '../../features/settings/presentation/mfm_help_page.dart';
 import '../../features/settings/presentation/drive_settings_page.dart';
@@ -63,8 +64,8 @@ sealed class DetailLocation {
         const DriveDetailLocation(),
       'settings' when segments.length == 2 && segments[1] == 'licenses' =>
         const SettingsLicensesLocation(),
-      'settings' when segments.length == 2 && segments[1] == 'accounts' =>
-        const SettingsAccountsLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'admin' =>
+        const AdminHomeLocation(),
       'settings' when segments.length == 2 && segments[1] == 'navigation' =>
         const SettingsNavigationLocation(),
       'settings' when segments.length == 2 && segments[1] == 'appearance' =>
@@ -162,10 +163,14 @@ class SearchDetailLocation extends DetailLocation {
   final String query;
 
   @override
-  String get location => '/search/${Uri.encodeComponent(query)}';
+  String get location {
+    final base = Uri(path: '/search');
+    if (query.isEmpty) return base.toString();
+    return base.replace(queryParameters: {'q': query}).toString();
+  }
 
   @override
-  Widget build(BuildContext context) => ExplorePage(initialQuery: query);
+  Widget build(BuildContext context) => SearchPage(initialQuery: query);
 }
 
 class ComposeDetailLocation extends DetailLocation {
@@ -220,14 +225,14 @@ class SettingsDetailLocation extends DetailLocation {
   Widget build(BuildContext context) => const SettingsPage();
 }
 
-class SettingsAccountsLocation extends DetailLocation {
-  const SettingsAccountsLocation();
+class AdminHomeLocation extends DetailLocation {
+  const AdminHomeLocation();
 
   @override
-  String get location => '/settings/accounts';
+  String get location => '/settings/admin';
 
   @override
-  Widget build(BuildContext context) => const AccountsSettingsPage();
+  Widget build(BuildContext context) => const AdminHomePage();
 }
 
 class SettingsNavigationLocation extends DetailLocation {

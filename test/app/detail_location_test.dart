@@ -14,7 +14,7 @@ void main() {
       const ChatUserDetailLocation('u1'),
       const ChatRoomDetailLocation('r1'),
       const SettingsDetailLocation(),
-      const SettingsAccountsLocation(),
+      const AdminHomeLocation(),
       const SettingsNavigationLocation(),
       const SettingsAppearanceLocation(),
       const SettingsAboutLocation(),

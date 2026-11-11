@@ -13,6 +13,7 @@ import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/mfm/mfm_body.dart';
 import '../../settings/application/app_settings.dart';
+import '../../shell/presentation/app_sidebar.dart';
 import '../../../core/ui/content_width.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/compact_tab_bar.dart';
@@ -39,7 +40,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final state = ref.watch(chatListControllerProvider);
     final controller = ref.read(chatListControllerProvider.notifier);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.chat)),
+      appBar: AppBar(title: Text(l10n.chat), leading: const AppDrawerButton()),
       body: _ChatLists(state: state, controller: controller, onOpen: _open),
     );
   }

@@ -2,125 +2,61 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:misskey_dart_api/misskey_dart_api.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../settings/application/app_settings.dart';
+import '../../../core/network/error_mapper.dart';
 import '../../../core/ui/content_width.dart';
-import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
-import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
-import '../../notes/domain/note_feed_source.dart';
-import '../../notes/presentation/note_list.dart';
 import '../application/explore_controllers.dart';
 
-class ExplorePage extends ConsumerStatefulWidget {
-  const ExplorePage({this.initialQuery, super.key});
-
-  /// A query carried in from elsewhere (an MFM `$[search ...]` function, say),
-  /// so the page opens on its results instead of the trends.
-  final String? initialQuery;
+/// Discovery: what is happening on this instance — trending hashtags and
+/// recommended users. Note/user search lives on the separate search page.
+class ExplorePage extends ConsumerWidget {
+  const ExplorePage({super.key});
 
   @override
-  ConsumerState<ExplorePage> createState() => _ExplorePageState();
-}
-
-class _ExplorePageState extends ConsumerState<ExplorePage> {
-  final _text = TextEditingController();
-  var _query = '';
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = widget.initialQuery;
-    if (initial != null && initial.isNotEmpty) {
-      _query = initial;
-      _text.text = initial;
-    }
-  }
-
-  @override
-  void dispose() {
-    _text.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(title: Text(l10n.explore)),
-        body: Column(
-          children: [
-            if (_query.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
-                child: CompactTabBar(labels: [l10n.notesTab, l10n.usersTab]),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: ReadableWidth(
-                centered: ref.watch(settingsControllerProvider).centerContent,
-                maxWidth: appMaxContentWidth,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _text,
-                        decoration: InputDecoration(
-                          hintText: l10n.searchHint,
-                          prefixIcon: const Icon(Icons.search),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.search,
-                        onSubmitted: _submit,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: () => _submit(_text.text),
-                      child: Text(l10n.searchSubmit),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: ReadableWidth(
-                centered: ref.watch(settingsControllerProvider).centerContent,
-                maxWidth: appMaxContentWidth,
-                child: _query.isEmpty
-                    ? _Trends()
-                    : TabBarView(
-                        children: [
-                          NoteList(
-                            source: NoteFeedSource.search(_query),
-                            emptyText: l10n.noSearchResults,
-                          ),
-                          _UserResults(query: _query),
-                        ],
-                      ),
-              ),
-            ),
-          ],
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.discover)),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            children: [
+              _SettingsHeader(label: l10n.trendingTags),
+              const _Trends(),
+              _SettingsHeader(label: l10n.recommendedUsers),
+              const _RecommendedUsers(),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  void _submit(String value) {
-    final query = value.trim();
-    if (query == _query) return;
-    setState(() => _query = query);
+class _SettingsHeader extends StatelessWidget {
+  const _SettingsHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
+      child: Text(label, style: Theme.of(context).textTheme.titleSmall),
+    );
   }
 }
 
 class _Trends extends ConsumerWidget {
+  const _Trends();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -135,83 +71,62 @@ class _Trends extends ConsumerWidget {
       ),
       data: (items) {
         if (items.isEmpty) return Center(child: Text(l10n.noTrends));
-        return ListView.separated(
-          itemCount: items.length,
-          separatorBuilder: (_, _) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            final trend = items[index];
-            return ListTile(
-              leading: const Icon(Icons.tag),
-              title: Text('#${trend.tag}'),
-              trailing: Text(compactCount(context, trend.usersCount)),
-              onTap: () => openDetail(context, TagDetailLocation(trend.tag)),
-            );
-          },
+        return Column(
+          children: [
+            for (final trend in items)
+              ListTile(
+                leading: const Icon(Icons.tag),
+                title: Text('#${trend.tag}'),
+                trailing: Text(compactCount(context, trend.usersCount)),
+                onTap: () => openDetail(context, TagDetailLocation(trend.tag)),
+              ),
+          ],
         );
       },
     );
   }
 }
 
-class _UserResults extends ConsumerWidget {
-  const _UserResults({required this.query});
-
-  final String query;
+/// `users/recommendation` — who this instance suggests following.
+class _RecommendedUsers extends ConsumerWidget {
+  const _RecommendedUsers();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final state = ref.watch(userSearchControllerProvider(query));
-    final controller = ref.read(userSearchControllerProvider(query).notifier);
-    if (state.loading && state.items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (state.items.isEmpty) {
-      return Center(child: Text(state.error?.message(l10n) ?? l10n.noUsers));
-    }
-    return ScrollEdgeLoader(
-      canLoad: () {
-        final current = ref.read(userSearchControllerProvider(query));
-        return current.hasMore && !current.loadingMore;
+    final users = ref.watch(recommendedUsersProvider);
+    return users.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(mapFailure(error).message(l10n)),
+            TextButton(
+              onPressed: () => ref.invalidate(recommendedUsersProvider),
+              child: Text(l10n.retry),
+            ),
+          ],
+        ),
+      ),
+      data: (items) {
+        if (items.isEmpty) return Center(child: Text(l10n.noUsers));
+        return Column(
+          children: [
+            for (final user in items)
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: nyachiImageProvider(user.avatarUrl),
+                ),
+                title: Text(user.name ?? user.username),
+                subtitle: Text(
+                  '@${user.username}${user.host == null ? '' : '@${user.host}'}',
+                ),
+                onTap: () => openDetail(context, UserDetailLocation(user.id)),
+              ),
+          ],
+        );
       },
-      onEdge: controller.loadMore,
-      child: ListView.separated(
-        itemCount: state.items.length + 1,
-        separatorBuilder: (_, _) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          if (index == state.items.length) {
-            if (state.loadingMore) {
-              return const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            return const SizedBox(height: 24);
-          }
-          final user = state.items[index];
-          return _UserTile(user: user);
-        },
-      ),
-    );
-  }
-}
-
-class _UserTile extends StatelessWidget {
-  const _UserTile({required this.user});
-
-  final User user;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: nyachiImageProvider(user.avatarUrl),
-      ),
-      title: Text(user.name ?? user.username),
-      subtitle: Text(
-        '@${user.username}${user.host == null ? '' : '@${user.host}'}',
-      ),
-      onTap: () => openDetail(context, UserDetailLocation(user.id)),
     );
   }
 }

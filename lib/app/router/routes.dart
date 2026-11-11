@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/admin/presentation/admin_announcements_page.dart';
 import '../../features/admin/presentation/admin_content_page.dart';
+import '../../features/admin/presentation/admin_home_page.dart';
 import '../../features/admin/presentation/admin_instance_page.dart';
 import '../../features/admin/presentation/admin_invites_page.dart';
 import '../../features/admin/presentation/admin_reports_page.dart';
@@ -21,6 +22,7 @@ import '../../features/notes/presentation/note_detail_page.dart';
 import '../../features/oobe/presentation/oobe_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../../features/drive/presentation/drive_page.dart';
+import '../../features/search/presentation/search_page.dart';
 import '../../features/settings/presentation/cache_page.dart';
 import '../../features/settings/presentation/mfm_help_page.dart';
 import '../../features/settings/presentation/drive_settings_page.dart';
@@ -245,8 +247,8 @@ class SettingsRoute extends GoRouteData with $SettingsRoute {
   }
 }
 
-@TypedGoRoute<SettingsAccountsRoute>(path: '/settings/accounts')
-class SettingsAccountsRoute extends GoRouteData with $SettingsAccountsRoute {
+@TypedGoRoute<SettingsAdminRoute>(path: '/settings/admin')
+class SettingsAdminRoute extends GoRouteData with $SettingsAdminRoute {
   @override
   Page<void> buildPage(BuildContext context, GoRouterState state) =>
       MaterialPage<void>(key: state.pageKey, child: build(context, state));
@@ -254,11 +256,11 @@ class SettingsAccountsRoute extends GoRouteData with $SettingsAccountsRoute {
   static final GlobalKey<NavigatorState> $parentNavigatorKey =
       appShellNavigatorKey;
 
-  const SettingsAccountsRoute();
+  const SettingsAdminRoute();
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const AccountsSettingsPage();
+    return const AdminHomePage();
   }
 }
 
@@ -629,7 +631,6 @@ class SettingsAdminInvitesRoute extends GoRouteData
     TypedStatefulShellBranch<ExploreBranchData>(
       routes: <TypedRoute<RouteData>>[
         TypedGoRoute<ExploreRoute>(path: '/explore'),
-        TypedGoRoute<SearchRoute>(path: '/search/:query'),
       ],
     ),
     TypedStatefulShellBranch<ChatBranchData>(
@@ -713,14 +714,15 @@ class ExploreRoute extends GoRouteData with $ExploreRoute {
   }
 }
 
+@TypedGoRoute<SearchRoute>(path: '/search')
 class SearchRoute extends GoRouteData with $SearchRoute {
-  const SearchRoute(this.query);
+  const SearchRoute({this.q});
 
-  final String query;
+  final String? q;
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return ExplorePage(initialQuery: query);
+    return SearchPage(initialQuery: q);
   }
 }
 

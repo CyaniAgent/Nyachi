@@ -55,6 +55,17 @@ Future<List<HashtagsTrendResponseItem>> trends(Ref ref) async {
   }
 }
 
+/// `users/recommendation` for the discovery page. Unlike search, this has no
+/// query argument; the server picks the accounts. Not cached: the list is
+/// short and instance-curated, staleness is worse than the extra call.
+@riverpod
+Future<List<User>> recommendedUsers(Ref ref) async {
+  final active = ref.watch(sessionControllerProvider).active;
+  if (active == null) return const [];
+  final client = ref.watch(misskeyClientProvider);
+  return client.users.recommendation(limit: 10);
+}
+
 @freezed
 abstract class UserSearchState with _$UserSearchState {
   const factory UserSearchState({

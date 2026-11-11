@@ -115,7 +115,8 @@ void main() {
     expect(router.routerDelegate.currentConfiguration.uri.toString(), '/home');
     expect(find.byIcon(Icons.send), findsOneWidget);
     expect(find.text('open'), findsOneWidget);
-    expect(find.byKey(const Key('app-navigation-rail')), findsOneWidget);
+    // The sidebar is shell chrome: it survives the compose sheet above it.
+    expect(find.text('Nyachi'), findsOneWidget);
 
     // Dismissing the sheet keeps the feed intact.
     await tester.tapAt(const Offset(400, 40));

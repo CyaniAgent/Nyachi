@@ -53,67 +53,44 @@ Future<void> _pump(WidgetTester tester, Widget page) async {
 }
 
 void main() {
-  testWidgets('settings groups server pages apart from app pages', (
+  testWidgets('settings groups account, client and server pages apart', (
     tester,
   ) async {
     await _pump(tester, const SettingsPage());
-
-    expect(find.text('This server'), findsOneWidget);
-    expect(find.text('App'), findsOneWidget);
-    expect(find.text('Advanced'), findsOneWidget);
-
-    // Server-owned pages live under the server group, not the app group.
-    expect(find.text('Notifications'), findsOneWidget);
-    expect(find.text('Drive space'), findsOneWidget);
-    expect(find.text('Appearance'), findsOneWidget);
-  });
-
-  testWidgets('the account header opens the account hub', (tester) async {
-    await _pump(tester, const SettingsPage());
-    // The header shows the active account and is the only route into the
-    // account pages, so a user-scoped setting is never a top-level tile.
-    expect(find.text('Alice'), findsOneWidget);
-    // The header states what it leads to; the user-scoped pages themselves
-    // live only behind it.
-    expect(find.text('Account and server'), findsOneWidget);
-    expect(find.text('Edit profile'), findsNothing);
-    expect(find.text('Security'), findsNothing);
-  });
-
-  testWidgets('search filters the entries', (tester) async {
-    await _pump(tester, const SettingsPage());
-
-    await tester.enterText(find.byType(SearchBar), 'appear');
-    await tester.pump();
-
-    expect(find.text('Appearance'), findsOneWidget);
-    expect(find.text('Notifications'), findsNothing);
-    expect(find.text('Cache management'), findsNothing);
-  });
-
-  testWidgets('the search bar sits above the entries without elevation', (
-    tester,
-  ) async {
-    await _pump(tester, const SettingsPage());
-
-    final searchBar = tester.widget<SearchBar>(find.byType(SearchBar));
-    // A flat bar blends into the page; the default Material shadow does not.
-    expect(searchBar.elevation?.resolve({}), 0);
-    expect(searchBar.leading, isA<Icon>());
-
-    // Above the first tile, not buried inside the scrolling list.
-    final barY = tester.getCenter(find.byType(SearchBar)).dy;
-    final tileY = tester.getCenter(find.text('Alice')).dy;
-    expect(barY, lessThan(tileY));
-  });
-
-  testWidgets('the account hub owns the user-scoped pages', (tester) async {
-    await _pump(tester, const AccountsSettingsPage());
 
     expect(find.text('Account'), findsOneWidget);
+    expect(find.text('Client'), findsOneWidget);
+    // The manage section only renders with moderator rights; the fake
+    // session below has none, so the group header is absent.
+    expect(find.text('This server'), findsNothing);
+
+    // User-scoped pages sit in the account group; client pages under Client.
     expect(find.text('Edit profile'), findsOneWidget);
-    expect(find.text('Privacy'), findsOneWidget);
-    expect(find.text('Email'), findsOneWidget);
     expect(find.text('Security'), findsOneWidget);
+    expect(find.text('Appearance'), findsOneWidget);
+    expect(find.text('Notifications'), findsOneWidget);
+  });
+
+  testWidgets('the account header shows the active handle and opens profile', (
+    tester,
+  ) async {
+    await _pump(tester, const SettingsPage());
+    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text('@alice@example.test'), findsOneWidget);
+  });
+
+  testWidgets('the moderation hub is the only admin entry', (tester) async {
+    await _pump(tester, const SettingsPage());
+
+    // The seven flat admin pages are gone from the root; only the hub tile
+    // remains, and it is gated off without moderator rights.
+    expect(find.text('Manage instance'), findsNothing);
+    expect(find.text('Reports'), findsNothing);
+    expect(find.text('Invite codes'), findsNothing);
+  });
+
+  testWidgets('the search bar is gone', (tester) async {
+    await _pump(tester, const SettingsPage());
+    expect(find.byType(SearchBar), findsNothing);
   });
 }

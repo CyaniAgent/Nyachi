@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyachi/features/admin/presentation/admin_announcements_page.dart';
 import 'package:nyachi/features/admin/presentation/admin_content_page.dart';
+import 'package:nyachi/features/admin/presentation/admin_home_page.dart';
 import 'package:nyachi/features/admin/presentation/admin_instance_page.dart';
 import 'package:nyachi/features/admin/presentation/admin_invites_page.dart';
 import 'package:nyachi/features/admin/presentation/admin_reports_page.dart';
@@ -37,7 +38,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   final cases = <String, Type>{
     '/settings': SettingsPage,
-    '/settings/accounts': AccountsSettingsPage,
+    '/settings/admin': AdminHomePage,
     '/settings/navigation': NavigationSettingsPage,
     '/settings/appearance': AppearanceSettingsPage,
     '/settings/about': AboutSettingsPage,

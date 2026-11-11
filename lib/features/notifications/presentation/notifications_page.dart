@@ -14,6 +14,7 @@ import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/scroll_edge_loader.dart';
 import '../../../core/ui/time_format.dart';
 import '../../settings/application/app_settings.dart';
+import '../../shell/presentation/app_sidebar.dart';
 import '../application/notification_list_controller.dart';
 import '../application/notification_unread.dart';
 import '../domain/notification_copy.dart';
@@ -72,6 +73,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.notifications),
+        leading: const AppDrawerButton(),
         actions: [
           IconButton(
             tooltip: unread.unreadOnly

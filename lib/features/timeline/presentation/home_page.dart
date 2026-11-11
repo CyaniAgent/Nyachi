@@ -16,6 +16,7 @@ import '../../announcements/data/announcement_repository.dart';
 import '../../notes/application/note_list_controller.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../notes/presentation/note_list.dart';
+import '../../shell/presentation/app_sidebar.dart';
 import '../application/home_stream_service.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -100,23 +101,12 @@ class _HomePageState extends ConsumerState<HomePage>
           return Scaffold(
             appBar: AppBar(
               title: Text(l10n.appTitle),
+              leading: const AppDrawerButton(),
               actions: [
                 IconButton(
-                  tooltip: l10n.refresh,
-                  onPressed: _refreshCurrent,
-                  icon: const Icon(Icons.refresh),
-                ),
-                IconButton(
-                  tooltip: l10n.announcements,
-                  onPressed: () =>
-                      openDetail(context, const AnnouncementsDetailLocation()),
-                  icon: const Icon(Icons.campaign_outlined),
-                ),
-                IconButton(
-                  tooltip: l10n.compose,
-                  onPressed: () =>
-                      openDetail(context, const ComposeDetailLocation(null)),
-                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: l10n.search,
+                  onPressed: () => GoRouter.of(context).push('/search'),
+                  icon: const Icon(Icons.search),
                 ),
               ],
             ),
@@ -293,9 +283,10 @@ class _AnnouncementBanners extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final banners = ref.watch(bannerAnnouncementsProvider);
-    if (banners.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final read = ref.read(readAnnouncementsProvider.notifier);
+    void openAll() =>
+        openDetail(context, const AnnouncementsDetailLocation());
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -316,7 +307,7 @@ class _AnnouncementBanners extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              onTap: () => GoRouter.of(context).push('/announcements'),
+              onTap: openAll,
               trailing: IconButton(
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 icon: const Icon(Icons.close, size: 18),
@@ -324,6 +315,26 @@ class _AnnouncementBanners extends ConsumerWidget {
               ),
             ),
           ),
+        // One entry for the whole list, not one per banner. With unread
+        // announcements it sits under them; with none it is the only,
+        // deliberately muted, way in.
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton.icon(
+              onPressed: openAll,
+              icon: const Icon(Icons.campaign_outlined, size: 16),
+              label: Text(context.l10n.viewAllAnnouncements),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: banners.isEmpty
+                    ? theme.colorScheme.onSurfaceVariant
+                    : theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -2,20 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart' hide Clip;
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/avatar.dart';
-import '../../../core/ui/breakpoints.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../../core/mfm/mfm_body.dart';
 import '../../notes/presentation/note_list.dart';
+import '../../shell/presentation/app_sidebar.dart';
 import '../application/profile_providers.dart';
 
 class ProfilePage extends ConsumerWidget {
@@ -28,18 +27,7 @@ class ProfilePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.profile),
-        actions: [
-          if (MediaQuery.sizeOf(context).width < kCompactBreakpoint)
-            IconButton(
-              tooltip: l10n.settings,
-              onPressed: () => GoRouter.of(context).push('/settings'),
-              icon: const Icon(Icons.settings_outlined),
-            ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => openDetail(context, const ComposeDetailLocation(null)),
-        child: const Icon(Icons.edit_outlined),
+        leading: const AppDrawerButton(),
       ),
       body: current.when(
         loading: () => const Center(child: CircularProgressIndicator()),

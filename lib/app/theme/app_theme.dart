@@ -4,8 +4,14 @@ import 'package:flutter/material.dart';
 
 const double appBorderRadius = 18;
 const double appColumnWidth = 380;
-const double appNavRailWidth = 80;
-const double appSidebarWidth = 240;
+const double appSidebarMinWidth = 160;
+const double appSidebarMaxWidth = 400;
+const double appSidebarDefaultWidth = 240;
+const double appSidebarCollapsedWidth = 80;
+
+/// Window width at or above which the desktop sidebar auto-expands (and below
+/// which it auto-collapses) while `sidebarAutoCollapse` is enabled.
+const double appSidebarAutoBreakpoint = 1000;
 const double appDetailPanelDefaultWidth = 480;
 const double appDetailPanelMinWidth = 360;
 const double appDetailPanelMaxWidth = 900;

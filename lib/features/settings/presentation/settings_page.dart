@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../admin/data/admin_repository.dart';
@@ -10,7 +9,6 @@ import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/mfm/mfm_motion.dart';
-import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/update/app_version.dart';
@@ -24,11 +22,9 @@ import '../application/app_settings.dart';
 
 /// Settings entry point.
 ///
-/// A profile header opens the account hub - the account itself plus the
-/// profile, privacy, email and security pages, which all change this user on
-/// the server. Below it the remaining pages are grouped by who owns the
-/// setting (this server vs. this app), with the rarely touched ones under
-/// "Advanced", and the search field jumps straight to any of them.
+/// Three sections: the account domain (profile, privacy, email, security —
+/// pages that change this user on the server), the client domain, and the
+/// instance domain with the moderation hub behind a single gated entry.
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
@@ -37,8 +33,6 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  var _query = '';
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -48,207 +42,150 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final canModerate = ref.watch(canModerateProvider).value ?? false;
     final entries = <_SettingsEntry>[
       _SettingsEntry(
-        group: _SettingsGroup.app,
+        group: _SettingsGroup.account,
+        icon: Icons.person_outline,
+        title: l10n.editProfile,
+        subtitle: l10n.profile,
+        open: const SettingsProfileLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.account,
+        icon: Icons.lock_outline,
+        title: l10n.privacy,
+        subtitle: l10n.mutedUsers,
+        open: const SettingsPrivacyLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.account,
+        icon: Icons.mail_outline,
+        title: l10n.emailSettings,
+        subtitle: l10n.emailAddress,
+        open: const SettingsEmailLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.account,
+        icon: Icons.shield_outlined,
+        title: l10n.security,
+        subtitle: l10n.twoFactor,
+        open: const SettingsSecurityLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.account,
+        icon: Icons.person_add_alt,
+        title: l10n.addAccount,
+        subtitle: l10n.accounts,
+        open: const AddAccountLocation(),
+      ),
+      _SettingsEntry(
+        group: _SettingsGroup.client,
         icon: Icons.tune,
         title: l10n.navigation,
         subtitle: l10n.visibleTabs,
         open: const SettingsNavigationLocation(),
       ),
       _SettingsEntry(
-        group: _SettingsGroup.app,
+        group: _SettingsGroup.client,
         icon: Icons.palette_outlined,
         title: l10n.appearance,
         subtitle: l10n.theme,
         open: const SettingsAppearanceLocation(),
       ),
       _SettingsEntry(
-        group: _SettingsGroup.app,
-        icon: Icons.info_outline,
-        title: l10n.about,
-        subtitle: l10n.appVersion(ref.watch(appVersionProvider).value ?? ''),
-        open: const SettingsAboutLocation(),
-      ),
-      _SettingsEntry(
-        group: _SettingsGroup.server,
+        group: _SettingsGroup.client,
         icon: Icons.notifications_outlined,
         title: l10n.notificationSettings,
         subtitle: l10n.notifyAll,
         open: const SettingsNotificationLocation(),
       ),
       _SettingsEntry(
-        group: _SettingsGroup.server,
+        group: _SettingsGroup.client,
         icon: Icons.notifications_active_outlined,
         title: l10n.pushNotifications,
         subtitle: l10n.pushSystemTitle,
         open: const SettingsPushLocation(),
       ),
       _SettingsEntry(
-        group: _SettingsGroup.server,
+        group: _SettingsGroup.client,
         icon: Icons.cloud_outlined,
         title: l10n.driveSpace,
         subtitle: l10n.openDrive,
         open: const SettingsDriveLocation(),
       ),
       _SettingsEntry(
-        group: _SettingsGroup.advanced,
+        group: _SettingsGroup.client,
         icon: Icons.cleaning_services_outlined,
         title: l10n.cacheManagement,
         subtitle: l10n.cacheManagementSubtitle,
         open: const SettingsCacheLocation(),
       ),
-      if (canModerate) ...[
+      _SettingsEntry(
+        group: _SettingsGroup.client,
+        icon: Icons.info_outline,
+        title: l10n.about,
+        subtitle: l10n.appVersion(ref.watch(appVersionProvider).value ?? ''),
+        open: const SettingsAboutLocation(),
+      ),
+      if (canModerate)
         _SettingsEntry(
-          group: _SettingsGroup.admin,
-          icon: Icons.flag_outlined,
-          title: l10n.adminReports,
-          subtitle: l10n.adminReportsSubtitle,
-          open: const AdminReportsLocation(),
+          group: _SettingsGroup.manage,
+          icon: Icons.shield_outlined,
+          title: l10n.adminHome,
+          subtitle: l10n.adminHomeSubtitle,
+          open: const AdminHomeLocation(),
         ),
-        _SettingsEntry(
-          group: _SettingsGroup.admin,
-          icon: Icons.people_outline,
-          title: l10n.adminUsers,
-          subtitle: l10n.adminUsersSubtitle,
-          open: const AdminUsersLocation(),
-        ),
-        _SettingsEntry(
-          group: _SettingsGroup.admin,
-          icon: Icons.folder_outlined,
-          title: l10n.adminContent,
-          subtitle: l10n.adminContentSubtitle,
-          open: const AdminContentLocation(),
-        ),
-        _SettingsEntry(
-          group: _SettingsGroup.admin,
-          icon: Icons.campaign_outlined,
-          title: l10n.adminAnnouncements,
-          subtitle: l10n.adminAnnouncementsSubtitle,
-          open: const AdminAnnouncementsLocation(),
-        ),
-        _SettingsEntry(
-          group: _SettingsGroup.admin,
-          icon: Icons.dns_outlined,
-          title: l10n.adminInstance,
-          subtitle: l10n.adminInstanceSubtitle,
-          open: const AdminInstanceLocation(),
-        ),
-        _SettingsEntry(
-          group: _SettingsGroup.admin,
-          icon: Icons.monitor_heart_outlined,
-          title: l10n.adminSystem,
-          subtitle: l10n.adminSystemSubtitle,
-          open: const AdminSystemLocation(),
-        ),
-        _SettingsEntry(
-          group: _SettingsGroup.admin,
-          icon: Icons.confirmation_number_outlined,
-          title: l10n.adminInvites,
-          subtitle: l10n.adminInvitesSubtitle,
-          open: const AdminInvitesLocation(),
-        ),
-      ],
     ];
-    final query = _query.trim().toLowerCase();
-    final visible = query.isEmpty
-        ? entries
-        : entries
-              .where(
-                (entry) =>
-                    entry.title.toLowerCase().contains(query) ||
-                    entry.subtitle.toLowerCase().contains(query),
-              )
-              .toList(growable: false);
     final active = session.active;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
-      body: Column(
+      body: _SettingsBody(
         children: [
-          // The search bar sits above the scrolling list: filtering happens as
-          // you type, so results appear in place and no separate search page
-          // is needed.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
-                child: SearchBar(
-                  hintText: l10n.settingsSearchHint,
-                  leading: const Icon(Icons.search),
-                  elevation: const WidgetStatePropertyAll(0),
-                  backgroundColor: WidgetStatePropertyAll(
-                    Theme.of(context).colorScheme.surfaceContainerHighest,
-                  ),
-                  onChanged: (value) => setState(() => _query = value),
-                ),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            leading: NyachiAvatar(
+              url: active?.avatarUrl,
+              size: 48,
+              fallback: Text(
+                active?.username.characters.firstOrNull?.toUpperCase() ?? '?',
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _SettingsBody(
-              children: [
-                if (query.isEmpty) ...[
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                    leading: NyachiAvatar(
-                      url: active?.avatarUrl,
-                      size: 48,
-                      fallback: Text(
-                        active?.username.characters.firstOrNull
-                                ?.toUpperCase() ??
-                            '?',
-                      ),
-                    ),
-                    title: Text(
-                      active?.displayName ??
-                          active?.username ??
-                          l10n.noAccounts,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    subtitle: Text(l10n.settingsAccountAndServer),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () =>
-                        openDetail(context, const SettingsAccountsLocation()),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                if (visible.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(l10n.noSearchResults),
-                  ),
-                for (final group in _SettingsGroup.values)
-                  if (visible.any((entry) => entry.group == group)) ...[
-                    _SettingsSectionHeader(
-                      label: switch (group) {
-                        _SettingsGroup.app => l10n.settingsGroupApp,
-                        _SettingsGroup.server => l10n.settingsGroupServer,
-                        _SettingsGroup.advanced => l10n.settingsGroupAdvanced,
-                        _SettingsGroup.admin => l10n.settingsGroupAdmin,
-                      },
-                    ),
-                    for (final entry in visible.where(
-                      (entry) => entry.group == group,
-                    ))
-                      _SettingsTile(
-                        icon: entry.icon,
-                        title: entry.title,
-                        subtitle: entry.subtitle,
-                        onTap:
-                            entry.onTap ??
-                            () => openDetail(context, entry.open!),
-                      ),
-                  ],
-              ],
+            title: Text(
+              active?.displayName ?? active?.username ?? l10n.noAccounts,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
+            subtitle: Text(
+              active == null
+                  ? l10n.settingsAccountAndServer
+                  : '@${active.username}@${active.host}',
+            ),
+            // Display only: "edit profile" below is the single entry point,
+            // and a second tap target on the same row only adds ambiguity.
           ),
+          for (final group in _SettingsGroup.values)
+            if (entries.any((entry) => entry.group == group)) ...[
+              _SettingsSectionHeader(
+                label: switch (group) {
+                  _SettingsGroup.account => l10n.settingsGroupAccount,
+                  _SettingsGroup.client => l10n.settingsGroupClient,
+                  _SettingsGroup.manage => l10n.settingsGroupManage,
+                },
+              ),
+              for (final entry in entries.where(
+                (entry) => entry.group == group,
+              ))
+                _SettingsTile(
+                  icon: entry.icon,
+                  title: entry.title,
+                  subtitle: entry.subtitle,
+                  onTap: entry.onTap ?? () => openDetail(context, entry.open!),
+                ),
+            ],
         ],
       ),
     );
   }
 }
 
-enum _SettingsGroup { app, server, advanced, admin }
+enum _SettingsGroup { account, client, manage }
 
 /// One searchable settings row: a page location or a direct callback.
 class _SettingsEntry {
@@ -287,130 +224,6 @@ class _SettingsSectionHeader extends StatelessWidget {
   }
 }
 
-class AccountsSettingsPage extends ConsumerWidget {
-  const AccountsSettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final session = ref.watch(sessionControllerProvider);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.accounts)),
-      body: _SettingsBody(
-        children: [
-          for (final account in session.accounts) ...[
-            ListTile(
-              leading: NyachiAvatar(
-                url: account.avatarUrl,
-                fallback: Text(account.username.characters.first),
-              ),
-              title: Text(account.displayName ?? account.username),
-              subtitle: Text('@${account.username}@${account.host}'),
-              trailing: account.id == session.active?.id
-                  ? Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  : TextButton(
-                      onPressed: () => _switch(context, ref, account),
-                      child: Text(l10n.switchLabel),
-                    ),
-              onTap: account.id == session.active?.id
-                  ? null
-                  : () => _switch(context, ref, account),
-              onLongPress: () => _remove(context, ref, account),
-            ),
-            const Divider(height: 1),
-          ],
-          ListTile(
-            leading: const Icon(Icons.person_add_alt),
-            title: Text(l10n.addAccount),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => openDetail(context, const AddAccountLocation()),
-          ),
-          // These pages change this user on the server, so they belong to the
-          // account rather than to the app-wide settings list.
-          _SettingsSectionHeader(label: l10n.settingsGroupAccount),
-          _SettingsTile(
-            icon: Icons.person_outline,
-            title: l10n.editProfile,
-            subtitle: l10n.profile,
-            onTap: () => openDetail(context, const SettingsProfileLocation()),
-          ),
-          _SettingsTile(
-            icon: Icons.lock_outline,
-            title: l10n.privacy,
-            subtitle: l10n.mutedUsers,
-            onTap: () => openDetail(context, const SettingsPrivacyLocation()),
-          ),
-          _SettingsTile(
-            icon: Icons.mail_outline,
-            title: l10n.emailSettings,
-            subtitle: l10n.emailAddress,
-            onTap: () => openDetail(context, const SettingsEmailLocation()),
-          ),
-          _SettingsTile(
-            icon: Icons.shield_outlined,
-            title: l10n.security,
-            subtitle: l10n.twoFactor,
-            onTap: () => openDetail(context, const SettingsSecurityLocation()),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _switch(
-    BuildContext context,
-    WidgetRef ref,
-    LocalAccount account,
-  ) async {
-    try {
-      await ref
-          .read(sessionControllerProvider.notifier)
-          .switchAccount(account.id);
-      if (context.mounted) context.go('/home');
-    } on SessionExpiredException {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.sessionExpired)));
-      }
-    }
-  }
-
-  Future<void> _remove(
-    BuildContext context,
-    WidgetRef ref,
-    LocalAccount account,
-  ) async {
-    final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.removeAccount),
-        content: Text(l10n.removeAccountConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.remove),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await ref
-        .read(sessionControllerProvider.notifier)
-        .removeAccount(account.id);
-    if (!context.mounted) return;
-    final active = ref.read(sessionControllerProvider).active;
-    context.go(active == null ? '/login' : '/home');
-  }
-}
-
 class NavigationSettingsPage extends ConsumerWidget {
   const NavigationSettingsPage({super.key});
 
@@ -419,76 +232,148 @@ class NavigationSettingsPage extends ConsumerWidget {
     final l10n = context.l10n;
     final settings = ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
-    final config = settings.navConfig;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navigation)),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: appMaxContentWidth),
-          child: ReorderableListView.builder(
-            // The default desktop drag handle is drawn over the trailing
-            // switch; draw our own handle next to it instead.
-            buildDefaultDragHandles: false,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            header: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                l10n.visibleTabs,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
+      body: _SettingsBody(
+        children: [
+          _SettingsSectionHeader(label: l10n.bottomBar),
+          _NavList(
+            config: settings.navConfig,
+            capped: true,
+            onReorder: (order) => controller.setNavConfig(
+              settings.navConfig.copyWith(order: order),
             ),
-            itemCount: config.order.length,
-            onReorderItem: (oldIndex, newIndex) {
-              final order = [...config.order];
-              final item = order.removeAt(oldIndex);
-              order.insert(newIndex, item);
-              controller.setNavConfig(config.copyWith(order: order));
-            },
-            itemBuilder: (context, index) {
-              final tab = config.order[index];
-              return Column(
-                key: ValueKey(tab),
-                children: [
-                  ListTile(
-                    leading: Icon(_tabIcon(tab)),
-                    title: Text(_tabLabel(context, tab)),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Switch(
-                          value: config.visible.contains(tab),
-                          onChanged: tab == AppTab.home
-                              ? null
-                              : (value) {
-                                  final visible = {...config.visible};
-                                  if (value) {
-                                    visible.add(tab);
-                                  } else {
-                                    visible.remove(tab);
-                                  }
-                                  controller.setNavConfig(
-                                    config.copyWith(visible: visible),
-                                  );
-                                },
-                        ),
-                        const SizedBox(width: 8),
-                        ReorderableDragStartListener(
-                          index: index,
-                          child: Icon(
-                            Icons.drag_indicator,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                ],
+            onToggle: (tab, value) {
+              final visible = {...settings.navConfig.visible};
+              if (value) {
+                visible.add(tab);
+              } else {
+                visible.remove(tab);
+              }
+              controller.setNavConfig(
+                settings.navConfig.copyWith(visible: visible),
               );
             },
           ),
-        ),
+          _SettingsSectionHeader(label: l10n.sidebarSection),
+          _NavList(
+            config: settings.sidebarNavConfig,
+            capped: false,
+            onReorder: (order) => controller.setSidebarNavConfig(
+              settings.sidebarNavConfig.copyWith(order: order),
+            ),
+            onToggle: (tab, value) {
+              final visible = {...settings.sidebarNavConfig.visible};
+              if (value) {
+                visible.add(tab);
+              } else {
+                visible.remove(tab);
+              }
+              controller.setSidebarNavConfig(
+                settings.sidebarNavConfig.copyWith(visible: visible),
+              );
+            },
+          ),
+          SwitchListTile(
+            title: Text(l10n.showMeAtTop),
+            subtitle: Text(l10n.showMeAtTopHint),
+            value: settings.showMeAtTop,
+            onChanged: controller.setShowMeAtTop,
+          ),
+          ListTile(
+            title: Text(l10n.sidebarWidth),
+            subtitle: Text('${settings.sidebarWidth.round()} px'),
+          ),
+          Slider(
+            value: settings.sidebarWidth,
+            min: appSidebarMinWidth,
+            max: appSidebarMaxWidth,
+            label: '${settings.sidebarWidth.round()} px',
+            // Dragging updates memory only; the write lands once on release.
+            onChanged: controller.setSidebarWidthLive,
+            onChangeEnd: controller.setSidebarWidth,
+          ),
+          SwitchListTile(
+            title: Text(l10n.sidebarAutoCollapse),
+            subtitle: Text(l10n.sidebarAutoCollapseHint),
+            value: settings.sidebarAutoCollapse,
+            onChanged: controller.setSidebarAutoCollapse,
+          ),
+        ],
       ),
+    );
+  }
+}
+
+/// One reorderable tab list for a chrome surface. When [capped] is set the
+/// bottom-bar rules apply: home stays visible and the switch disables once
+/// four tabs are on.
+class _NavList extends StatelessWidget {
+  const _NavList({
+    required this.config,
+    required this.capped,
+    required this.onReorder,
+    required this.onToggle,
+  });
+
+  final NavConfig config;
+  final bool capped;
+  final ValueChanged<List<AppTab>> onReorder;
+  final void Function(AppTab tab, bool value) onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final visibleCount = config.visible.length;
+    return ReorderableListView.builder(
+      // The default desktop drag handle is drawn over the trailing
+      // switch; draw our own handle next to it instead.
+      buildDefaultDragHandles: false,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      itemCount: config.order.length,
+      onReorderItem: (oldIndex, newIndex) {
+        final order = [...config.order];
+        final item = order.removeAt(oldIndex);
+        order.insert(newIndex, item);
+        onReorder(order);
+      },
+      itemBuilder: (context, index) {
+        final tab = config.order[index];
+        final atCap =
+            capped && !config.visible.contains(tab) && visibleCount >= 4;
+        return Column(
+          key: ValueKey(tab),
+          children: [
+            ListTile(
+              leading: Icon(_tabIcon(tab)),
+              title: Text(_tabLabel(context, tab)),
+              subtitle: atCap ? Text(l10n.maxTabsReached) : null,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Switch(
+                    value: config.visible.contains(tab),
+                    onChanged: tab == AppTab.home || atCap
+                        ? null
+                        : (value) => onToggle(tab, value),
+                  ),
+                  const SizedBox(width: 8),
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: Icon(
+                      Icons.drag_indicator,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+          ],
+        );
+      },
     );
   }
 }
@@ -854,7 +739,7 @@ class _SettingsTile extends StatelessWidget {
 String _tabLabel(BuildContext context, AppTab tab) => switch (tab) {
   AppTab.home => context.l10n.home,
   AppTab.notifications => context.l10n.notifications,
-  AppTab.explore => context.l10n.explore,
+  AppTab.explore => context.l10n.discover,
   AppTab.chat => context.l10n.chat,
   AppTab.profile => context.l10n.profile,
 };

@@ -9,6 +9,7 @@ import '../../../app/detail_panel/detail_panel_controller.dart';
 import '../../../app/detail_panel/detail_panel_coordinator.dart';
 import '../../../app/detail_panel/detail_panel_host.dart';
 import '../../../app/detail_panel/detail_panel_scope.dart';
+import '../../../app/detail_panel/open_detail.dart';
 import '../../../app/router/back_navigation.dart';
 import '../../../app/router/navigator_keys.dart';
 import '../../../app/router/router_guards.dart';
@@ -20,6 +21,7 @@ import '../../../core/ui/l10n_ext.dart';
 import '../../notifications/application/realtime_providers.dart';
 import '../../settings/application/app_settings.dart';
 import '../application/shell_navigation.dart';
+import 'app_sidebar.dart';
 
 /// Persistent navigation chrome above the authenticated shell navigator.
 class RootShell extends ConsumerStatefulWidget {
@@ -134,8 +136,8 @@ class _RootShellState extends ConsumerState<RootShell> {
   @override
   Widget build(BuildContext context) {
     final notifier = ref.watch(shellNavigationProvider);
-    final config = ref.watch(settingsControllerProvider).navConfig;
-    final breakpoint = ref.watch(settingsControllerProvider).detailBreakpoint;
+    final settings = ref.watch(settingsControllerProvider);
+    final breakpoint = settings.detailBreakpoint;
     final width = MediaQuery.sizeOf(context).width;
     // The back handler reads the panel stack, so the shell has to rebuild when
     // it opens or closes; otherwise the system back button keeps a stale
@@ -152,7 +154,11 @@ class _RootShellState extends ConsumerState<RootShell> {
       builder: (context, shell, _) {
         final currentIndex = shell?.currentIndex ?? AppTab.home.index;
         final current = AppTab.values[currentIndex];
-        if (shell != null && shouldFallbackToHome(config, current)) {
+        final wide = width >= kCompactBreakpoint;
+        final fallbackConfig = wide
+            ? settings.sidebarNavConfig
+            : settings.navConfig;
+        if (shell != null && shouldFallbackToHome(fallbackConfig, current)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             shell.goBranch(AppTab.home.index);
           });
@@ -177,27 +183,14 @@ class _RootShellState extends ConsumerState<RootShell> {
               unwindAppState(container, currentIndex: currentIndex);
             },
             child: ShellChrome(
-              selectedIndex: _selectedVisibleIndex(
-                config,
-                current,
-                width >= kCompactBreakpoint,
-              ),
-              onDestinationSelected: (tab) => _select(shell, tab),
-              onProfile: () => _select(shell, AppTab.profile),
-              onSettings: () => GoRouter.of(context).push('/settings'),
-              onDrive: () => GoRouter.of(context).push('/drive'),
+              selectedTab: current,
+              onSelectTab: (tab) => _select(shell, tab),
               child: content,
             ),
           ),
         );
       },
     );
-  }
-
-  int? _selectedVisibleIndex(NavConfig config, AppTab current, bool railMode) {
-    final visible = shellVisibleTabs(config, railMode);
-    final index = visible.indexOf(current);
-    return index < 0 ? null : index;
   }
 
   void _select(StatefulNavigationShell? shell, AppTab tab) {
@@ -220,397 +213,280 @@ class _RootShellState extends ConsumerState<RootShell> {
 }
 
 /// Tabs rendered in the shell chrome for the given mode.
-///
-/// The profile tab is hidden from the desktop rail (the user panel in the
-/// corner navigates there instead); on the bottom bar it stays, rendered as
-/// the user's avatar.
-List<AppTab> shellVisibleTabs(NavConfig config, bool railMode) {
-  final visible = config.order
-      .where(config.visible.contains)
-      .toList(growable: false);
-  if (!railMode) return visible;
-  return visible.where((tab) => tab != AppTab.profile).toList(growable: false);
-}
+List<AppTab> shellVisibleTabs(NavConfig config) =>
+    config.order.where(config.visible.contains).toList(growable: false);
 
 /// Sidebar/bottom-navigation chrome shared by [RootShell] and widget tests.
-class ShellChrome extends ConsumerWidget {
+class ShellChrome extends ConsumerStatefulWidget {
   const ShellChrome({
     required this.child,
-    required this.selectedIndex,
-    required this.onDestinationSelected,
-    required this.onSettings,
-    required this.onDrive,
-    required this.onProfile,
+    required this.selectedTab,
+    required this.onSelectTab,
     super.key,
   });
 
   final Widget child;
-  final int? selectedIndex;
-  final ValueChanged<AppTab> onDestinationSelected;
-  final VoidCallback onSettings;
-  final VoidCallback onDrive;
-  final VoidCallback onProfile;
+  final AppTab selectedTab;
+  final ValueChanged<AppTab> onSelectTab;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(settingsControllerProvider).navConfig;
-    final account = ref.watch(activeAccountProvider);
-    final width = MediaQuery.sizeOf(context).width;
-    final railMode = width >= kCompactBreakpoint;
-    final visible = shellVisibleTabs(config, railMode);
-    final destinations = visible
-        .map(
-          (tab) => _Destination(
-            icon: _icon(tab),
-            label: _label(context, tab),
-            avatarUrl: tab == AppTab.profile && !railMode
-                ? account?.avatarUrl
-                : null,
-          ),
-        )
-        .toList(growable: false);
+  ConsumerState<ShellChrome> createState() => _ShellChromeState();
+}
 
-    if (!railMode) {
-      return Scaffold(
-        body: child,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: (selectedIndex ?? 0).clamp(0, destinations.length - 1),
-          onDestinationSelected: (index) {
-            onDestinationSelected(visible[index]);
-          },
-          destinations: [
-            for (final destination in destinations)
-              NavigationDestination(
-                icon: destination.avatarUrl == null
-                    ? Icon(destination.icon)
-                    : NyachiAvatar(
-                        url: destination.avatarUrl,
-                        size: 28,
-                        showStatus: true,
-                        statusRingColor: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainer,
-                      ),
-                label: destination.avatarUrl == null
-                    ? destination.label
-                    : context.l10n.me,
-              ),
-          ],
+class _ShellChromeState extends ConsumerState<ShellChrome> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  /// Collapsed state of the desktop sidebar for this session. Seeded from the
+  /// window width while auto-collapse is on; a manual toggle wins afterwards.
+  bool? _collapsedOverride;
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = ref.watch(settingsControllerProvider);
+    final width = MediaQuery.sizeOf(context).width;
+    final wide = width >= kCompactBreakpoint;
+    final child = widget.child;
+    if (!wide) {
+      return AppDrawerScope(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+        child: Scaffold(
+          key: _scaffoldKey,
+          body: child,
+          // The drawer lists every tab in bottom-bar order: it is where the
+          // tabs hidden from the bottom bar stay reachable.
+          drawer: AppDrawer(
+            entries: _entries(
+              settings,
+              widget.selectedTab,
+              config: settings.navConfig,
+              allTabs: true,
+            ),
+          ),
+          bottomNavigationBar: _BottomBar(
+            config: settings.navConfig,
+            selectedTab: widget.selectedTab,
+            onSelectTab: widget.onSelectTab,
+          ),
+          floatingActionButton: _ComposeFab(
+            visibleTab: widget.selectedTab,
+            covered: ref.watch(detailPanelControllerProvider).isOpen,
+          ),
         ),
       );
     }
-
+    final autoCollapse =
+        settings.sidebarAutoCollapse && width < appSidebarAutoBreakpoint;
+    final collapsed = _collapsedOverride ?? autoCollapse;
     return Scaffold(
       body: Row(
         children: [
-          _AppNavigationRail(
-            extended: width >= 1200,
-            destinations: destinations,
-            visible: visible,
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
-            onSettings: onSettings,
-            onDrive: onDrive,
-            onProfile: onProfile,
+          SizedBox(
+            width: collapsed ? appSidebarCollapsedWidth : settings.sidebarWidth,
+            child: AppSidebar(
+              entries: _entries(settings, widget.selectedTab),
+              collapsed: collapsed,
+              onToggleCollapse: () =>
+                  setState(() => _collapsedOverride = !collapsed),
+            ),
           ),
-          VerticalDivider(
-            width: 1,
-            color: Theme.of(context).dividerColor.withAlpha(128),
-          ),
+          if (!collapsed)
+            SidebarResizeHandle(
+              width: settings.sidebarWidth,
+              onChanged: (value) => ref
+                  .read(settingsControllerProvider.notifier)
+                  .setSidebarWidthLive(value),
+              onCommit: (value) => ref
+                  .read(settingsControllerProvider.notifier)
+                  .setSidebarWidth(value),
+            ),
           Expanded(child: child),
         ],
       ),
-    );
-  }
-
-  IconData _icon(AppTab tab) => switch (tab) {
-    AppTab.home => Icons.home_outlined,
-    AppTab.notifications => Icons.notifications_outlined,
-    AppTab.explore => Icons.explore_outlined,
-    AppTab.chat => Icons.chat_bubble_outline,
-    AppTab.profile => Icons.person_outline,
-  };
-
-  String _label(BuildContext context, AppTab tab) => switch (tab) {
-    AppTab.home => context.l10n.home,
-    AppTab.notifications => context.l10n.notifications,
-    AppTab.explore => context.l10n.explore,
-    AppTab.chat => context.l10n.chat,
-    AppTab.profile => context.l10n.profile,
-  };
-}
-
-class _AppNavigationRail extends StatelessWidget {
-  const _AppNavigationRail({
-    required this.extended,
-    required this.destinations,
-    required this.visible,
-    required this.selectedIndex,
-    required this.onDestinationSelected,
-    required this.onSettings,
-    required this.onDrive,
-    required this.onProfile,
-  });
-
-  final bool extended;
-  final List<_Destination> destinations;
-  final List<AppTab> visible;
-  final int? selectedIndex;
-  final ValueChanged<AppTab> onDestinationSelected;
-  final VoidCallback onSettings;
-  final VoidCallback onDrive;
-  final VoidCallback onProfile;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      key: const Key('app-navigation-rail'),
-      width: extended ? appSidebarWidth : appNavRailWidth,
-      child: Column(
-        children: [
-          Expanded(
-            child: NavigationRail(
-              key: ValueKey<bool>(extended),
-              selectedIndex: selectedIndex?.clamp(0, destinations.length - 1),
-              onDestinationSelected: (index) {
-                onDestinationSelected(visible[index]);
-              },
-              extended: extended,
-              labelType: NavigationRailLabelType.none,
-              groupAlignment: -0.86,
-              minWidth: appNavRailWidth,
-              minExtendedWidth: appSidebarWidth,
-              destinations: [
-                for (final destination in destinations)
-                  NavigationRailDestination(
-                    icon: Tooltip(
-                      message: destination.label,
-                      child: Icon(destination.icon),
-                    ),
-                    label: Text(destination.label),
-                  ),
-              ],
-            ),
-          ),
-          Divider(
-            height: 1,
-            color: Theme.of(context).dividerColor.withAlpha(128),
-          ),
-          _SidebarUserPanel(
-            extended: extended,
-            onSettings: onSettings,
-            onDrive: onDrive,
-            onProfile: onProfile,
-          ),
-        ],
+      floatingActionButton: _ComposeFab(
+        visibleTab: widget.selectedTab,
+        covered: ref.watch(detailPanelControllerProvider).isOpen,
       ),
     );
   }
+
+  /// [config] defaults to the sidebar's own tabs. The drawer passes the
+  /// bottom config with [allTabs] so the tabs it hides stay one tap away.
+  AppNavEntries _entries(
+    AppSettings settings,
+    AppTab selectedTab, {
+    NavConfig? config,
+    bool allTabs = false,
+  }) {
+    final source = config ?? settings.sidebarNavConfig;
+    final tabs = allTabs
+        ? source.order
+        : source.order
+              .where(source.visible.contains)
+              .where((tab) => !(settings.showMeAtTop && tab == AppTab.profile))
+              .toList(growable: false);
+    return AppNavEntries(
+      tabs: tabs,
+      selectedTab: selectedTab,
+      onSelectTab: widget.onSelectTab,
+      onOpenAnnouncements: () =>
+          openDetail(context, const AnnouncementsDetailLocation()),
+      onOpenDrive: () => openDetail(context, const DriveDetailLocation()),
+      onOpenAdmin: () => openDetail(context, const AdminHomeLocation()),
+      onOpenSettings: () => openDetail(context, const SettingsDetailLocation()),
+    );
+  }
 }
 
-class _SidebarUserPanel extends ConsumerStatefulWidget {
-  const _SidebarUserPanel({
-    required this.extended,
-    required this.onSettings,
-    required this.onDrive,
-    required this.onProfile,
+/// Drag handle between the sidebar and the content column. Deltas accumulate
+/// locally and are written once when the gesture ends, so a drag does not
+/// touch preferences on every frame.
+class SidebarResizeHandle extends StatefulWidget {
+  const SidebarResizeHandle({
+    required this.width,
+    required this.onChanged,
+    required this.onCommit,
+    super.key,
   });
 
-  final bool extended;
-  final VoidCallback onSettings;
-  final VoidCallback onDrive;
-  final VoidCallback onProfile;
+  final double width;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<double> onCommit;
 
   @override
-  ConsumerState<_SidebarUserPanel> createState() => _SidebarUserPanelState();
+  State<SidebarResizeHandle> createState() => _SidebarResizeHandleState();
 }
 
-class _SidebarUserPanelState extends ConsumerState<_SidebarUserPanel> {
-  var _hovering = false;
+class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
+  double? _dragWidth;
 
   @override
   Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeLeftRight,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragStart: (_) => _dragWidth = widget.width,
+        onHorizontalDragUpdate: (details) {
+          final current = _dragWidth;
+          if (current == null) return;
+          final next = (current + details.delta.dx).clamp(
+            appSidebarMinWidth,
+            appSidebarMaxWidth,
+          );
+          _dragWidth = next;
+          widget.onChanged(next);
+        },
+        onHorizontalDragEnd: (_) => _finishDrag(),
+        onHorizontalDragCancel: _finishDrag,
+        child: SizedBox(
+          width: 8,
+          height: double.infinity,
+          child: Center(
+            child: SizedBox(
+              width: 1,
+              height: double.infinity,
+              child: ColoredBox(color: Theme.of(context).dividerColor),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _finishDrag() {
+    final value = _dragWidth;
+    _dragWidth = null;
+    if (value != null) widget.onCommit(value);
+  }
+}
+
+class _BottomBar extends ConsumerWidget {
+  const _BottomBar({
+    required this.config,
+    required this.selectedTab,
+    required this.onSelectTab,
+  });
+
+  final NavConfig config;
+  final AppTab selectedTab;
+  final ValueChanged<AppTab> onSelectTab;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final visible = shellVisibleTabs(config);
     final account = ref.watch(activeAccountProvider);
-    if (account == null) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12, top: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: context.l10n.drive,
-              onPressed: widget.onDrive,
-              icon: const Icon(Icons.cloud_outlined),
-            ),
-            IconButton(
-              tooltip: context.l10n.settings,
-              onPressed: widget.onSettings,
-              icon: const Icon(Icons.settings_outlined),
-            ),
-          ],
+    return NavigationBar(
+      selectedIndex: visible
+          .indexOf(selectedTab)
+          .clamp(0, visible.isEmpty ? 0 : visible.length - 1),
+      onDestinationSelected: (index) => onSelectTab(visible[index]),
+      destinations: [
+        for (final tab in visible)
+          NavigationDestination(
+            icon: tab == AppTab.profile
+                ? NyachiAvatar(
+                    url: account?.avatarUrl,
+                    size: 28,
+                    showStatus: true,
+                    statusRingColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainer,
+                  )
+                : Icon(_icon(tab)),
+            label: tab == AppTab.profile
+                ? context.l10n.me
+                : _label(context, tab),
+          ),
+      ],
+    );
+  }
+}
+
+/// Shell-level compose FAB: shown on the home and profile tabs, and hidden
+/// while the detail panel covers the feed side. Hidden means both invisible
+/// and untappable — a transparent FAB still swallows taps.
+class _ComposeFab extends StatelessWidget {
+  const _ComposeFab({required this.visibleTab, required this.covered});
+
+  final AppTab visibleTab;
+
+  /// The wide-screen detail panel is open over the feed area.
+  final bool covered;
+
+  @override
+  Widget build(BuildContext context) {
+    final onTab = visibleTab == AppTab.home || visibleTab == AppTab.profile;
+    final visible = onTab && !covered;
+    return AnimatedScale(
+      duration: const Duration(milliseconds: 180),
+      curve: visible ? Curves.easeOut : Curves.easeIn,
+      scale: visible ? 1 : 0,
+      child: IgnorePointer(
+        ignoring: !visible,
+        child: FloatingActionButton(
+          onPressed: () =>
+              openDetail(context, const ComposeDetailLocation(null)),
+          child: const Icon(Icons.edit_outlined),
         ),
-      );
-    }
-    final displayName = account.displayName ?? account.username;
-    if (!widget.extended) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8, top: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: context.l10n.profile,
-              onPressed: widget.onProfile,
-              icon: NyachiAvatar(
-                url: account.avatarUrl,
-                size: 36,
-                showStatus: true,
-              ),
-            ),
-            IconButton(
-              tooltip: context.l10n.drive,
-              onPressed: widget.onDrive,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 32),
-              icon: const Icon(Icons.cloud_outlined, size: 20),
-            ),
-            IconButton(
-              tooltip: context.l10n.settings,
-              onPressed: widget.onSettings,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 32),
-              icon: const Icon(Icons.settings_outlined, size: 20),
-            ),
-          ],
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: MouseRegion(
-              onEnter: (_) => setState(() => _hovering = true),
-              onExit: (_) => setState(() => _hovering = false),
-              child: InkWell(
-                onTap: widget.onProfile,
-                child: Row(
-                  children: [
-                    NyachiAvatar(
-                      url: account.avatarUrl,
-                      size: 36,
-                      showStatus: true,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            displayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          AnimatedSwitcher(
-                            layoutBuilder:
-                                (
-                                  Widget? currentChild,
-                                  List<Widget> previousChildren,
-                                ) {
-                                  return Stack(
-                                    alignment: Alignment.centerLeft,
-                                    children: [
-                                      ...previousChildren,
-                                      ?currentChild,
-                                    ],
-                                  );
-                                },
-                            duration: const Duration(milliseconds: 180),
-                            switchInCurve: Curves.easeOut,
-                            switchOutCurve: Curves.easeIn,
-                            transitionBuilder: (child, animation) {
-                              final incoming = child.key == ValueKey(_hovering);
-                              final position = incoming
-                                  ? Tween<Offset>(
-                                      begin: const Offset(0, 1),
-                                      end: Offset.zero,
-                                    ).animate(animation)
-                                  : Tween<Offset>(
-                                      begin: const Offset(0, -1),
-                                      end: Offset.zero,
-                                    ).animate(animation);
-                              return ClipRect(
-                                child: SlideTransition(
-                                  position: position,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Text(
-                              _hovering
-                                  ? '@${account.username}'
-                                  : context.l10n.online,
-                              key: ValueKey(_hovering),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          _PanelIconButton(
-            tooltip: context.l10n.drive,
-            icon: Icons.cloud_outlined,
-            onPressed: widget.onDrive,
-          ),
-          _PanelIconButton(
-            tooltip: context.l10n.settings,
-            icon: Icons.settings_outlined,
-            onPressed: widget.onSettings,
-          ),
-        ],
       ),
     );
   }
 }
 
-class _PanelIconButton extends StatelessWidget {
-  const _PanelIconButton({
-    required this.tooltip,
-    required this.icon,
-    required this.onPressed,
-  });
+/// The bottom bar shares the sidebar's icons and labels so a tab reads the
+/// same in both presentations.
+IconData _icon(AppTab tab) => switch (tab) {
+  AppTab.home => Icons.home_outlined,
+  AppTab.notifications => Icons.notifications_outlined,
+  AppTab.explore => Icons.explore_outlined,
+  AppTab.chat => Icons.chat_bubble_outline,
+  AppTab.profile => Icons.person_outline,
+};
 
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-      icon: Icon(icon, size: 18),
-    );
-  }
-}
-
-class _Destination {
-  const _Destination({required this.icon, required this.label, this.avatarUrl});
-
-  final IconData icon;
-  final String label;
-  final String? avatarUrl;
-}
+String _label(BuildContext context, AppTab tab) => switch (tab) {
+  AppTab.home => context.l10n.home,
+  AppTab.notifications => context.l10n.notifications,
+  AppTab.explore => context.l10n.discover,
+  AppTab.chat => context.l10n.chat,
+  AppTab.profile => context.l10n.profile,
+};

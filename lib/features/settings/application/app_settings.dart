@@ -13,6 +13,10 @@ part 'app_settings.g.dart';
 
 enum AppTab { home, notifications, explore, chat, profile }
 
+/// Tab order and visibility for one chrome surface. Both the narrow bottom
+/// bar and the desktop sidebar store their own [NavConfig]; the difference
+/// lives in the sanitizing rules and the extra sidebar preferences on
+/// [AppSettings], not in the shape.
 @freezed
 abstract class NavConfig with _$NavConfig {
   const factory NavConfig({
@@ -21,17 +25,45 @@ abstract class NavConfig with _$NavConfig {
   }) = _NavConfig;
 }
 
+/// Bottom bar default: explore stays out so the bar holds four destinations.
+NavConfig defaultBottomNavConfig() => const NavConfig(
+  order: AppTab.values,
+  visible: {AppTab.home, AppTab.notifications, AppTab.chat, AppTab.profile},
+);
+
+/// Sidebar default: every tab visible, the account row at the top.
+NavConfig defaultSidebarNavConfig() =>
+    NavConfig(order: AppTab.values, visible: AppTab.values.toSet());
+
+/// Legacy default kept for callers that only need "everything visible".
 NavConfig defaultNavConfig() =>
     NavConfig(order: AppTab.values, visible: AppTab.values.toSet());
 
 NavConfig sanitizeNavConfig(NavConfig config) {
-  final order = <AppTab>[];
-  for (final tab in [...config.order, ...AppTab.values]) {
-    if (!order.contains(tab)) order.add(tab);
-  }
+  final order = _dedupeTabs(config.order);
   final visible = config.visible.intersection(AppTab.values.toSet())
     ..add(AppTab.home);
   return NavConfig(order: order, visible: visible);
+}
+
+/// Bottom bar rules: home always visible and at most four destinations, so
+/// the bar never overflows. Extra visible tabs beyond the cap are dropped in
+/// configured order.
+NavConfig sanitizeBottomNavConfig(NavConfig config) {
+  final sanitized = sanitizeNavConfig(config);
+  final others = sanitized.order
+      .where((tab) => tab != AppTab.home && sanitized.visible.contains(tab))
+      .take(3)
+      .toSet();
+  return NavConfig(order: sanitized.order, visible: {AppTab.home, ...others});
+}
+
+List<AppTab> _dedupeTabs(List<AppTab> order) {
+  final deduped = <AppTab>[];
+  for (final tab in [...order, ...AppTab.values]) {
+    if (!deduped.contains(tab)) deduped.add(tab);
+  }
+  return deduped;
 }
 
 @immutable
@@ -41,8 +73,12 @@ class AppSettings {
     required this.localeCode,
     required this.accentColor,
     required this.navConfig,
+    required this.sidebarNavConfig,
     required this.detailBreakpoint,
     required this.oobeCompleted,
+    this.showMeAtTop = false,
+    this.sidebarWidth = appSidebarDefaultWidth,
+    this.sidebarAutoCollapse = true,
     this.centerContent = true,
     this.defaultVisibility = 'public',
     this.defaultLocalOnly = false,
@@ -59,14 +95,27 @@ class AppSettings {
   final String themeMode;
   final String localeCode;
   final String accentColor;
+
+  /// Bottom-bar tabs on narrow screens.
   final NavConfig navConfig;
+
+  /// Sidebar tabs on wide screens, plus the account-row placement.
+  final NavConfig sidebarNavConfig;
   final int detailBreakpoint;
 
   /// Whether the first-run OOBE wizard has been completed. Until it is, the
   /// router guard pins every route to `/oobe`.
   final bool oobeCompleted;
 
-  /// Centers the readable column on wide screens instead of left-aligning it.
+  /// Desktop sidebar: the account header replaces the "me" tab row when set.
+  final bool showMeAtTop;
+
+  /// Desktop sidebar width in logical pixels (drag-adjusted, 160-400).
+  final double sidebarWidth;
+
+  /// Desktop sidebar collapses/expands automatically with window width until
+  /// the user toggles it manually or turns the automation off.
+  final bool sidebarAutoCollapse;
   final bool centerContent;
 
   /// Starting visibility and local-only flag for a new note. The composer
@@ -87,8 +136,12 @@ class AppSettings {
     String? localeCode,
     String? accentColor,
     NavConfig? navConfig,
+    NavConfig? sidebarNavConfig,
     int? detailBreakpoint,
     bool? oobeCompleted,
+    bool? showMeAtTop,
+    double? sidebarWidth,
+    bool? sidebarAutoCollapse,
     bool? centerContent,
     String? defaultVisibility,
     bool? defaultLocalOnly,
@@ -100,8 +153,12 @@ class AppSettings {
       localeCode: localeCode ?? this.localeCode,
       accentColor: accentColor ?? this.accentColor,
       navConfig: navConfig ?? this.navConfig,
+      sidebarNavConfig: sidebarNavConfig ?? this.sidebarNavConfig,
       detailBreakpoint: detailBreakpoint ?? this.detailBreakpoint,
       oobeCompleted: oobeCompleted ?? this.oobeCompleted,
+      showMeAtTop: showMeAtTop ?? this.showMeAtTop,
+      sidebarWidth: sidebarWidth ?? this.sidebarWidth,
+      sidebarAutoCollapse: sidebarAutoCollapse ?? this.sidebarAutoCollapse,
       centerContent: centerContent ?? this.centerContent,
       defaultVisibility: defaultVisibility ?? this.defaultVisibility,
       defaultLocalOnly: defaultLocalOnly ?? this.defaultLocalOnly,
@@ -118,6 +175,13 @@ class SettingsController extends _$SettingsController {
   static const accentKey = 'settings.accentColor';
   static const orderKey = 'settings.tabOrder';
   static const hiddenKey = 'settings.hiddenTabs';
+  static const bottomOrderKey = 'settings.bottomTabOrder';
+  static const bottomHiddenKey = 'settings.bottomHiddenTabs';
+  static const sidebarOrderKey = 'settings.sidebarTabOrder';
+  static const sidebarHiddenKey = 'settings.sidebarHiddenTabs';
+  static const showMeAtTopKey = 'layout.showMeAtTop';
+  static const sidebarWidthKey = 'layout.sidebarWidth';
+  static const sidebarAutoCollapseKey = 'layout.sidebarAutoCollapse';
   static const detailBreakpointKey = 'layout.detailBreakpoint';
   static const centerContentKey = 'layout.centerContent';
   static const oobeCompletedKey = 'oobe.completed';
@@ -131,28 +195,35 @@ class SettingsController extends _$SettingsController {
   @override
   AppSettings build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    final order = prefs.getStringList(orderKey);
-    final hidden = prefs.getStringList(hiddenKey) ?? const [];
-    final parsedOrder = order
-        ?.map(_parseTab)
-        .whereType<AppTab>()
-        .toList(growable: false);
-    final nav = sanitizeNavConfig(
-      NavConfig(
-        order: parsedOrder == null || parsedOrder.isEmpty
-            ? AppTab.values
-            : parsedOrder,
-        visible: AppTab.values
-            .where((tab) => !hidden.contains(tab.name))
-            .toSet(),
-      ),
+    final bottom = _readNavConfig(
+      prefs,
+      orderKey: bottomOrderKey,
+      hiddenKey: bottomHiddenKey,
+      legacyOrderKey: orderKey,
+      legacyHiddenKey: hiddenKey,
+      fallback: defaultBottomNavConfig(),
+      sanitize: sanitizeBottomNavConfig,
+    );
+    final sidebar = _readNavConfig(
+      prefs,
+      orderKey: sidebarOrderKey,
+      hiddenKey: sidebarHiddenKey,
+      legacyOrderKey: orderKey,
+      legacyHiddenKey: hiddenKey,
+      fallback: defaultSidebarNavConfig(),
+      sanitize: sanitizeNavConfig,
     );
     return AppSettings(
       themeMode: prefs.getString(themeKey) ?? 'system',
       localeCode: prefs.getString(localeKey) ?? 'system',
       accentColor: prefs.getString(accentKey) ?? 'instance',
-      navConfig: nav,
+      navConfig: bottom,
+      sidebarNavConfig: sidebar,
       oobeCompleted: prefs.getBool(oobeCompletedKey) ?? false,
+      showMeAtTop: prefs.getBool(showMeAtTopKey) ?? false,
+      sidebarWidth: (prefs.getDouble(sidebarWidthKey) ?? appSidebarDefaultWidth)
+          .clamp(appSidebarMinWidth, appSidebarMaxWidth),
+      sidebarAutoCollapse: prefs.getBool(sidebarAutoCollapseKey) ?? true,
       detailBreakpoint:
           (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
@@ -163,6 +234,40 @@ class SettingsController extends _$SettingsController {
       mfmMotionMode: _parseMotionMode(prefs.getString(mfmMotionModeKey)),
       mfmMotionClasses: _parseMotionClasses(
         prefs.getStringList(mfmMotionClassesKey),
+      ),
+    );
+  }
+
+  /// Reads one surface's config. Both surfaces seed from the legacy single
+  /// `settings.tabOrder`/`settings.hiddenTabs` pair on first read, so an
+  /// existing install keeps its tab order instead of snapping to defaults;
+  /// the bottom config additionally drops tabs beyond the four-slot cap.
+  NavConfig _readNavConfig(
+    SharedPreferences prefs, {
+    required String orderKey,
+    required String hiddenKey,
+    required String legacyOrderKey,
+    required String legacyHiddenKey,
+    required NavConfig fallback,
+    required NavConfig Function(NavConfig) sanitize,
+  }) {
+    final order =
+        prefs.getStringList(orderKey) ?? prefs.getStringList(legacyOrderKey);
+    final hidden =
+        prefs.getStringList(hiddenKey) ?? prefs.getStringList(legacyHiddenKey);
+    if (order == null && hidden == null) return sanitize(fallback);
+    final parsedOrder = order
+        ?.map(_parseTab)
+        .whereType<AppTab>()
+        .toList(growable: false);
+    return sanitize(
+      NavConfig(
+        order: parsedOrder == null || parsedOrder.isEmpty
+            ? fallback.order
+            : parsedOrder,
+        visible: AppTab.values
+            .where((tab) => !(hidden ?? const []).contains(tab.name))
+            .toSet(),
       ),
     );
   }
@@ -217,8 +322,30 @@ class SettingsController extends _$SettingsController {
   }
 
   Future<void> setNavConfig(NavConfig config) async {
-    final sanitized = sanitizeNavConfig(config);
+    final sanitized = sanitizeBottomNavConfig(config);
     state = state.copyWith(navConfig: sanitized);
+    await _writeNavConfig(
+      sanitized,
+      orderKey: bottomOrderKey,
+      hiddenKey: bottomHiddenKey,
+    );
+  }
+
+  Future<void> setSidebarNavConfig(NavConfig config) async {
+    final sanitized = sanitizeNavConfig(config);
+    state = state.copyWith(sidebarNavConfig: sanitized);
+    await _writeNavConfig(
+      sanitized,
+      orderKey: sidebarOrderKey,
+      hiddenKey: sidebarHiddenKey,
+    );
+  }
+
+  Future<void> _writeNavConfig(
+    NavConfig sanitized, {
+    required String orderKey,
+    required String hiddenKey,
+  }) async {
     await _prefs.setStringList(
       orderKey,
       sanitized.order.map((tab) => tab.name).toList(growable: false),
@@ -230,6 +357,30 @@ class SettingsController extends _$SettingsController {
           .map((tab) => tab.name)
           .toList(growable: false),
     );
+  }
+
+  Future<void> setShowMeAtTop(bool value) async {
+    state = state.copyWith(showMeAtTop: value);
+    await _prefs.setBool(showMeAtTopKey, value);
+  }
+
+  Future<void> setSidebarWidth(double value) async {
+    final clamped = value.clamp(appSidebarMinWidth, appSidebarMaxWidth);
+    state = state.copyWith(sidebarWidth: clamped);
+    await _prefs.setDouble(sidebarWidthKey, clamped);
+  }
+
+  /// Drag-time width update: in-memory only, persisted by [setSidebarWidth]
+  /// when the drag gesture ends.
+  void setSidebarWidthLive(double value) {
+    state = state.copyWith(
+      sidebarWidth: value.clamp(appSidebarMinWidth, appSidebarMaxWidth),
+    );
+  }
+
+  Future<void> setSidebarAutoCollapse(bool value) async {
+    state = state.copyWith(sidebarAutoCollapse: value);
+    await _prefs.setBool(sidebarAutoCollapseKey, value);
   }
 
   AppTab? _parseTab(String value) {
