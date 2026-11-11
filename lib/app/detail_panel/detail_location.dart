@@ -2,6 +2,13 @@
 
 import 'package:flutter/material.dart';
 
+import '../../features/admin/presentation/admin_announcements_page.dart';
+import '../../features/admin/presentation/admin_content_page.dart';
+import '../../features/admin/presentation/admin_instance_page.dart';
+import '../../features/admin/presentation/admin_invites_page.dart';
+import '../../features/admin/presentation/admin_reports_page.dart';
+import '../../features/admin/presentation/admin_system_page.dart';
+import '../../features/admin/presentation/admin_users_page.dart';
 import '../../features/announcements/presentation/announcements_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/chat/domain/chat_models.dart';
@@ -80,6 +87,21 @@ sealed class DetailLocation {
         const SettingsDriveLocation(),
       'settings' when segments.length == 2 && segments[1] == 'push' =>
         const SettingsPushLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'admin-reports' =>
+        const AdminReportsLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'admin-users' =>
+        const AdminUsersLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'admin-content' =>
+        const AdminContentLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'admin-instance' =>
+        const AdminInstanceLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'admin-system' =>
+        const AdminSystemLocation(),
+      'settings'
+          when segments.length == 2 && segments[1] == 'admin-announcements' =>
+        const AdminAnnouncementsLocation(),
+      'settings' when segments.length == 2 && segments[1] == 'admin-invites' =>
+        const AdminInvitesLocation(),
       'announcements' when segments.length == 1 =>
         const AnnouncementsDetailLocation(),
       'add-account' when segments.length == 1 => const AddAccountLocation(),
@@ -346,6 +368,76 @@ class SettingsPushLocation extends DetailLocation {
 
   @override
   Widget build(BuildContext context) => const PushSettingsPage();
+}
+
+class AdminReportsLocation extends DetailLocation {
+  const AdminReportsLocation();
+
+  @override
+  String get location => '/settings/admin-reports';
+
+  @override
+  Widget build(BuildContext context) => const AdminReportsPage();
+}
+
+class AdminUsersLocation extends DetailLocation {
+  const AdminUsersLocation();
+
+  @override
+  String get location => '/settings/admin-users';
+
+  @override
+  Widget build(BuildContext context) => const AdminUsersPage();
+}
+
+class AdminContentLocation extends DetailLocation {
+  const AdminContentLocation();
+
+  @override
+  String get location => '/settings/admin-content';
+
+  @override
+  Widget build(BuildContext context) => const AdminContentPage();
+}
+
+class AdminInstanceLocation extends DetailLocation {
+  const AdminInstanceLocation();
+
+  @override
+  String get location => '/settings/admin-instance';
+
+  @override
+  Widget build(BuildContext context) => const AdminInstancePage();
+}
+
+class AdminSystemLocation extends DetailLocation {
+  const AdminSystemLocation();
+
+  @override
+  String get location => '/settings/admin-system';
+
+  @override
+  Widget build(BuildContext context) => const AdminSystemPage();
+}
+
+class AdminAnnouncementsLocation extends DetailLocation {
+  const AdminAnnouncementsLocation();
+
+  @override
+  String get location => '/settings/admin-announcements';
+
+  @override
+  Widget build(BuildContext context) => const AdminAnnouncementsPage();
+}
+
+class AdminInvitesLocation extends DetailLocation {
+  const AdminInvitesLocation();
+
+  @override
+  String get location => '/settings/admin-invites';
+
+  @override
+  Widget build(BuildContext context) => const AdminInvitesPage();
 }
 
 class AddAccountLocation extends DetailLocation {

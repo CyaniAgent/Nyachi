@@ -3,6 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/presentation/admin_announcements_page.dart';
+import '../../features/admin/presentation/admin_content_page.dart';
+import '../../features/admin/presentation/admin_instance_page.dart';
+import '../../features/admin/presentation/admin_invites_page.dart';
+import '../../features/admin/presentation/admin_reports_page.dart';
+import '../../features/admin/presentation/admin_system_page.dart';
+import '../../features/admin/presentation/admin_users_page.dart';
 import '../../features/announcements/presentation/announcements_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/chat/domain/chat_models.dart';
@@ -486,6 +493,127 @@ class SettingsPushRoute extends GoRouteData with $SettingsPushRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PushSettingsPage();
+}
+
+@TypedGoRoute<SettingsAdminReportsRoute>(path: '/settings/admin-reports')
+class SettingsAdminReportsRoute extends GoRouteData
+    with $SettingsAdminReportsRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsAdminReportsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminReportsPage();
+}
+
+@TypedGoRoute<SettingsAdminUsersRoute>(path: '/settings/admin-users')
+class SettingsAdminUsersRoute extends GoRouteData
+    with $SettingsAdminUsersRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsAdminUsersRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminUsersPage();
+}
+
+@TypedGoRoute<SettingsAdminContentRoute>(path: '/settings/admin-content')
+class SettingsAdminContentRoute extends GoRouteData
+    with $SettingsAdminContentRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsAdminContentRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminContentPage();
+}
+
+@TypedGoRoute<SettingsAdminAnnouncementsRoute>(
+  path: '/settings/admin-announcements',
+)
+class SettingsAdminAnnouncementsRoute extends GoRouteData
+    with $SettingsAdminAnnouncementsRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsAdminAnnouncementsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminAnnouncementsPage();
+}
+
+@TypedGoRoute<SettingsAdminInstanceRoute>(path: '/settings/admin-instance')
+class SettingsAdminInstanceRoute extends GoRouteData
+    with $SettingsAdminInstanceRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsAdminInstanceRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminInstancePage();
+}
+
+@TypedGoRoute<SettingsAdminSystemRoute>(path: '/settings/admin-system')
+class SettingsAdminSystemRoute extends GoRouteData
+    with $SettingsAdminSystemRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsAdminSystemRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminSystemPage();
+}
+
+@TypedGoRoute<SettingsAdminInvitesRoute>(path: '/settings/admin-invites')
+class SettingsAdminInvitesRoute extends GoRouteData
+    with $SettingsAdminInvitesRoute {
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MaterialPage<void>(key: state.pageKey, child: build(context, state));
+
+  static final GlobalKey<NavigatorState> $parentNavigatorKey =
+      appShellNavigatorKey;
+
+  const SettingsAdminInvitesRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminInvitesPage();
 }
 
 @TypedStatefulShellRoute<AppShellRouteData>(

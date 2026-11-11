@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nyachi/features/admin/presentation/admin_announcements_page.dart';
+import 'package:nyachi/features/admin/presentation/admin_content_page.dart';
+import 'package:nyachi/features/admin/presentation/admin_instance_page.dart';
+import 'package:nyachi/features/admin/presentation/admin_invites_page.dart';
+import 'package:nyachi/features/admin/presentation/admin_reports_page.dart';
+import 'package:nyachi/features/admin/presentation/admin_system_page.dart';
+import 'package:nyachi/features/admin/presentation/admin_users_page.dart';
 import 'package:nyachi/app/router/navigator_keys.dart';
 import 'package:nyachi/app/router/routes.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
@@ -44,6 +51,13 @@ void main() {
     '/settings/security': SecuritySettingsPage,
     '/settings/drive-settings': DriveSettingsPage,
     '/settings/push': PushSettingsPage,
+    '/settings/admin-reports': AdminReportsPage,
+    '/settings/admin-users': AdminUsersPage,
+    '/settings/admin-content': AdminContentPage,
+    '/settings/admin-announcements': AdminAnnouncementsPage,
+    '/settings/admin-instance': AdminInstancePage,
+    '/settings/admin-system': AdminSystemPage,
+    '/settings/admin-invites': AdminInvitesPage,
   };
 
   for (final entry in cases.entries) {

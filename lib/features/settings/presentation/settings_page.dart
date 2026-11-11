@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../admin/data/admin_repository.dart';
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/auth/session_controller.dart';
@@ -42,6 +43,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final session = ref.watch(sessionControllerProvider);
+    // Moderator rights are read from the server, so the group appears and
+    // disappears with the account's actual role rather than a stored flag.
+    final canModerate = ref.watch(canModerateProvider).value ?? false;
     final entries = <_SettingsEntry>[
       _SettingsEntry(
         group: _SettingsGroup.app,
@@ -92,6 +96,57 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         subtitle: l10n.cacheManagementSubtitle,
         open: const SettingsCacheLocation(),
       ),
+      if (canModerate) ...[
+        _SettingsEntry(
+          group: _SettingsGroup.admin,
+          icon: Icons.flag_outlined,
+          title: l10n.adminReports,
+          subtitle: l10n.adminReportsSubtitle,
+          open: const AdminReportsLocation(),
+        ),
+        _SettingsEntry(
+          group: _SettingsGroup.admin,
+          icon: Icons.people_outline,
+          title: l10n.adminUsers,
+          subtitle: l10n.adminUsersSubtitle,
+          open: const AdminUsersLocation(),
+        ),
+        _SettingsEntry(
+          group: _SettingsGroup.admin,
+          icon: Icons.folder_outlined,
+          title: l10n.adminContent,
+          subtitle: l10n.adminContentSubtitle,
+          open: const AdminContentLocation(),
+        ),
+        _SettingsEntry(
+          group: _SettingsGroup.admin,
+          icon: Icons.campaign_outlined,
+          title: l10n.adminAnnouncements,
+          subtitle: l10n.adminAnnouncementsSubtitle,
+          open: const AdminAnnouncementsLocation(),
+        ),
+        _SettingsEntry(
+          group: _SettingsGroup.admin,
+          icon: Icons.dns_outlined,
+          title: l10n.adminInstance,
+          subtitle: l10n.adminInstanceSubtitle,
+          open: const AdminInstanceLocation(),
+        ),
+        _SettingsEntry(
+          group: _SettingsGroup.admin,
+          icon: Icons.monitor_heart_outlined,
+          title: l10n.adminSystem,
+          subtitle: l10n.adminSystemSubtitle,
+          open: const AdminSystemLocation(),
+        ),
+        _SettingsEntry(
+          group: _SettingsGroup.admin,
+          icon: Icons.confirmation_number_outlined,
+          title: l10n.adminInvites,
+          subtitle: l10n.adminInvitesSubtitle,
+          open: const AdminInvitesLocation(),
+        ),
+      ],
     ];
     final query = _query.trim().toLowerCase();
     final visible = query.isEmpty
@@ -169,6 +224,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         _SettingsGroup.app => l10n.settingsGroupApp,
                         _SettingsGroup.server => l10n.settingsGroupServer,
                         _SettingsGroup.advanced => l10n.settingsGroupAdvanced,
+                        _SettingsGroup.admin => l10n.settingsGroupAdmin,
                       },
                     ),
                     for (final entry in visible.where(
@@ -192,7 +248,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 }
 
-enum _SettingsGroup { app, server, advanced }
+enum _SettingsGroup { app, server, advanced, admin }
 
 /// One searchable settings row: a page location or a direct callback.
 class _SettingsEntry {
