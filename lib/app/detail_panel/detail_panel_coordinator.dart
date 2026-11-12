@@ -30,15 +30,6 @@ class DetailPanelCoordinator {
   final GoRouter router;
   Uri _baseUri;
 
-  /// Bumped whenever the coordinator changes the stack itself.
-  ///
-  /// The panel host also reacts to pages disappearing from its Navigator,
-  /// which is how a back gesture surfaces; without this counter a programmatic
-  /// pop (closing the panel on a tab switch, say) would look like a user back
-  /// and pop a second time.
-  int _programmaticChange = 0;
-  int get programmaticChange => _programmaticChange;
-
   DetailPanelController get _controller =>
       container.read(detailPanelControllerProvider.notifier);
   DetailPanelState get _state => container.read(detailPanelControllerProvider);
@@ -48,7 +39,6 @@ class DetailPanelCoordinator {
       router.push(location.location);
       return;
     }
-    _programmaticChange++;
     _controller.replaceStack(location);
     _writeCurrent();
   }
@@ -58,19 +48,16 @@ class DetailPanelCoordinator {
       router.push(location.location);
       return;
     }
-    _programmaticChange++;
     _controller.push(location);
     _writeCurrent();
   }
 
   void popFromPanel() {
-    _programmaticChange++;
     _controller.pop();
     _writeCurrent();
   }
 
   void closeFromPanel() {
-    _programmaticChange++;
     _controller.close();
     _writeCurrent();
   }
@@ -78,7 +65,6 @@ class DetailPanelCoordinator {
   void syncFromUri(Uri uri, {required double width, required int breakpoint}) {
     _baseUri = uri;
     if (!isTabRootPath(uri.path)) {
-      _programmaticChange++;
       _controller.close();
       if (uri.queryParameters.containsKey('detail')) {
         final next = _withoutDetail(uri);
@@ -90,7 +76,6 @@ class DetailPanelCoordinator {
 
     final raw = uri.queryParameters['detail'];
     if (raw == null) {
-      _programmaticChange++;
       _controller.close();
       return;
     }
@@ -111,7 +96,6 @@ class DetailPanelCoordinator {
   }
 
   void downgradeToFullPage(DetailLocation location) {
-    _programmaticChange++;
     _controller.close();
     router.go(location.location);
   }

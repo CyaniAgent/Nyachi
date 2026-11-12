@@ -41,16 +41,10 @@ class _DetailPanelHostState extends ConsumerState<DetailPanelHost> {
   var _fallbackPending = false;
   late bool _snapPending;
 
-  /// Coordinator revision whose stack is currently on screen. A page leaving
-  /// the Navigator is only a user back when the coordinator has not changed
-  /// the stack since this was recorded.
-  late int _seenChange;
-
   @override
   void initState() {
     super.initState();
     _snapPending = widget.snapInitialOpen;
-    _seenChange = widget.coordinator.programmaticChange;
   }
 
   ValueKey<String> _pageKey(DetailLocation location, int index) =>
@@ -149,14 +143,12 @@ class _DetailPanelHostState extends ConsumerState<DetailPanelHost> {
 
   void _onDidRemovePage(Page<Object?> page) {
     if (page.key == _rootKey || _popPending) return;
-    // A stack change the coordinator made itself already updated the state;
-    // reacting again here would pop a second page and desync the stack.
-    // Consuming the revision also re-arms user-back handling for the new
-    // stack, which is why it is not refreshed on every build.
-    if (widget.coordinator.programmaticChange != _seenChange) {
-      _seenChange = widget.coordinator.programmaticChange;
-      return;
-    }
+    // Distinguish a user back from a coordinator-driven change by what the
+    // controller still believes is on top: after the coordinator popped or
+    // replaced the stack itself, the removed page no longer matches its top,
+    // so there is nothing to relay. When the removed page IS the controller's
+    // top, the pop came from inside the panel (its AppBar back button, a
+    // nested pop) and the controller must follow.
     final state = ref.read(detailPanelControllerProvider);
     final top = state.top;
     if (top == null) return;

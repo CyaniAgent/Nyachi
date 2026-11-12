@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyachi/app/detail_panel/detail_location.dart';
+import 'package:nyachi/app/detail_panel/detail_panel_controller.dart';
 import 'package:nyachi/app/detail_panel/open_detail.dart';
 import 'package:nyachi/app/detail_panel/detail_panel_coordinator.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
@@ -21,6 +22,115 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// away and back. This mirrors the real router: one ShellRoute hosting
 /// RootShell around a StatefulShellRoute with two branches.
 void main() {
+  testWidgets('panel back button closes the panel without leaving a shell', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final account = LocalAccount(
+      id: 'account',
+      host: 'example.test',
+      userId: 'u1',
+      username: 'alice',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
+
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        ShellRoute(
+          builder: (context, state, child) =>
+              RootShell(uri: state.uri, child: child),
+          routes: [
+            StatefulShellRoute.indexedStack(
+              builder: (context, state, navigationShell) =>
+                  AppShell(navigationShell: navigationShell),
+              branches: [
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(
+                      path: '/home',
+                      builder: (_, _) => const _HomePage(),
+                    ),
+                  ],
+                ),
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(
+                      path: '/chat',
+                      builder: (_, _) => const _ChatPage(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(preferences),
+        appDatabaseProvider.overrideWithValue(database),
+        activeAccountProvider.overrideWithValue(account),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Open the panel from the feed.
+    await tester.tap(find.text('open detail'));
+    await tester.pumpAndSettle();
+    expect(find.text('About'), findsWidgets);
+
+    // Close it the way the panel page's own back button does: the inner
+    // panel Navigator pops. This used to be swallowed as a programmatic
+    // change, leaving an empty shell that only a window resize cleared.
+    final panelNavigator = tester
+        .widgetList<Navigator>(find.byType(Navigator))
+        .firstWhere(
+          (navigator) => navigator.pages.any(
+            (page) => page.key == const ValueKey('detail-panel-root'),
+          ),
+        );
+    final navigatorState = tester.state<NavigatorState>(
+      find.byWidget(panelNavigator),
+    );
+    navigatorState.pop();
+    await tester.pumpAndSettle();
+
+    final state = container.read(detailPanelControllerProvider);
+    expect(state.isOpen, isFalse);
+    expect(
+      router.routeInformationProvider.value.uri.queryParameters.containsKey(
+        'detail',
+      ),
+      isFalse,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('panel survives switching tabs and back', (tester) async {
     tester.view.physicalSize = const Size(1400, 900);
     tester.view.devicePixelRatio = 1;
