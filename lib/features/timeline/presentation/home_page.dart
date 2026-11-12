@@ -285,8 +285,7 @@ class _AnnouncementBanners extends ConsumerWidget {
     final banners = ref.watch(bannerAnnouncementsProvider);
     final theme = Theme.of(context);
     final read = ref.read(readAnnouncementsProvider.notifier);
-    void openAll() =>
-        openDetail(context, const AnnouncementsDetailLocation());
+    void openAll() => openDetail(context, const AnnouncementsDetailLocation());
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

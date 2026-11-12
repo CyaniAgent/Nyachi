@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/storage/storage_models.dart';
@@ -154,64 +155,65 @@ class AppSidebar extends ConsumerWidget {
       color: theme.colorScheme.surfaceContainerLow,
       child: SafeArea(
         right: false,
+        // One tree for both states: only the labels and the header swap, and
+        // both cross-fade with the width so collapsing reads as one motion
+        // instead of a subtree replacement.
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (collapsed)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: IconButton(
-                  tooltip: context.l10n.expand,
-                  onPressed: onToggleCollapse,
-                  icon: const Icon(Icons.menu),
-                ),
-              )
-            else
-              showMeAtTop
-                  ? AccountHeader(onNavigate: entries.onSelectTab)
-                  : const SidebarBrandHeader(),
-            Expanded(
-              child: NavEntryList(entries: entries, collapsed: collapsed),
-            ),
-            if (collapsed)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      tooltip: context.l10n.settings,
-                      onPressed: entries.onOpenSettings,
-                      icon: const Icon(Icons.settings_outlined),
-                    ),
-                    IconButton(
+            // Expanded: the account or brand block; collapsed: the expand
+            // chevron. Both fade over the width change; the outgoing header is
+            // removed immediately instead of lingering in a too-narrow pane,
+            // so it never lays out below its minimum width.
+            AnimatedSwitcher(
+              duration: appSidebarAnimationDuration,
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              layoutBuilder: (current, previous) => current ?? previous.first,
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: collapsed
+                  ? IconButton(
+                      key: const ValueKey('collapsed-header'),
                       tooltip: context.l10n.expand,
                       onPressed: onToggleCollapse,
                       icon: const Icon(Icons.chevron_right),
+                    )
+                  : KeyedSubtree(
+                      key: const ValueKey('expanded-header'),
+                      child: showMeAtTop
+                          ? AccountHeader(onNavigate: entries.onSelectTab)
+                          : const SidebarBrandHeader(),
                     ),
-                  ],
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: NavTile(
-                        icon: Icons.settings_outlined,
-                        label: context.l10n.settings,
-                        onTap: entries.onOpenSettings,
-                      ),
+            ),
+            Expanded(
+              child: NavEntryList(entries: entries, collapsed: collapsed),
+            ),
+            // One footer for both states: the same settings tile and toggle,
+            // with the tile's label collapsing and the chevron flipping. No
+            // subtree swap means no outgoing row has to lay out in a width it
+            // was never sized for.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: NavTile(
+                      icon: Icons.settings_outlined,
+                      label: context.l10n.settings,
+                      collapsed: collapsed,
+                      onTap: entries.onOpenSettings,
                     ),
+                  ),
+                  if (!collapsed)
                     IconButton(
                       tooltip: context.l10n.collapse,
                       onPressed: onToggleCollapse,
                       icon: const Icon(Icons.chevron_left),
                     ),
-                  ],
-                ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -305,30 +307,43 @@ class NavTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: collapsed ? 0 : 12,
-              vertical: 10,
-            ),
-            child: collapsed
-                ? Center(child: Icon(icon, size: 22, color: foreground))
-                : Row(
-                    children: [
-                      Icon(icon, size: 22, color: foreground),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: selected
-                                ? theme.colorScheme.onSecondaryContainer
-                                : theme.colorScheme.onSurface,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: ClipRect(
+              child: Row(
+                children: [
+                  Icon(icon, size: 22, color: foreground),
+                  // Expanded takes whatever is left — zero while collapsed — so
+                  // the row adapts to every intermediate width the collapse
+                  // animation passes through. The label fades and loses its
+                  // inset on the same curve, which reads as one slide.
+                  Expanded(
+                    child: ClipRect(
+                      child: AnimatedOpacity(
+                        duration: appSidebarAnimationDuration,
+                        curve: appSidebarAnimationCurve,
+                        opacity: collapsed ? 0 : 1,
+                        child: AnimatedPadding(
+                          duration: appSidebarAnimationDuration,
+                          curve: appSidebarAnimationCurve,
+                          padding: EdgeInsets.only(left: collapsed ? 0 : 12),
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.clip,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: selected
+                                  ? theme.colorScheme.onSecondaryContainer
+                                  : theme.colorScheme.onSurface,
+                            ),
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

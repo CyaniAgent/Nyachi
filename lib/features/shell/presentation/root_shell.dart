@@ -240,6 +240,10 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
   /// window width while auto-collapse is on; a manual toggle wins afterwards.
   bool? _collapsedOverride;
 
+  /// True while the sidebar edge is being dragged; disables the width tween so
+  /// the pane tracks the pointer exactly instead of lagging behind it.
+  var _draggingWidth = false;
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
@@ -277,11 +281,22 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
     final autoCollapse =
         settings.sidebarAutoCollapse && width < appSidebarAutoBreakpoint;
     final collapsed = _collapsedOverride ?? autoCollapse;
+    final targetWidth = collapsed
+        ? appSidebarCollapsedWidth
+        : settings.sidebarWidth;
     return Scaffold(
       body: Row(
         children: [
-          SizedBox(
-            width: collapsed ? appSidebarCollapsedWidth : settings.sidebarWidth,
+          // Animated so the collapse toggle and the auto switch at the
+          // breakpoint read as one motion. During a width drag the target
+          // changes every frame, and an animation there would lag the cursor,
+          // so the tween is skipped while dragging.
+          AnimatedContainer(
+            duration: _draggingWidth
+                ? Duration.zero
+                : appSidebarAnimationDuration,
+            curve: appSidebarAnimationCurve,
+            width: targetWidth,
             child: AppSidebar(
               entries: _entries(settings, widget.selectedTab),
               collapsed: collapsed,
@@ -292,6 +307,8 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
           if (!collapsed)
             SidebarResizeHandle(
               width: settings.sidebarWidth,
+              onDragStateChanged: (dragging) =>
+                  setState(() => _draggingWidth = dragging),
               onChanged: (value) => ref
                   .read(settingsControllerProvider.notifier)
                   .setSidebarWidthLive(value),
@@ -345,12 +362,16 @@ class SidebarResizeHandle extends StatefulWidget {
     required this.width,
     required this.onChanged,
     required this.onCommit,
+    required this.onDragStateChanged,
     super.key,
   });
 
   final double width;
   final ValueChanged<double> onChanged;
   final ValueChanged<double> onCommit;
+
+  /// Lets the shell disable its width tween for the duration of the drag.
+  final ValueChanged<bool> onDragStateChanged;
 
   @override
   State<SidebarResizeHandle> createState() => _SidebarResizeHandleState();
@@ -365,7 +386,10 @@ class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
       cursor: SystemMouseCursors.resizeLeftRight,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onHorizontalDragStart: (_) => _dragWidth = widget.width,
+        onHorizontalDragStart: (_) {
+          _dragWidth = widget.width;
+          widget.onDragStateChanged(true);
+        },
         onHorizontalDragUpdate: (details) {
           final current = _dragWidth;
           if (current == null) return;
@@ -396,6 +420,7 @@ class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
   void _finishDrag() {
     final value = _dragWidth;
     _dragWidth = null;
+    widget.onDragStateChanged(false);
     if (value != null) widget.onCommit(value);
   }
 }

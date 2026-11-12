@@ -184,6 +184,62 @@ void main() {
     expect(find.byIcon(Icons.cloud_outlined), findsOneWidget);
   });
 
+  testWidgets('collapsing the sidebar animates instead of jumping', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ShellChrome(
+            selectedTab: AppTab.home,
+            onSelectTab: (_) {},
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Size sidebarSize() => tester.getSize(find.byType(AppSidebar));
+
+    final expandedWidth = sidebarSize().width;
+    expect(expandedWidth, greaterThan(200));
+
+    await tester.tap(find.byTooltip('Collapse'));
+    await tester.pump();
+    // Mid-flight the pane is narrower than expanded but wider than collapsed:
+    // that is the animation, not a subtree swap.
+    await tester.pump(const Duration(milliseconds: 80));
+    final midWidth = sidebarSize().width;
+    expect(midWidth, lessThan(expandedWidth));
+    expect(midWidth, greaterThan(80));
+
+    await tester.pumpAndSettle();
+    expect(sidebarSize().width, 80);
+    // Every destination remains; labels are faded out, not removed, so the
+    // tree keeps its state across the transition.
+    expect(find.byIcon(Icons.home_outlined), findsOneWidget);
+    final label = tester.widget<AnimatedOpacity>(
+      find
+          .ancestor(
+            of: find.text('Home'),
+            matching: find.byType(AnimatedOpacity),
+          )
+          .first,
+    );
+    expect(label.opacity, 0);
+  });
+
   testWidgets('drawer hamburger opens the shell drawer', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();

@@ -10,6 +10,7 @@ import '../../../core/ui/content_width.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
 import '../../../core/ui/time_format.dart';
+import '../../shell/presentation/app_sidebar.dart';
 import '../application/explore_controllers.dart';
 
 /// Discovery: what is happening on this instance — trending hashtags and
@@ -21,7 +22,10 @@ class ExplorePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.discover)),
+      appBar: AppBar(
+        title: Text(l10n.discover),
+        leading: const AppDrawerButton(),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: appMaxContentWidth),

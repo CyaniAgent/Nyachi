@@ -12,6 +12,11 @@ const double appSidebarCollapsedWidth = 80;
 /// Window width at or above which the desktop sidebar auto-expands (and below
 /// which it auto-collapses) while `sidebarAutoCollapse` is enabled.
 const double appSidebarAutoBreakpoint = 1000;
+
+/// Sidebar collapse/expand motion. Long enough to read as a slide, short
+/// enough not to delay the navigation the user just asked for.
+const Duration appSidebarAnimationDuration = Duration(milliseconds: 220);
+const Curve appSidebarAnimationCurve = Curves.easeOutCubic;
 const double appDetailPanelDefaultWidth = 480;
 const double appDetailPanelMinWidth = 360;
 const double appDetailPanelMaxWidth = 900;
