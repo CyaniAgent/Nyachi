@@ -3,22 +3,42 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/network/instance_repository.dart';
 import '../core/ui/app_scroll_behavior.dart';
 import '../core/ui/breakpoints.dart';
 import '../core/ui/l10n_ext.dart';
 import '../features/settings/application/app_settings.dart';
+import 'back_button_throttle.dart';
 import 'bootstrap.dart';
 import '../core/l10n/app_localizations.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
-class NyachiApp extends ConsumerWidget {
+class NyachiApp extends ConsumerStatefulWidget {
   const NyachiApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NyachiApp> createState() => _NyachiAppState();
+}
+
+class _NyachiAppState extends ConsumerState<NyachiApp> {
+  // The throttle rides inside the router config (MaterialApp.router rejects
+  // a dispatcher next to a config), and the instance must survive rebuilds:
+  // it carries the back-event throttle window.
+  ThrottledRouterConfig<Object>? _routerConfig;
+
+  RouterConfig<Object> _routerConfigOf(GoRouter router) {
+    final existing = _routerConfig;
+    if (existing != null) return existing;
+    return _routerConfig = ThrottledRouterConfig<Object>(
+      inner: router as RouterConfig<Object>,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
     final settings = ref.watch(settingsControllerProvider);
     final instance = ref.watch(instanceInfoProvider).value;
@@ -90,7 +110,7 @@ class NyachiApp extends ConsumerWidget {
           locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: ref.watch(appRouterProvider),
+          routerConfig: _routerConfigOf(ref.watch(appRouterProvider)),
         );
       },
     );

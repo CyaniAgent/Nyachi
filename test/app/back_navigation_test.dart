@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nyachi/app/back_button_throttle.dart';
 import 'package:nyachi/app/detail_panel/detail_location.dart';
 import 'package:nyachi/app/detail_panel/detail_panel_controller.dart';
 import 'package:nyachi/app/detail_panel/detail_panel_coordinator.dart';
@@ -29,7 +30,14 @@ typedef Shell = ({ProviderContainer container, GoRouter router});
 
 /// Builds the real shell — `RootShell` for the panel wiring and `AppShell` for
 /// the branch navigator — around a two-tab route table.
-Future<Shell> pumpShell(WidgetTester tester) async {
+///
+/// [wrapRouterConfig] replaces the plain `routerConfig` with a wrapper; the
+/// double-back test installs the app's throttled config through it, because
+/// `MaterialApp.router` refuses a dispatcher next to a config.
+Future<Shell> pumpShell(
+  WidgetTester tester, {
+  RouterConfig<Object> Function(GoRouter router)? wrapRouterConfig,
+}) async {
   tester.view.physicalSize = const Size(1300, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -110,7 +118,8 @@ Future<Shell> pumpShell(WidgetTester tester) async {
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: router,
+        routerConfig:
+            wrapRouterConfig?.call(router) ?? router as RouterConfig<Object>,
       ),
     ),
   );
@@ -160,6 +169,30 @@ void main() {
 
     // The search page is gone and the app is still on its tab; before the
     // PopScope guard this back exited the app instead of popping the page.
+    expect(find.text('search page'), findsNothing);
+    expect(find.text('open note'), findsOneWidget);
+  });
+
+  testWidgets('a rapid double-back pops one route, not two', (tester) async {
+    final shell = await pumpShell(
+      tester,
+      // The app installs this config; the test reproduces the burst it
+      // guards against.
+      wrapRouterConfig: (router) =>
+          ThrottledRouterConfig<Object>(inner: router),
+    );
+    final router = shell.router;
+
+    unawaited(router.push('/search'));
+    await tester.pumpAndSettle();
+    expect(find.text('search page'), findsOneWidget);
+
+    // Two back events in one burst: the second arrives while the first pop
+    // is still settling, and used to pop the emptied root — exiting the app.
+    await pressSystemBack(tester);
+    await pressSystemBack(tester);
+
+    // One pop: back on the tab, app alive.
     expect(find.text('search page'), findsNothing);
     expect(find.text('open note'), findsOneWidget);
   });
