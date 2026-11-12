@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -91,6 +93,12 @@ Future<Shell> pumpShell(WidgetTester tester) async {
           ),
         ],
       ),
+      // A page pushed above the shell, like /search. Back from it must land
+      // back on the tab, not exit the app.
+      GoRoute(
+        path: '/search',
+        builder: (_, _) => const Scaffold(body: Text('search page')),
+      ),
     ],
   );
   addTearDown(router.dispose);
@@ -138,6 +146,24 @@ Future<void> pressSystemBack(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('back from a page pushed above the shell returns to the tab', (
+    tester,
+  ) async {
+    final shell = await pumpShell(tester);
+    final router = shell.router;
+
+    unawaited(router.push('/search'));
+    await tester.pumpAndSettle();
+    expect(find.text('search page'), findsOneWidget);
+
+    await pressSystemBack(tester);
+
+    // The search page is gone and the app is still on its tab; before the
+    // PopScope guard this back exited the app instead of popping the page.
+    expect(find.text('search page'), findsNothing);
+    expect(find.text('open note'), findsOneWidget);
+  });
+
   testWidgets('back closes the detail panel before anything else', (
     tester,
   ) async {

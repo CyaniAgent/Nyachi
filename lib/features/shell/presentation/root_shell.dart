@@ -258,12 +258,12 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= kCompactBreakpoint;
     final child = widget.child;
-    // While the detail panel is open the content column is squeezed: the
-    // panel owns 360 to 900 of the window width, so at every width the
-    // collapsed sidebar is the only one that keeps the feed its minimum.
-    // The sidebar exists only in the wide branch, which is the only branch
-    // that reconciles the panel state; narrow collapses for it.
-    if (wide) {
+    // While the detail panel is open the content column is squeezed. By
+    // default the sidebar keeps its state and the panel takes the room from
+    // the feed; when the user turned the panel-collapse option on, the pane
+    // folds for the panel and restores on close. Either way the feed keeps
+    // its minimum: when the window is too narrow for both, the panel wins.
+    if (wide && settings.sidebarCollapseForPanel) {
       final panelOpen = ref.watch(detailPanelControllerProvider).isOpen;
       if (panelOpen != _panelWasOpen) {
         _panelWasOpen = panelOpen;

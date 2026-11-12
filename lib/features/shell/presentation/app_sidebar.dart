@@ -57,9 +57,15 @@ class AppDrawerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Square constraints: a bare IconButton in the leading slot can be
+    // stretched wider than tall by the toolbar, and the circular M3
+    // highlight renders as an ellipse.
     return IconButton(
       tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
       onPressed: () => AppDrawerScope.open(context),
+      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.standard,
       icon: const Icon(Icons.menu),
     );
   }
@@ -358,23 +364,32 @@ class _ExpandedSidebar extends StatelessWidget {
             ),
           ),
         ),
-        // The pinned footer: settings row, account panel and the collapse
+        // The pinned footer: the account row, settings and the collapse
         // toggle stay visible without scrolling.
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: NavRow(
-                  icon: Icons.settings_outlined,
-                  label: context.l10n.settings,
-                  onTap: entries.onOpenSettings,
-                ),
+              SidebarUserPanel(
+                collapsed: false,
+                onOpenProfile: entries.onOpenProfile,
               ),
-              IconButton(
-                tooltip: context.l10n.collapse,
-                onPressed: onToggleCollapse,
-                icon: const Icon(Icons.chevron_left),
+              Row(
+                children: [
+                  Expanded(
+                    child: NavRow(
+                      icon: Icons.settings_outlined,
+                      label: context.l10n.settings,
+                      onTap: entries.onOpenSettings,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: context.l10n.collapse,
+                    onPressed: onToggleCollapse,
+                    icon: const Icon(Icons.chevron_left),
+                  ),
+                ],
               ),
             ],
           ),
@@ -493,8 +508,8 @@ class _RailIconTile extends StatelessWidget {
   }
 }
 
-/// Account row pinned to the collapsed rail's trailing slot: the avatar
-/// alone. Tapping it opens the profile.
+/// Account row pinned to the sidebar's footer: avatar + name when expanded,
+/// the avatar alone in the collapsed rail. Tapping it opens the profile.
 class SidebarUserPanel extends ConsumerWidget {
   const SidebarUserPanel({
     required this.collapsed,
@@ -531,7 +546,7 @@ class SidebarUserPanel extends ConsumerWidget {
                   context.l10n.noAccounts,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall,
+              style: theme.textTheme.bodyMedium,
             ),
           ),
       ],

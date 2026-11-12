@@ -79,6 +79,7 @@ class AppSettings {
     this.showMeAtTop = false,
     this.sidebarWidth = appSidebarDefaultWidth,
     this.sidebarAutoCollapse = true,
+    this.sidebarCollapseForPanel = false,
     this.centerContent = true,
     this.defaultVisibility = 'public',
     this.defaultLocalOnly = false,
@@ -116,6 +117,11 @@ class AppSettings {
   /// Desktop sidebar collapses/expands automatically with window width until
   /// the user toggles it manually or turns the automation off.
   final bool sidebarAutoCollapse;
+
+  /// Whether opening the wide-screen detail panel collapses the sidebar.
+  /// Off by default: the panel just squeezes the feed. When the window is
+  /// too narrow for both, the panel still wins (feed minimum width).
+  final bool sidebarCollapseForPanel;
   final bool centerContent;
 
   /// Starting visibility and local-only flag for a new note. The composer
@@ -142,6 +148,7 @@ class AppSettings {
     bool? showMeAtTop,
     double? sidebarWidth,
     bool? sidebarAutoCollapse,
+    bool? sidebarCollapseForPanel,
     bool? centerContent,
     String? defaultVisibility,
     bool? defaultLocalOnly,
@@ -159,6 +166,8 @@ class AppSettings {
       showMeAtTop: showMeAtTop ?? this.showMeAtTop,
       sidebarWidth: sidebarWidth ?? this.sidebarWidth,
       sidebarAutoCollapse: sidebarAutoCollapse ?? this.sidebarAutoCollapse,
+      sidebarCollapseForPanel:
+          sidebarCollapseForPanel ?? this.sidebarCollapseForPanel,
       centerContent: centerContent ?? this.centerContent,
       defaultVisibility: defaultVisibility ?? this.defaultVisibility,
       defaultLocalOnly: defaultLocalOnly ?? this.defaultLocalOnly,
@@ -182,6 +191,7 @@ class SettingsController extends _$SettingsController {
   static const showMeAtTopKey = 'layout.showMeAtTop';
   static const sidebarWidthKey = 'layout.sidebarWidth';
   static const sidebarAutoCollapseKey = 'layout.sidebarAutoCollapse';
+  static const sidebarCollapseForPanelKey = 'layout.sidebarCollapseForPanel';
   static const detailBreakpointKey = 'layout.detailBreakpoint';
   static const centerContentKey = 'layout.centerContent';
   static const oobeCompletedKey = 'oobe.completed';
@@ -224,6 +234,8 @@ class SettingsController extends _$SettingsController {
       sidebarWidth: (prefs.getDouble(sidebarWidthKey) ?? appSidebarDefaultWidth)
           .clamp(appSidebarMinWidth, appSidebarMaxWidth),
       sidebarAutoCollapse: prefs.getBool(sidebarAutoCollapseKey) ?? true,
+      sidebarCollapseForPanel:
+          prefs.getBool(sidebarCollapseForPanelKey) ?? false,
       detailBreakpoint:
           (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
@@ -381,6 +393,11 @@ class SettingsController extends _$SettingsController {
   Future<void> setSidebarAutoCollapse(bool value) async {
     state = state.copyWith(sidebarAutoCollapse: value);
     await _prefs.setBool(sidebarAutoCollapseKey, value);
+  }
+
+  Future<void> setSidebarCollapseForPanel(bool value) async {
+    state = state.copyWith(sidebarCollapseForPanel: value);
+    await _prefs.setBool(sidebarCollapseForPanelKey, value);
   }
 
   AppTab? _parseTab(String value) {

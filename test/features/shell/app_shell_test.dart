@@ -277,7 +277,11 @@ void main() {
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({});
+    // The panel-collapse behavior is opt-in; the default keeps the pane
+    // as it is and lets the panel take the room from the feed.
+    SharedPreferences.setMockInitialValues({
+      'layout.sidebarCollapseForPanel': true,
+    });
     final preferences = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
@@ -314,6 +318,47 @@ void main() {
     container.read(detailPanelControllerProvider.notifier).close();
     await tester.pumpAndSettle();
     // Closing restores the pre-panel state.
+    expect(sidebarSize().width, greaterThan(80));
+  });
+
+  testWidgets('the detail panel keeps the sidebar expanded by default', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ShellChrome(
+            selectedTab: AppTab.home,
+            onSelectTab: (_) {},
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Size sidebarSize() => tester.getSize(find.byType(AppSidebar));
+    expect(sidebarSize().width, greaterThan(80));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ShellChrome)),
+    );
+    container
+        .read(detailPanelControllerProvider.notifier)
+        .replaceStack(NoteDetailLocation('n1'));
+    await tester.pumpAndSettle();
+    // Opt-in is off: the pane keeps its width and the panel squeezes the
+    // feed instead.
     expect(sidebarSize().width, greaterThan(80));
   });
 

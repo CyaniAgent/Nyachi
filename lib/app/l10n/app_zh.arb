@@ -586,6 +586,8 @@
   "sidebarWidth": "侧边栏宽度",
   "sidebarAutoCollapse": "随窗口宽度折叠",
   "sidebarAutoCollapseHint": "低于 1000 px 折叠，高于则展开",
+  "sidebarCollapseForPanel": "打开详情面板时折叠侧栏",
+  "sidebarCollapseForPanelHint": "面板打开期间收起侧栏，关闭后恢复",
   "maxTabsReached": "底栏最多容纳四个标签",
   "viewAllAnnouncements": "查看全部",
   "discover": "发现",

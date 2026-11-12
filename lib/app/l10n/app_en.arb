@@ -602,6 +602,8 @@
   "sidebarWidth": "Sidebar width",
   "sidebarAutoCollapse": "Collapse with window width",
   "sidebarAutoCollapseHint": "Collapses below 1000 px, expands above",
+  "sidebarCollapseForPanel": "Collapse sidebar for detail panel",
+  "sidebarCollapseForPanelHint": "Fold the sidebar while a panel is open, restore it on close",
   "maxTabsReached": "Up to four tabs fit in the bottom bar",
   "viewAllAnnouncements": "View all",
   "discover": "Discover",
