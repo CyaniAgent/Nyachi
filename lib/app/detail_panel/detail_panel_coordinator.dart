@@ -157,8 +157,8 @@ class DetailPanelCoordinator {
 
 /// Publishes the coordinator owned by the live shell.
 ///
-/// Back handling runs with the root navigator's context, which sits above the
-/// shell and therefore cannot reach [DetailPanelScope]; going through a
+/// Back handling runs with the root navigator's context, which sits above
+/// the shell and therefore cannot reach [DetailPanelScope]; going through a
 /// provider keeps the single coordinator reachable from there.
 final detailPanelCoordinatorProvider =
     Provider<ValueNotifier<DetailPanelCoordinator?>>((ref) {

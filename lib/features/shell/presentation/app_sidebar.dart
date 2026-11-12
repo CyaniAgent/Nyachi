@@ -72,6 +72,7 @@ class AppNavEntries {
     required this.tabs,
     required this.selectedTab,
     required this.onSelectTab,
+    required this.onOpenProfile,
     required this.onOpenAnnouncements,
     required this.onOpenDrive,
     required this.onOpenAdmin,
@@ -81,6 +82,7 @@ class AppNavEntries {
   final List<AppTab> tabs;
   final AppTab selectedTab;
   final ValueChanged<AppTab> onSelectTab;
+  final VoidCallback onOpenProfile;
   final VoidCallback onOpenAnnouncements;
   final VoidCallback onOpenDrive;
   final VoidCallback onOpenAdmin;
@@ -122,11 +124,13 @@ class AppDrawer extends ConsumerWidget {
       tabs: entries.tabs,
       selectedTab: entries.selectedTab,
       onSelectTab: (tab) => closeThen(() => entries.onSelectTab(tab)),
+      onOpenProfile: () => closeThen(entries.onOpenProfile),
       onOpenAnnouncements: () => closeThen(entries.onOpenAnnouncements),
       onOpenDrive: () => closeThen(entries.onOpenDrive),
       onOpenAdmin: () => closeThen(entries.onOpenAdmin),
       onOpenSettings: () => closeThen(entries.onOpenSettings),
     );
+
     return Drawer(
       child: SafeArea(
         child: ListView(
@@ -136,7 +140,7 @@ class AppDrawer extends ConsumerWidget {
               onNavigate: (tab) => closeThen(() => entries.onSelectTab(tab)),
             ),
             const Divider(height: 16),
-            NavEntryList(entries: nav),
+            DrawerNavList(entries: nav),
           ],
         ),
       ),
@@ -144,8 +148,101 @@ class AppDrawer extends ConsumerWidget {
   }
 }
 
-/// Desktop sidebar. Collapsed it keeps the same entries as compact icons, so
-/// every destination stays reachable in both states.
+/// The drawer's navigation list: the same destinations as the desktop rail,
+/// rendered as full-width rows for touch.
+class DrawerNavList extends StatelessWidget {
+  const DrawerNavList({required this.entries, super.key});
+
+  final AppNavEntries entries;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final tab in entries.tabs)
+          _DrawerRow(
+            icon: entries.icon(tab),
+            label: entries.label(context, tab),
+            selected: tab == entries.selectedTab,
+            onTap: () => entries.onSelectTab(tab),
+          ),
+        _DrawerRow(
+          icon: Icons.campaign_outlined,
+          label: context.l10n.announcements,
+          onTap: entries.onOpenAnnouncements,
+        ),
+        _DrawerRow(
+          icon: Icons.cloud_outlined,
+          label: context.l10n.drive,
+          onTap: entries.onOpenDrive,
+        ),
+        _DrawerRow(
+          icon: Icons.settings_outlined,
+          label: context.l10n.settings,
+          onTap: entries.onOpenSettings,
+        ),
+      ],
+    );
+  }
+}
+
+class _DrawerRow extends StatelessWidget {
+  const _DrawerRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.selected = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fg = selected
+        ? theme.colorScheme.onSecondaryContainer
+        : theme.colorScheme.onSurfaceVariant;
+    return Material(
+      color: selected
+          ? theme.colorScheme.secondaryContainer
+          : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(icon, size: 22, color: fg),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: selected
+                        ? theme.colorScheme.onSecondaryContainer
+                        : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Desktop sidebar, both states built on [NavigationRail].
+///
+/// The rail supplies the selection indicator, the group dividers and the
+/// expand/collapse toggle for free; everything custom is pinned above it
+/// (the account or brand header) and below it (the settings row).
 class AppSidebar extends ConsumerWidget {
   const AppSidebar({
     required this.entries,
@@ -164,19 +261,19 @@ class AppSidebar extends ConsumerWidget {
     final showMeAtTop = ref.watch(
       settingsControllerProvider.select((s) => s.showMeAtTop),
     );
+    final canModerate = ref.watch(canModerateProvider).value ?? false;
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
       child: SafeArea(
         right: false,
-        // One tree for both states: only the labels and the header swap, and
-        // both cross-fade with the width so collapsing reads as one motion
-        // instead of a subtree replacement.
+        // One rail for both states. The labels collapse in place instead of
+        // the pane swapping subtrees, so collapsing reads as one motion.
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Expanded: the account or brand block; collapsed: the app icon.
-            // The expand/collapse toggle lives once, in the footer, so the
-            // collapse state is not announced by two identical controls.
+            // The account or brand block, cross-fading over the width change.
+            // When the account shows at the top it is the identity; otherwise
+            // the app's own brand does that job.
             AnimatedSwitcher(
               duration: appSidebarAnimationDuration,
               switchInCurve: Curves.easeOut,
@@ -194,50 +291,71 @@ class AppSidebar extends ConsumerWidget {
                     ),
             ),
             Expanded(
-              child: NavEntryList(entries: entries, collapsed: collapsed),
-            ),
-            // One footer for both states, with the one collapse toggle the
-            // sidebar has: its label states what the tap will do, so it is
-            // never announced twice nor described by the wrong verb.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-              child: collapsed
-                  // Collapsed, the settings row and the toggle stack: there is
-                  // no room for them side by side, and squeezing the tile into
-                  // a sliver is what made its icon sit off-center.
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        NavTile(
-                          icon: Icons.settings_outlined,
-                          label: context.l10n.settings,
-                          tooltip: context.l10n.settings,
-                          collapsed: true,
-                          onTap: entries.onOpenSettings,
-                        ),
-                        IconButton(
-                          tooltip: context.l10n.expand,
-                          onPressed: onToggleCollapse,
-                          icon: const Icon(Icons.chevron_right),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: NavTile(
-                            icon: Icons.settings_outlined,
-                            label: context.l10n.settings,
-                            onTap: entries.onOpenSettings,
+              child: NavigationRail(
+                selectedIndex: _selectedIndex(entries),
+                labelType: collapsed
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.all,
+                leading: const SidebarRailBrand(),
+                trailing: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // The feature rows scroll with the rest of the pane when
+                    // the window is short; the user panel and the toggle stay
+                    // pinned below.
+                    SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _FeatureRow(
+                            icon: Icons.campaign_outlined,
+                            label: context.l10n.announcements,
+                            collapsed: collapsed,
+                            onTap: entries.onOpenAnnouncements,
                           ),
-                        ),
-                        IconButton(
-                          tooltip: context.l10n.collapse,
-                          onPressed: onToggleCollapse,
-                          icon: const Icon(Icons.chevron_left),
-                        ),
-                      ],
+                          _FeatureRow(
+                            icon: Icons.cloud_outlined,
+                            label: context.l10n.drive,
+                            collapsed: collapsed,
+                            onTap: entries.onOpenDrive,
+                          ),
+                          if (canModerate)
+                            _FeatureRow(
+                              icon: Icons.shield_outlined,
+                              label: context.l10n.adminHome,
+                              collapsed: collapsed,
+                              onTap: entries.onOpenAdmin,
+                            ),
+                        ],
+                      ),
                     ),
+                    SidebarUserPanel(
+                      collapsed: collapsed,
+                      onOpenProfile: entries.onOpenProfile,
+                    ),
+                    IconButton(
+                      tooltip: collapsed
+                          ? context.l10n.expand
+                          : context.l10n.collapse,
+                      onPressed: onToggleCollapse,
+                      icon: Icon(
+                        collapsed ? Icons.chevron_right : Icons.chevron_left,
+                      ),
+                    ),
+                  ],
+                ),
+                onDestinationSelected: (index) =>
+                    entries.onSelectTab(entries.tabs[index]),
+                destinations: [
+                  for (final tab in entries.tabs)
+                    NavigationRailDestination(
+                      icon: Icon(entries.icon(tab), size: 22),
+                      selectedIcon: Icon(entries.icon(tab), size: 22),
+                      label: Text(entries.label(context, tab)),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
@@ -246,160 +364,61 @@ class AppSidebar extends ConsumerWidget {
   }
 }
 
-/// Tabs, then the feature entries. The admin row is gated here, once, by the
-/// server-reported moderator role.
-class NavEntryList extends ConsumerWidget {
-  const NavEntryList({
-    required this.entries,
-    this.collapsed = false,
+/// Compact account row pinned to the bottom of the sidebar in both states:
+/// avatar + name (expanded) or the avatar alone (collapsed). Tapping the
+/// avatar opens the profile; settings stay reachable from the rail itself.
+class SidebarUserPanel extends ConsumerWidget {
+  const SidebarUserPanel({
+    required this.collapsed,
+    required this.onOpenProfile,
     super.key,
   });
 
-  final AppNavEntries entries;
   final bool collapsed;
+  final VoidCallback onOpenProfile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final canModerate = ref.watch(canModerateProvider).value ?? false;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final tab in entries.tabs)
-            NavTile(
-              icon: entries.icon(tab),
-              label: entries.label(context, tab),
-              // Collapsed, the label is not rendered, so the tile needs an
-              // explicit name for tooltips and assistive tech.
-              tooltip: entries.label(context, tab),
-              selected: tab == entries.selectedTab,
-              collapsed: collapsed,
-              onTap: () => entries.onSelectTab(tab),
-            ),
-          const Divider(height: 16),
-          NavTile(
-            icon: Icons.campaign_outlined,
-            label: context.l10n.announcements,
-            tooltip: context.l10n.announcements,
-            collapsed: collapsed,
-            onTap: entries.onOpenAnnouncements,
-          ),
-          NavTile(
-            icon: Icons.cloud_outlined,
-            label: context.l10n.drive,
-            tooltip: context.l10n.drive,
-            collapsed: collapsed,
-            onTap: entries.onOpenDrive,
-          ),
-          if (canModerate)
-            NavTile(
-              icon: Icons.shield_outlined,
-              label: context.l10n.adminHome,
-              tooltip: context.l10n.adminHome,
-              collapsed: collapsed,
-              onTap: entries.onOpenAdmin,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class NavTile extends StatelessWidget {
-  const NavTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.tooltip,
-    this.selected = false,
-    this.collapsed = false,
-    super.key,
-  });
-
-  final IconData icon;
-  final String label;
-
-  /// Accessible name when [label] is not rendered (collapsed sidebar).
-  final String? tooltip;
-  final VoidCallback onTap;
-  final bool selected;
-  final bool collapsed;
-
-  @override
-  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground = selected
-        ? theme.colorScheme.onSecondaryContainer
-        : theme.colorScheme.onSurfaceVariant;
-    final tile = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Material(
-        color: selected
-            ? theme.colorScheme.secondaryContainer
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
+    final account = ref.watch(activeAccountProvider);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: account == null ? null : onOpenProfile,
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: collapsed ? 0 : 12,
-              vertical: 10,
-            ),
-            child: ClipRect(
-              child: Row(
-                // Collapsed, the row holds only the icon and has to center it;
-                // a leading-aligned icon in a full-width row reads as
-                // misaligned next to the centered header and footer buttons.
-                mainAxisAlignment: collapsed
-                    ? MainAxisAlignment.center
-                    : MainAxisAlignment.start,
-                children: [
-                  Icon(icon, size: 22, color: foreground),
-                  // Expanded takes whatever is left — zero while collapsed — so
-                  // the row adapts to every intermediate width the collapse
-                  // animation passes through. The label fades and loses its
-                  // inset on the same curve, which reads as one slide.
-                  Expanded(
-                    child: ClipRect(
-                      child: AnimatedOpacity(
-                        duration: appSidebarAnimationDuration,
-                        curve: appSidebarAnimationCurve,
-                        opacity: collapsed ? 0 : 1,
-                        child: AnimatedPadding(
-                          duration: appSidebarAnimationDuration,
-                          curve: appSidebarAnimationCurve,
-                          padding: EdgeInsets.only(left: collapsed ? 0 : 12),
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            softWrap: false,
-                            overflow: TextOverflow.clip,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: selected
-                                  ? theme.colorScheme.onSecondaryContainer
-                                  : theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: NyachiAvatar(
+              url: account?.avatarUrl,
+              size: 32,
+              showStatus: true,
             ),
           ),
         ),
-      ),
+        if (!collapsed)
+          Expanded(
+            child: Text(
+              account?.displayName ??
+                  account?.username ??
+                  context.l10n.noAccounts,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+      ],
     );
-    return collapsed && tooltip != null
-        ? Tooltip(message: tooltip!, child: tile)
-        : tile;
   }
 }
 
-/// Brand mark shown in the collapsed sidebar: the app icon alone, so the pane
-/// still identifies the app without a label.
+/// The tab destination that is selected, or -1 (no feature is a persistent
+/// selection). Feature rows announce their tap through the rail without
+/// keeping the indicator pinned to them.
+int _selectedIndex(AppNavEntries entries) =>
+    entries.tabs.indexOf(entries.selectedTab);
+
+/// Brand mark shown in the collapsed sidebar: the app icon alone, so the
+/// pane still identifies the app without a label.
 class SidebarBrandMark extends StatelessWidget {
   const SidebarBrandMark({super.key});
 
@@ -407,6 +426,86 @@ class SidebarBrandMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(
+            'assets/brand/app_icon_full.png',
+            width: 28,
+            height: 28,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A feature row in the rail's trailing column: announcements, drive, admin.
+/// Centered icon when collapsed; icon + label when expanded.
+class _FeatureRow extends StatelessWidget {
+  const _FeatureRow({
+    required this.icon,
+    required this.label,
+    required this.collapsed,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool collapsed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              mainAxisAlignment: collapsed
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
+              children: [
+                Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
+                if (!collapsed) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return collapsed ? Tooltip(message: label, child: row) : row;
+  }
+}
+
+/// App mark in the rail's leading slot: present in both states, so the
+/// collapsed sidebar still identifies the app.
+class SidebarRailBrand extends StatelessWidget {
+  const SidebarRailBrand({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6),

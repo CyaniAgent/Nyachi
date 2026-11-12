@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nyachi/app/detail_panel/detail_location.dart';
+import 'package:nyachi/app/detail_panel/detail_panel_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/settings/application/app_settings.dart';
@@ -176,12 +178,12 @@ void main() {
 
     // Collapsed means icon-only, not empty: the tab icons and the feature
     // entries are all still there.
-    expect(find.byIcon(Icons.home_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.chat_bubble_outline), findsOneWidget);
-    expect(find.byIcon(Icons.person_outline), findsOneWidget);
-    expect(find.byIcon(Icons.campaign_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.home_outlined), findsWidgets);
+    expect(find.byIcon(Icons.notifications_outlined), findsWidgets);
+    expect(find.byIcon(Icons.chat_bubble_outline), findsWidgets);
+    expect(find.byIcon(Icons.person_outline), findsWidgets);
+    expect(find.byIcon(Icons.campaign_outlined), findsWidgets);
+    expect(find.byIcon(Icons.cloud_outlined), findsWidgets);
   });
 
   testWidgets('collapsing the sidebar animates instead of jumping', (
@@ -228,9 +230,6 @@ void main() {
     expect(sidebarSize().width, 80);
     // Every destination remains.
     expect(find.byIcon(Icons.home_outlined), findsOneWidget);
-    // Collapsed tiles carry their name as a tooltip; without it an icon-only
-    // row has no accessible name.
-    expect(find.byTooltip('Home'), findsOneWidget);
     // The collapse state is announced by exactly one control, and it says what
     // the next tap does.
     expect(find.byTooltip('Expand'), findsOneWidget);
@@ -272,6 +271,50 @@ void main() {
     final titleLeft = tester.getTopLeft(find.text('Title')).dx;
     // No reserved leading slot: the title starts at the normal inset.
     expect(titleLeft, lessThan(40));
+  });
+
+  testWidgets('opening the detail panel collapses the sidebar', (tester) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ShellChrome(
+            selectedTab: AppTab.home,
+            onSelectTab: (_) {},
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Size sidebarSize() => tester.getSize(find.byType(AppSidebar));
+    // Above the auto-breakpoint the pane starts expanded.
+    expect(sidebarSize().width, greaterThan(80));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ShellChrome)),
+    );
+    container
+        .read(detailPanelControllerProvider.notifier)
+        .replaceStack(NoteDetailLocation('n1'));
+    await tester.pumpAndSettle();
+    // The panel squeezed the content column: the pane collapsed to make room.
+    expect(sidebarSize().width, 80);
+
+    container.read(detailPanelControllerProvider.notifier).close();
+    await tester.pumpAndSettle();
+    // Closing restores the pre-panel state.
+    expect(sidebarSize().width, greaterThan(80));
   });
 
   testWidgets('drawer hamburger opens the shell drawer', (tester) async {

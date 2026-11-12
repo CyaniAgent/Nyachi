@@ -38,6 +38,7 @@ class _RootShellState extends ConsumerState<RootShell> {
   DetailPanelCoordinator? _coordinator;
   ValueNotifier<DetailPanelCoordinator?>? _coordinatorNotifier;
   Uri? _syncedUri;
+
   double? _syncedWidth;
   int? _syncedBreakpoint;
   var _syncScheduled = false;
@@ -244,12 +245,36 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
   /// the pane tracks the pointer exactly instead of lagging behind it.
   var _draggingWidth = false;
 
+  /// The detail-panel open state the sidebar last reconciled against.
+  var _panelWasOpen = false;
+
+  /// The sidebar's collapse override as it was when the panel opened,
+  /// restored when the panel closes.
+  bool? _savedOverride;
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= kCompactBreakpoint;
     final child = widget.child;
+    // While the detail panel is open the content column is squeezed: the
+    // panel owns 360 to 900 of the window width, so at every width the
+    // collapsed sidebar is the only one that keeps the feed its minimum.
+    // The sidebar exists only in the wide branch, which is the only branch
+    // that reconciles the panel state; narrow collapses for it.
+    if (wide) {
+      final panelOpen = ref.watch(detailPanelControllerProvider).isOpen;
+      if (panelOpen != _panelWasOpen) {
+        _panelWasOpen = panelOpen;
+        if (panelOpen) {
+          _savedOverride = _collapsedOverride;
+          _collapsedOverride = true;
+        } else {
+          _collapsedOverride = _savedOverride;
+        }
+      }
+    }
     if (!wide) {
       return AppDrawerScope(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
@@ -345,6 +370,7 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
       tabs: tabs,
       selectedTab: selectedTab,
       onSelectTab: widget.onSelectTab,
+      onOpenProfile: () => widget.onSelectTab(AppTab.profile),
       onOpenAnnouncements: () =>
           openDetail(context, const AnnouncementsDetailLocation()),
       onOpenDrive: () => openDetail(context, const DriveDetailLocation()),
