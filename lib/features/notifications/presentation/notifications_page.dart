@@ -73,7 +73,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.notifications),
-        leading: const AppDrawerButton(),
+        leading: appBarDrawerLeading(context),
         actions: [
           IconButton(
             tooltip: unread.unreadOnly

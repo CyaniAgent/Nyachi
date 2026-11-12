@@ -27,7 +27,7 @@ class ProfilePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.profile),
-        leading: const AppDrawerButton(),
+        leading: appBarDrawerLeading(context),
       ),
       body: current.when(
         loading: () => const Center(child: CircularProgressIndicator()),

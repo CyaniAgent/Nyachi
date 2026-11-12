@@ -24,7 +24,7 @@ class ExplorePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.discover),
-        leading: const AppDrawerButton(),
+        leading: appBarDrawerLeading(context),
       ),
       body: Center(
         child: ConstrainedBox(

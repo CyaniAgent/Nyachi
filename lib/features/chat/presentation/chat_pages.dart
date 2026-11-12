@@ -40,7 +40,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final state = ref.watch(chatListControllerProvider);
     final controller = ref.read(chatListControllerProvider.notifier);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.chat), leading: const AppDrawerButton()),
+      appBar: AppBar(
+        title: Text(l10n.chat),
+        leading: appBarDrawerLeading(context),
+      ),
       body: _ChatLists(state: state, controller: controller, onOpen: _open),
     );
   }

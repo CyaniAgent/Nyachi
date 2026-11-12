@@ -226,18 +226,52 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(sidebarSize().width, 80);
-    // Every destination remains; labels are faded out, not removed, so the
-    // tree keeps its state across the transition.
+    // Every destination remains.
     expect(find.byIcon(Icons.home_outlined), findsOneWidget);
-    final label = tester.widget<AnimatedOpacity>(
-      find
-          .ancestor(
-            of: find.text('Home'),
-            matching: find.byType(AnimatedOpacity),
-          )
-          .first,
+    // Collapsed tiles carry their name as a tooltip; without it an icon-only
+    // row has no accessible name.
+    expect(find.byTooltip('Home'), findsOneWidget);
+    // The collapse state is announced by exactly one control, and it says what
+    // the next tap does.
+    expect(find.byTooltip('Expand'), findsOneWidget);
+    expect(find.byTooltip('Collapse'), findsNothing);
+  });
+
+  testWidgets('wide layouts have no drawer button and no leading gap', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              appBar: AppBar(
+                title: const Text('Title'),
+                leading: appBarDrawerLeading(context),
+              ),
+              body: const SizedBox.expand(),
+            ),
+          ),
+        ),
+      ),
     );
-    expect(label.opacity, 0);
+    await tester.pumpAndSettle();
+
+    // The sidebar is already on screen, so a hamburger would open nothing.
+    expect(find.byIcon(Icons.menu), findsNothing);
+    final titleLeft = tester.getTopLeft(find.text('Title')).dx;
+    // No reserved leading slot: the title starts at the normal inset.
+    expect(titleLeft, lessThan(40));
   });
 
   testWidgets('drawer hamburger opens the shell drawer', (tester) async {

@@ -11,6 +11,7 @@ import '../../../core/auth/session_controller.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
+import '../../../core/ui/breakpoints.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../admin/data/admin_repository.dart';
 import '../../settings/application/app_settings.dart';
@@ -38,7 +39,19 @@ class AppDrawerScope extends InheritedWidget {
       openDrawer != oldWidget.openDrawer;
 }
 
-/// Hamburger for the leading slot of tab-root AppBars.
+/// Leading slot for a tab-root AppBar.
+///
+/// Narrow screens get the drawer hamburger. Wide screens already have the
+/// persistent sidebar, so this returns null: a control that cannot open
+/// anything would be announced to assistive tech and would still make the
+/// AppBar reserve leading space for it.
+Widget? appBarDrawerLeading(BuildContext context) {
+  if (MediaQuery.sizeOf(context).width >= kCompactBreakpoint) return null;
+  return const AppDrawerButton();
+}
+
+/// Hamburger for the leading slot of tab-root AppBars. Only built when a
+/// drawer actually exists; see [appBarDrawerLeading].
 class AppDrawerButton extends StatelessWidget {
   const AppDrawerButton({super.key});
 
@@ -161,10 +174,9 @@ class AppSidebar extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Expanded: the account or brand block; collapsed: the expand
-            // chevron. Both fade over the width change; the outgoing header is
-            // removed immediately instead of lingering in a too-narrow pane,
-            // so it never lays out below its minimum width.
+            // Expanded: the account or brand block; collapsed: the app icon.
+            // The expand/collapse toggle lives once, in the footer, so the
+            // collapse state is not announced by two identical controls.
             AnimatedSwitcher(
               duration: appSidebarAnimationDuration,
               switchInCurve: Curves.easeOut,
@@ -173,12 +185,7 @@ class AppSidebar extends ConsumerWidget {
               transitionBuilder: (child, animation) =>
                   FadeTransition(opacity: animation, child: child),
               child: collapsed
-                  ? IconButton(
-                      key: const ValueKey('collapsed-header'),
-                      tooltip: context.l10n.expand,
-                      onPressed: onToggleCollapse,
-                      icon: const Icon(Icons.chevron_right),
-                    )
+                  ? const SidebarBrandMark(key: ValueKey('collapsed-header'))
                   : KeyedSubtree(
                       key: const ValueKey('expanded-header'),
                       child: showMeAtTop
@@ -189,30 +196,48 @@ class AppSidebar extends ConsumerWidget {
             Expanded(
               child: NavEntryList(entries: entries, collapsed: collapsed),
             ),
-            // One footer for both states: the same settings tile and toggle,
-            // with the tile's label collapsing and the chevron flipping. No
-            // subtree swap means no outgoing row has to lay out in a width it
-            // was never sized for.
+            // One footer for both states, with the one collapse toggle the
+            // sidebar has: its label states what the tap will do, so it is
+            // never announced twice nor described by the wrong verb.
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: NavTile(
-                      icon: Icons.settings_outlined,
-                      label: context.l10n.settings,
-                      collapsed: collapsed,
-                      onTap: entries.onOpenSettings,
+              child: collapsed
+                  // Collapsed, the settings row and the toggle stack: there is
+                  // no room for them side by side, and squeezing the tile into
+                  // a sliver is what made its icon sit off-center.
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NavTile(
+                          icon: Icons.settings_outlined,
+                          label: context.l10n.settings,
+                          tooltip: context.l10n.settings,
+                          collapsed: true,
+                          onTap: entries.onOpenSettings,
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.expand,
+                          onPressed: onToggleCollapse,
+                          icon: const Icon(Icons.chevron_right),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: NavTile(
+                            icon: Icons.settings_outlined,
+                            label: context.l10n.settings,
+                            onTap: entries.onOpenSettings,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.collapse,
+                          onPressed: onToggleCollapse,
+                          icon: const Icon(Icons.chevron_left),
+                        ),
+                      ],
                     ),
-                  ),
-                  if (!collapsed)
-                    IconButton(
-                      tooltip: context.l10n.collapse,
-                      onPressed: onToggleCollapse,
-                      icon: const Icon(Icons.chevron_left),
-                    ),
-                ],
-              ),
             ),
           ],
         ),
@@ -244,6 +269,9 @@ class NavEntryList extends ConsumerWidget {
             NavTile(
               icon: entries.icon(tab),
               label: entries.label(context, tab),
+              // Collapsed, the label is not rendered, so the tile needs an
+              // explicit name for tooltips and assistive tech.
+              tooltip: entries.label(context, tab),
               selected: tab == entries.selectedTab,
               collapsed: collapsed,
               onTap: () => entries.onSelectTab(tab),
@@ -252,12 +280,14 @@ class NavEntryList extends ConsumerWidget {
           NavTile(
             icon: Icons.campaign_outlined,
             label: context.l10n.announcements,
+            tooltip: context.l10n.announcements,
             collapsed: collapsed,
             onTap: entries.onOpenAnnouncements,
           ),
           NavTile(
             icon: Icons.cloud_outlined,
             label: context.l10n.drive,
+            tooltip: context.l10n.drive,
             collapsed: collapsed,
             onTap: entries.onOpenDrive,
           ),
@@ -265,6 +295,7 @@ class NavEntryList extends ConsumerWidget {
             NavTile(
               icon: Icons.shield_outlined,
               label: context.l10n.adminHome,
+              tooltip: context.l10n.adminHome,
               collapsed: collapsed,
               onTap: entries.onOpenAdmin,
             ),
@@ -279,6 +310,7 @@ class NavTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.tooltip,
     this.selected = false,
     this.collapsed = false,
     super.key,
@@ -286,6 +318,9 @@ class NavTile extends StatelessWidget {
 
   final IconData icon;
   final String label;
+
+  /// Accessible name when [label] is not rendered (collapsed sidebar).
+  final String? tooltip;
   final VoidCallback onTap;
   final bool selected;
   final bool collapsed;
@@ -296,7 +331,7 @@ class NavTile extends StatelessWidget {
     final foreground = selected
         ? theme.colorScheme.onSecondaryContainer
         : theme.colorScheme.onSurfaceVariant;
-    return Padding(
+    final tile = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Material(
         color: selected
@@ -307,9 +342,18 @@ class NavTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: EdgeInsets.symmetric(
+              horizontal: collapsed ? 0 : 12,
+              vertical: 10,
+            ),
             child: ClipRect(
               child: Row(
+                // Collapsed, the row holds only the icon and has to center it;
+                // a leading-aligned icon in a full-width row reads as
+                // misaligned next to the centered header and footer buttons.
+                mainAxisAlignment: collapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
                 children: [
                   Icon(icon, size: 22, color: foreground),
                   // Expanded takes whatever is left — zero while collapsed — so
@@ -344,6 +388,32 @@ class NavTile extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+    return collapsed && tooltip != null
+        ? Tooltip(message: tooltip!, child: tile)
+        : tile;
+  }
+}
+
+/// Brand mark shown in the collapsed sidebar: the app icon alone, so the pane
+/// still identifies the app without a label.
+class SidebarBrandMark extends StatelessWidget {
+  const SidebarBrandMark({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(
+            'assets/brand/app_icon_full.png',
+            width: 28,
+            height: 28,
           ),
         ),
       ),

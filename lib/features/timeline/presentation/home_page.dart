@@ -101,7 +101,7 @@ class _HomePageState extends ConsumerState<HomePage>
           return Scaffold(
             appBar: AppBar(
               title: Text(l10n.appTitle),
-              leading: const AppDrawerButton(),
+              leading: appBarDrawerLeading(context),
               actions: [
                 IconButton(
                   tooltip: l10n.search,
