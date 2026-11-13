@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:nyachi/app/detail_panel/detail_location.dart';
 import 'package:nyachi/app/detail_panel/detail_panel_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
+import 'package:nyachi/core/auth/session_controller.dart';
+import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
 import 'package:nyachi/features/settings/application/app_settings.dart';
 import 'package:nyachi/features/shell/presentation/app_sidebar.dart';
@@ -146,6 +148,59 @@ void main() {
     // branch content).
     expect(find.text('detail'), findsOneWidget);
     expect(find.text('Nyachi'), findsOneWidget);
+  });
+
+  testWidgets('the account card is one tap target across its whole row', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final account = LocalAccount(
+      id: 'account',
+      host: 'example.test',
+      userId: 'u1',
+      username: 'alice',
+      displayName: 'Alice',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
+
+    var opened = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          activeAccountProvider.overrideWithValue(account),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 240,
+              child: Column(
+                children: [
+                  SidebarUserPanel(
+                    collapsed: false,
+                    onOpenProfile: () => opened++,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The name is part of the card's tap target, not just the avatar.
+    await tester.tap(find.text('Alice'));
+    await tester.pumpAndSettle();
+    expect(opened, 1);
   });
 
   testWidgets('collapsed sidebar keeps every destination reachable', (

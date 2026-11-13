@@ -508,9 +508,10 @@ class _RailIconTile extends StatelessWidget {
   }
 }
 
-/// Account row pinned to the sidebar's footer: avatar + name when expanded,
-/// the avatar alone in the collapsed rail. Tapping it opens the profile.
-class SidebarUserPanel extends ConsumerWidget {
+/// Account card pinned to the sidebar's footer: a rounded, whole-row tap
+/// target (avatar + name + handle). Collapsed to the rail it is the avatar
+/// alone. Tapping anywhere on the row opens the profile.
+class SidebarUserPanel extends ConsumerStatefulWidget {
   const SidebarUserPanel({
     required this.collapsed,
     required this.onOpenProfile,
@@ -521,35 +522,116 @@ class SidebarUserPanel extends ConsumerWidget {
   final VoidCallback onOpenProfile;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SidebarUserPanel> createState() => _SidebarUserPanelState();
+}
+
+class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
+  var _hovering = false;
+
+  /// Below this the card falls back to the avatar alone: the sidebar width
+  /// tweens between 80 and 240, and the full row needs room for the avatar,
+  /// the gap and readable text.
+  static const _fullCardMinWidth = 150.0;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final account = ref.watch(activeAccountProvider);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        InkWell(
-          onTap: account == null ? null : onOpenProfile,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: NyachiAvatar(
-              url: account?.avatarUrl,
-              size: 32,
-              showStatus: true,
+    final l10n = context.l10n;
+    final avatar = NyachiAvatar(
+      url: account?.avatarUrl,
+      size: 36,
+      showStatus: true,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The rail, and every intermediate width the collapse animation
+        // passes through, gets the avatar alone.
+        if (widget.collapsed || constraints.maxWidth < _fullCardMinWidth) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: Tooltip(
+                  message: l10n.profile,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: account == null ? null : widget.onOpenProfile,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: avatar,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        return _fullCard(context, theme, account, avatar);
+      },
+    );
+  }
+
+  Widget _fullCard(
+    BuildContext context,
+    ThemeData theme,
+    LocalAccount? account,
+    Widget avatar,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: account == null ? null : widget.onOpenProfile,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _hovering = true),
+            onExit: (_) => setState(() => _hovering = false),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  avatar,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          account?.displayName ??
+                              account?.username ??
+                              context.l10n.noAccounts,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        // Hovering swaps the muted status line for the
+                        // handle, the way the sidebar identified the
+                        // account before.
+                        Text(
+                          _hovering && account != null
+                              ? '@${account.username}'
+                              : context.l10n.online,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-        if (!collapsed)
-          Expanded(
-            child: Text(
-              account?.displayName ??
-                  account?.username ??
-                  context.l10n.noAccounts,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
