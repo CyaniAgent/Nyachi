@@ -583,7 +583,6 @@
   "adminHomeSubtitle": "通報・ユーザー・コンテンツ・サーバー設定",
   "bottomBar": "ボトムバー（狭い画面）",
   "sidebarSection": "サイドバー（デスクトップ）",
-  "sidebarWidth": "サイドバーの幅",
   "showMeAtTop": "アカウントを上部に表示",
   "showMeAtTopHint": "アカウント領域がプロフィールタブの行を置き換えます",
   "maxTabsReached": "ボトムバーには最大4つのタブが入ります",

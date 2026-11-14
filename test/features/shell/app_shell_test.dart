@@ -151,20 +151,21 @@ void main() {
     expect(find.text('Home'), findsOneWidget);
     expect(find.byTooltip('Collapse'), findsOneWidget);
     expect(find.byIcon(Icons.menu_open), findsOneWidget);
-    // The compose fab is extended, and the feature entries are rows.
-    expect(find.text('Compose'), findsOneWidget);
+    // The compose fab is the same flat circle in both states, and the
+    // feature entries read as rows.
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
     expect(find.text('Announcements'), findsOneWidget);
     expect(find.text('Drive'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
 
-    // Collapsing swaps the toggle to its other style and the compose fab to
-    // its circle; the destination labels stay mounted, hidden by the rail's
-    // own transition. The feature entries collapse to icon tiles.
+    // Collapsing swaps the toggle to its other style; the compose fab keeps
+    // its size, the destination labels stay mounted (hidden by the rail's
+    // own transition), and the feature entries collapse to icon tiles.
     await tester.tap(find.byTooltip('Collapse'));
     await tester.pumpAndSettle();
     expect(find.byTooltip('Expand'), findsOneWidget);
     expect(find.byIcon(Icons.menu), findsOneWidget);
-    expect(find.text('Compose'), findsNothing);
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
     expect(find.byTooltip('Announcements'), findsOneWidget);
     expect(find.byTooltip('Settings'), findsOneWidget);
 
@@ -175,7 +176,7 @@ void main() {
     expect(find.byTooltip('Collapse'), findsOneWidget);
   });
 
-  testWidgets('the rail account chip opens the account menu and switches', (
+  testWidgets('the rail account card switches to the profile tab', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 900);
@@ -191,25 +192,13 @@ void main() {
       addedAt: DateTime(2026),
       lastUsedAt: DateTime(2026),
     );
-    final bob = LocalAccount(
-      id: 'bob',
-      host: 'other.test',
-      userId: 'u2',
-      username: 'bob',
-      addedAt: DateTime(2026),
-      lastUsedAt: DateTime(2026),
-    );
 
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(preferences),
         sessionControllerProvider.overrideWith(
           () => _FakeSession(
-            SessionState(
-              accounts: [alice, bob],
-              active: alice,
-              initialized: true,
-            ),
+            SessionState(accounts: [alice], active: alice, initialized: true),
           ),
         ),
         // A signed-in session would open a socket with retry timers.
@@ -217,55 +206,30 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    final shellKey = GlobalKey<NavigatorState>();
-    final router = GoRouter(
-      initialLocation: '/home',
-      routes: [
-        ShellRoute(
-          navigatorKey: shellKey,
-          builder: (context, state, child) =>
-              RootShell(uri: state.uri, child: child),
-          routes: [
-            StatefulShellRoute.indexedStack(
-              builder: (context, state, navigationShell) =>
-                  AppShell(navigationShell: navigationShell),
-              branches: [
-                StatefulShellBranch(
-                  routes: [
-                    GoRoute(path: '/home', builder: (_, _) => const Scaffold()),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-    addTearDown(router.dispose);
 
+    AppTab? selected;
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp.router(
+        child: MaterialApp(
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: router,
+          home: ShellChrome(
+            selectedTab: AppTab.home,
+            onSelectTab: (tab) => selected = tab,
+            child: const SizedBox.expand(),
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    // On a wide window the account chip's menu is the switcher: it lists
-    // both accounts, and switching reaches the session.
+    // The account card at the rail's bottom is a direct shortcut: tapping
+    // it switches to the profile tab — no menu in between.
     await tester.tap(find.text('alice'));
     await tester.pumpAndSettle();
-    expect(find.text('@bob@other.test'), findsOneWidget);
-
-    await tester.tap(find.text('@bob@other.test'));
-    await tester.pumpAndSettle();
-
-    expect(container.read(sessionControllerProvider).active?.id, 'bob');
+    expect(selected, AppTab.profile);
   });
 
   testWidgets('the extended rail lists tabs and feature entries', (
@@ -303,7 +267,9 @@ void main() {
     expect(find.text('Announcements'), findsOneWidget);
     expect(find.text('Drive'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
-    expect(find.text('Compose'), findsOneWidget);
+    // The compose fab is a flat circle with a tooltip, no label text.
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+    expect(find.byTooltip('Compose'), findsOneWidget);
     expect(find.byTooltip('Collapse'), findsOneWidget);
   });
 

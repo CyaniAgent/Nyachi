@@ -279,8 +279,8 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
       );
     }
     // Wide: an extended rail. Collapsed it is the icon column; expanded it
-    // carries the destination labels at the drag-adjusted width. The feature
-    // entries (announcements, drive, admin, settings) and the account menu
+    // carries the destination labels at the fixed narrow width. The feature
+    // entries (announcements, drive, admin, settings) and the account card
     // are pinned at the rail's bottom, so nothing is one tap further away
     // than the other.
     return Scaffold(
@@ -295,18 +295,7 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
             extended: _railExtended,
             onToggleExtended: () =>
                 setState(() => _railExtended = !_railExtended),
-            extendedWidth: settings.sidebarWidth,
           ),
-          if (_railExtended)
-            SidebarResizeHandle(
-              width: settings.sidebarWidth,
-              onChanged: (value) => ref
-                  .read(settingsControllerProvider.notifier)
-                  .setSidebarWidthLive(value),
-              onCommit: (value) => ref
-                  .read(settingsControllerProvider.notifier)
-                  .setSidebarWidth(value),
-            ),
           Expanded(child: child),
         ],
       ),
@@ -343,13 +332,11 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
 }
 
 /// Wide-screen extended rail. Collapsed it is the icon column the rail
-/// widget is designed for; expanded it carries the destination labels at
-/// the drag-adjusted width. The toggle button carries the two states
-/// (hamburger while collapsed, menu-open while expanded). The compose FAB
-/// follows the framework's extended-animation example: a circular FAB
-/// collapsed, a `FloatingActionButton.extended` labelled "Compose" when
-/// expanded. Feature entries and the account menu stay pinned at the
-/// bottom in both states.
+/// widget is designed for; expanded it carries the destination labels at the
+/// fixed narrow width. The toggle button carries the two states (hamburger
+/// while collapsed, menu-open while expanded). The compose FAB is the same
+/// regular circular flat FAB in both states — it never shrinks. Feature
+/// entries and the account card stay pinned at the bottom in both states.
 class _DesktopRail extends ConsumerWidget {
   const _DesktopRail({
     required this.entries,
@@ -358,7 +345,6 @@ class _DesktopRail extends ConsumerWidget {
     required this.onCompose,
     required this.extended,
     required this.onToggleExtended,
-    required this.extendedWidth,
   });
 
   final AppNavEntries entries;
@@ -367,7 +353,6 @@ class _DesktopRail extends ConsumerWidget {
   final VoidCallback onCompose;
   final bool extended;
   final VoidCallback onToggleExtended;
-  final double extendedWidth;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -386,7 +371,7 @@ class _DesktopRail extends ConsumerWidget {
       }
       return Icon(
         entries.icon(tab),
-        size: 22,
+        size: 24,
         color: selected
             ? theme.colorScheme.onSecondaryContainer
             : theme.colorScheme.onSurfaceVariant,
@@ -401,8 +386,8 @@ class _DesktopRail extends ConsumerWidget {
           selectedIndex: selectedIndex == -1 ? null : selectedIndex,
           labelType: NavigationRailLabelType.none,
           extended: extended,
-          minExtendedWidth: extendedWidth,
-          // The feature entries and the account chip stay pinned at the
+          minExtendedWidth: appRailExtendedWidth,
+          // The feature entries and the account card stay pinned at the
           // bottom in both states.
           trailingAtBottom: true,
           groupAlignment: -1,
@@ -418,7 +403,7 @@ class _DesktopRail extends ConsumerWidget {
                 icon: Icon(extended ? Icons.menu_open : Icons.menu),
               ),
               const SizedBox(height: 12),
-              _RailComposeFab(extended: extended, onPressed: onCompose),
+              _RailComposeFab(onPressed: onCompose),
             ],
           ),
           destinations: [
@@ -432,7 +417,6 @@ class _DesktopRail extends ConsumerWidget {
           onDestinationSelected: (index) => onSelectTab(entries.tabs[index]),
           trailing: _RailTrailing(
             extended: extended,
-            extendedWidth: extendedWidth,
             canModerate: canModerate,
             entries: entries,
           ),
@@ -442,22 +426,19 @@ class _DesktopRail extends ConsumerWidget {
   }
 }
 
-/// The rail's trailing slot: feature entries and the account chip pinned at
+/// The rail's trailing slot: feature entries and the account card pinned at
 /// the bottom. Lives inside the rail's subtree so it can read the rail's
 /// extended animation: the slot passes unbounded width constraints, so the
 /// rows inside need the rail's own animated width — this box lerps between
-/// the rail's collapsed width (its default 80) and the configured extended
-/// width.
+/// the rail's collapsed width (its default 80) and the fixed extended width.
 class _RailTrailing extends StatelessWidget {
   const _RailTrailing({
     required this.extended,
-    required this.extendedWidth,
     required this.canModerate,
     required this.entries,
   });
 
   final bool extended;
-  final double extendedWidth;
   final bool canModerate;
   final AppNavEntries entries;
 
@@ -467,7 +448,7 @@ class _RailTrailing extends StatelessWidget {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) => SizedBox(
-        width: lerpDouble(80, extendedWidth, animation.value)!,
+        width: lerpDouble(80, appRailExtendedWidth, animation.value)!,
         child: child,
       ),
       child: Column(
@@ -515,10 +496,11 @@ class _RailTrailing extends StatelessWidget {
 
 /// One feature entry pinned in the rail's trailing slot. Rail destinations
 /// must report a selection and these are not persistent selections, so they
-/// live in the trailing slot where taps are free — styled like the
-/// destinations themselves so the rail reads as one column: collapsed, the
-/// same centred 22 px icon; expanded, the icon in the same 80 px icon zone
-/// with the label beside it.
+/// live in the trailing slot where taps are free — laid out with the same
+/// parts the framework's own extended destination row uses: the icon in its
+/// 56 px circular indicator area, the label beside it in the destination
+/// label style, and the destination bottom spacing, so the column reads as
+/// one list.
 class _RailFeatureEntry extends StatelessWidget {
   const _RailFeatureEntry({
     required this.extended,
@@ -537,177 +519,76 @@ class _RailFeatureEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Expanded, the icon sits in the same 80 px zone the destinations use,
-    // so the column of icons stays aligned; collapsed, the icon is centred
-    // the way the destinations are.
-    Widget content = Row(
-      mainAxisAlignment: extended
-          ? MainAxisAlignment.start
-          : MainAxisAlignment.center,
-      children: [
-        if (extended)
-          SizedBox(
-            width: 80,
-            child: Icon(
-              icon,
-              size: 22,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          )
-        else
-          Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
-        if (extended)
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ),
-      ],
+    // The destination icon sits in a 56 px circular indicator area; its
+    // label uses the theme's bodyLarge like the rail's own labels.
+    final iconPart = SizedBox(
+      width: 56,
+      height: 56,
+      child: Icon(icon, size: 24, color: theme.colorScheme.onSurfaceVariant),
     );
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(height: 56, child: Center(child: content)),
+    final label = Text(
+      this.label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodyLarge?.copyWith(
+        color: theme.colorScheme.onSurface,
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: extended
+                ? Row(
+                    children: [
+                      iconPart,
+                      Expanded(
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: label,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  )
+                : Center(child: iconPart),
+          ),
         ),
       ),
     );
   }
 }
 
-/// The leading compose button, following the framework's extended-animation
-/// example: a regular circular FAB collapsed, a `FloatingActionButton.
-/// extended` when expanded, revealed from the start edge while the rail's
-/// width animates. Flat in every state — no shadow — and each variant keeps
-/// its natural size (56 collapsed, 48 extended) instead of being squeezed.
+/// The leading compose button: the same regular circular flat FAB in both
+/// rail states — it never shrinks or morphs, so the rail's leading column
+/// reads identically collapsed and expanded.
 class _RailComposeFab extends StatelessWidget {
-  const _RailComposeFab({required this.extended, required this.onPressed});
+  const _RailComposeFab({required this.onPressed});
 
-  final bool extended;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final animation = NavigationRail.extendedAnimation(context);
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        return Container(
-          height: lerpDouble(56, 48, animation.value)!,
-          // Collapsed, the rail centres the circle like every destination.
-          // Expanded, the labelled fab sits at the start edge instead of
-          // floating mid-pane.
-          alignment: animation.value == 0
-              ? Alignment.center
-              : AlignmentDirectional.centerStart,
-          child: animation.value == 0
-              ? FloatingActionButton(
-                  heroTag: null,
-                  tooltip: context.l10n.compose,
-                  onPressed: onPressed,
-                  elevation: 0,
-                  hoverElevation: 0,
-                  focusElevation: 0,
-                  child: const Icon(Icons.edit_outlined),
-                )
-              : Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  widthFactor: animation.value,
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.only(start: 8),
-                    child: FloatingActionButton.extended(
-                      heroTag: null,
-                      tooltip: context.l10n.compose,
-                      onPressed: onPressed,
-                      elevation: 0,
-                      hoverElevation: 0,
-                      focusElevation: 0,
-                      icon: const Icon(Icons.edit_outlined),
-                      label: Text(context.l10n.compose),
-                    ),
-                  ),
-                ),
-        );
-      },
+    return FloatingActionButton(
+      heroTag: null,
+      tooltip: context.l10n.compose,
+      onPressed: onPressed,
+      elevation: 0,
+      hoverElevation: 0,
+      focusElevation: 0,
+      child: const Icon(Icons.edit_outlined),
     );
-  }
-}
-
-/// Drag handle between the rail and the content column. Deltas accumulate
-/// locally and are written once when the gesture ends, so a drag does not
-/// touch preferences on every frame.
-class SidebarResizeHandle extends StatefulWidget {
-  const SidebarResizeHandle({
-    required this.width,
-    required this.onChanged,
-    required this.onCommit,
-    super.key,
-  });
-
-  final double width;
-  final ValueChanged<double> onChanged;
-  final ValueChanged<double> onCommit;
-
-  @override
-  State<SidebarResizeHandle> createState() => _SidebarResizeHandleState();
-}
-
-class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
-  double? _dragWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeLeftRight,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onHorizontalDragStart: (_) => _dragWidth = widget.width,
-        onHorizontalDragUpdate: (details) {
-          final current = _dragWidth;
-          if (current == null) return;
-          final next = (current + details.delta.dx).clamp(
-            appSidebarMinWidth,
-            appSidebarMaxWidth,
-          );
-          _dragWidth = next;
-          widget.onChanged(next);
-        },
-        onHorizontalDragEnd: (_) => _finishDrag(),
-        onHorizontalDragCancel: _finishDrag,
-        child: SizedBox(
-          width: 8,
-          height: double.infinity,
-          child: Center(
-            child: SizedBox(
-              width: 1,
-              height: double.infinity,
-              child: ColoredBox(color: Theme.of(context).dividerColor),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _finishDrag() {
-    final value = _dragWidth;
-    _dragWidth = null;
-    if (value != null) widget.onCommit(value);
   }
 }
 
 /// The account card pinned at the rail's bottom, the card refined for the
 /// sidebar: a rounded, whole-row tap target (avatar + name + handle) when
-/// expanded, the avatar alone when collapsed. Tapping anywhere opens the
-/// official menu anchor — every signed-in account to switch to, then the
-/// current account's profile.
+/// expanded, the avatar alone when collapsed. Tapping anywhere switches to
+/// the user's profile tab.
 class _RailAccountCard extends ConsumerStatefulWidget {
   const _RailAccountCard({required this.extended, required this.onOpenProfile});
 
@@ -719,7 +600,6 @@ class _RailAccountCard extends ConsumerStatefulWidget {
 }
 
 class _RailAccountCardState extends ConsumerState<_RailAccountCard> {
-  final _menuController = MenuController();
   var _hovering = false;
 
   /// Below this the card falls back to the avatar alone: the full row needs
@@ -731,202 +611,133 @@ class _RailAccountCardState extends ConsumerState<_RailAccountCard> {
     final theme = Theme.of(context);
     final session = ref.watch(sessionControllerProvider);
     final account = session.active;
-    final canSwitch = session.accounts.length > 1;
     final l10n = context.l10n;
     final avatar = NyachiAvatar(
       url: account?.avatarUrl,
       size: 36,
       showStatus: true,
     );
-    // The official menu anchor handles the geometry this card needs: the
-    // card sits at the bottom of the window, so the menu flips above it,
-    // grows upward, and closes on outside taps.
-    return MenuAnchor(
-      controller: _menuController,
-      style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(
-          theme.colorScheme.surfaceContainer,
-        ),
-        padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(vertical: 6),
-        ),
-        minimumSize: const WidgetStatePropertyAll(Size(220, 0)),
-        maximumSize: const WidgetStatePropertyAll(Size(260, double.infinity)),
-      ),
-      menuChildren: [
-        if (canSwitch)
-          for (final item in session.accounts)
-            MenuItemButton(
-              leadingIcon: NyachiAvatar(
-                url: item.avatarUrl,
-                size: 24,
-                fallback: Text(item.username.characters.first),
-              ),
-              trailingIcon: item.id == session.active?.id
-                  ? Icon(
-                      Icons.check_circle,
-                      size: 18,
-                      color: theme.colorScheme.primary,
-                    )
-                  : null,
-              onPressed: item.id == session.active?.id
-                  ? null
-                  : () => switchAccount(context, ref, item),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    item.displayName ?? item.username,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '@${item.username}@${item.host}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        MenuItemButton(
-          leadingIcon: const Icon(Icons.person_outline, size: 20),
-          onPressed: widget.onOpenProfile,
-          child: Text(l10n.profile),
-        ),
-      ],
-      builder: (context, controller, child) {
-        void openMenu() {
-          if (account != null) controller.open();
-        }
-
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            // The rail, and every intermediate width the collapse animation
-            // passes through, gets the avatar alone.
-            if (!widget.extended || constraints.maxWidth < _fullCardMinWidth) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Material(
-                    color: Colors.transparent,
-                    shape: const CircleBorder(),
-                    child: Tooltip(
-                      message: canSwitch ? l10n.accounts : l10n.profile,
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: openMenu,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: avatar,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(24),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: account == null ? null : openMenu,
-                  child: MouseRegion(
-                    onEnter: (_) => setState(() => _hovering = true),
-                    onExit: (_) => setState(() => _hovering = false),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        children: [
-                          avatar,
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  account?.displayName ??
-                                      account?.username ??
-                                      l10n.noAccounts,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                                // Hovering slides the handle in over the
-                                // status line, so the handle is readable
-                                // without opening anything.
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 180),
-                                  switchInCurve: Curves.easeOut,
-                                  switchOutCurve: Curves.easeIn,
-                                  layoutBuilder:
-                                      (currentChild, previousChildren) => Stack(
-                                        alignment: Alignment.centerLeft,
-                                        children: [
-                                          ...previousChildren,
-                                          ?currentChild,
-                                        ],
-                                      ),
-                                  transitionBuilder: (child, animation) {
-                                    final incoming =
-                                        child.key == ValueKey(_hovering);
-                                    final position = incoming
-                                        ? Tween<Offset>(
-                                            begin: const Offset(0, 1),
-                                            end: Offset.zero,
-                                          ).animate(animation)
-                                        : Tween<Offset>(
-                                            begin: const Offset(0, -1),
-                                            end: Offset.zero,
-                                          ).animate(animation);
-                                    return ClipRect(
-                                      child: SlideTransition(
-                                        position: position,
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    _hovering && account != null
-                                        ? '@${account.username}'
-                                        : l10n.online,
-                                    key: ValueKey(_hovering),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (canSwitch)
-                            Icon(
-                              Icons.unfold_more,
-                              size: 18,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                        ],
+    // The bottom padding keeps the card off the very edge of the window in
+    // both rail states.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // The rail, and every intermediate width the collapse animation
+          // passes through, gets the avatar alone.
+          if (!widget.extended || constraints.maxWidth < _fullCardMinWidth) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: Tooltip(
+                    message: l10n.profile,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: widget.onOpenProfile,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: avatar,
                       ),
                     ),
                   ),
                 ),
               ),
             );
-          },
-        );
-      },
+          }
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: widget.onOpenProfile,
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _hovering = true),
+                  onExit: (_) => setState(() => _hovering = false),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        avatar,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                account?.displayName ??
+                                    account?.username ??
+                                    l10n.noAccounts,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              // Hovering slides the handle in over the
+                              // status line, so the handle is readable
+                              // without navigating anywhere.
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 180),
+                                switchInCurve: Curves.easeOut,
+                                switchOutCurve: Curves.easeIn,
+                                layoutBuilder:
+                                    (currentChild, previousChildren) => Stack(
+                                      alignment: Alignment.centerLeft,
+                                      children: [
+                                        ...previousChildren,
+                                        ?currentChild,
+                                      ],
+                                    ),
+                                transitionBuilder: (child, animation) {
+                                  final incoming =
+                                      child.key == ValueKey(_hovering);
+                                  final position = incoming
+                                      ? Tween<Offset>(
+                                          begin: const Offset(0, 1),
+                                          end: Offset.zero,
+                                        ).animate(animation)
+                                      : Tween<Offset>(
+                                          begin: const Offset(0, -1),
+                                          end: Offset.zero,
+                                        ).animate(animation);
+                                  return ClipRect(
+                                    child: SlideTransition(
+                                      position: position,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  _hovering && account != null
+                                      ? '@${account.username}'
+                                      : l10n.online,
+                                  key: ValueKey(_hovering),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

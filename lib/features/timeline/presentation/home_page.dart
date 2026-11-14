@@ -7,17 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:misskey_dart_api/misskey_dart_api.dart';
 
-import '../../../app/detail_panel/detail_location.dart';
-import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/ui/compact_tab_bar.dart';
 import '../../../core/ui/l10n_ext.dart';
 import '../../../core/ui/network_image.dart';
-import '../../../core/ui/content_width.dart';
 import '../../announcements/data/announcement_repository.dart';
 import '../../notes/application/note_list_controller.dart';
 import '../../notes/domain/note_feed_source.dart';
 import '../../notes/presentation/note_list.dart';
-import '../../settings/application/app_settings.dart';
 import '../../shell/presentation/app_sidebar.dart';
 import '../application/home_stream_service.dart';
 
@@ -118,7 +114,6 @@ class _HomePageState extends ConsumerState<HomePage>
                   padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
                   child: CompactTabBar(labels: labels),
                 ),
-                const _AnnouncementBanners(),
                 Expanded(
                   child: TabBarView(
                     controller: controller,
@@ -271,92 +266,6 @@ class _StreamHeader extends StatelessWidget {
                 ),
             ],
           ),
-        );
-      },
-    );
-  }
-}
-
-/// Persistent banners for unread `display: banner` announcements. Dismissing
-/// marks the announcement read on the server; tapping opens the full list.
-class _AnnouncementBanners extends ConsumerWidget {
-  const _AnnouncementBanners();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final banners = ref.watch(bannerAnnouncementsProvider);
-    final theme = Theme.of(context);
-    final read = ref.read(readAnnouncementsProvider.notifier);
-    void openAll() => openDetail(context, const AnnouncementsDetailLocation());
-    // The banners and their entry line sit in the same readable column the
-    // feed uses: full-bleed color, with the insets the feed applies so the
-    // "view all" button lands on the column's edge instead of the window's.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final slack = constraints.maxWidth - appMaxContentWidth - 24.0;
-        final centered = ref.watch(
-          settingsControllerProvider.select((s) => s.centerContent),
-        );
-        final leading = slack <= 0
-            ? 12.0
-            : (centered ? 12.0 + slack / 2 : 12.0);
-        final trailing = slack <= 0
-            ? 12.0
-            : (centered ? 12.0 + slack / 2 : 12.0 + slack);
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final announcement in banners.take(3))
-              Padding(
-                padding: EdgeInsets.only(left: leading, right: trailing),
-                child: Material(
-                  borderRadius: BorderRadius.circular(12),
-                  color: theme.colorScheme.secondaryContainer,
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(
-                      Icons.campaign_outlined,
-                      size: 20,
-                      color: theme.colorScheme.primary,
-                    ),
-                    title: Text(
-                      announcement.title.isEmpty
-                          ? announcement.text
-                          : announcement.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onTap: openAll,
-                    trailing: IconButton(
-                      tooltip: MaterialLocalizations.of(context)
-                          .closeButtonTooltip,
-                      icon: const Icon(Icons.close, size: 18),
-                      onPressed: () => read.markRead(announcement.id),
-                    ),
-                  ),
-                ),
-              ),
-            // One entry for the whole list, not one per banner. With unread
-            // announcements it sits under them; with none it is the only,
-            // deliberately muted, way in.
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: Padding(
-                padding: EdgeInsets.only(right: trailing),
-                child: TextButton.icon(
-                  onPressed: openAll,
-                  icon: const Icon(Icons.campaign_outlined, size: 16),
-                  label: Text(context.l10n.viewAllAnnouncements),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    foregroundColor: banners.isEmpty
-                        ? theme.colorScheme.onSurfaceVariant
-                        : theme.colorScheme.primary,
-                  ),
-                ),
-              ),
-            ),
-          ],
         );
       },
     );

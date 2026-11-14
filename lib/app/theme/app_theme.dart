@@ -16,10 +16,9 @@ const int appDetailBreakpointMax = 1600;
 const int appDetailBreakpointStep = 40;
 const int appDetailBreakpointDefault = 1200;
 
-/// Desktop sidebar (extended rail) width bounds, drag-adjusted.
-const double appSidebarMinWidth = 160;
-const double appSidebarMaxWidth = 320;
-const double appSidebarDefaultWidth = 220;
+/// Desktop rail: the extended state's width. Narrow by design — the pane is
+/// an icon column with labels, not a menu — and not user-adjustable.
+const double appRailExtendedWidth = 150;
 
 /// Neutral seed used when neither the user nor the instance provides a colour.
 const Color appFallbackSeed = Color(0xFF6750A4);
