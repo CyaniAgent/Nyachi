@@ -377,6 +377,8 @@ void main() {
       tester.getRect(find.text('Profile')),
     ];
     for (final item in menuItems) {
+      // ignore: avoid_print
+      print('MENU-GEOM item=$item card=$card');
       final overlaps =
           item.left < card.right &&
           item.right > card.left &&

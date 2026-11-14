@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -591,6 +589,7 @@ class SidebarUserPanel extends ConsumerStatefulWidget {
 }
 
 class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
+  final _menuController = MenuController();
   var _hovering = false;
 
   /// Below this the card falls back to the avatar alone: the sidebar width
@@ -611,99 +610,117 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
       size: 36,
       showStatus: true,
     );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // The rail, and every intermediate width the collapse animation
-        // passes through, gets the avatar alone.
-        if (widget.collapsed || constraints.maxWidth < _fullCardMinWidth) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Material(
-                color: Colors.transparent,
-                shape: const CircleBorder(),
-                child: Tooltip(
-                  message: canSwitch ? l10n.accounts : l10n.profile,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: account == null
-                        ? null
-                        : () => _openAccountMenu(context),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: avatar,
+    // The official menu anchor handles the geometry this card needs: the
+    // card sits at the bottom of the window, so the menu flips above it,
+    // grows upward, and closes on outside taps.
+    return MenuAnchor(
+      controller: _menuController,
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(
+          theme.colorScheme.surfaceContainer,
+        ),
+        elevation: const WidgetStatePropertyAll(4),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(vertical: 6),
+        ),
+        minimumSize: const WidgetStatePropertyAll(Size(220, 0)),
+      ),
+      menuChildren: _accountMenuItems(context, session),
+      builder: (context, controller, child) {
+        void openMenu() {
+          if (account != null) controller.open();
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // The rail, and every intermediate width the collapse animation
+            // passes through, gets the avatar alone.
+            if (widget.collapsed || constraints.maxWidth < _fullCardMinWidth) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Material(
+                    color: Colors.transparent,
+                    shape: const CircleBorder(),
+                    child: Tooltip(
+                      message: canSwitch ? l10n.accounts : l10n.profile,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: openMenu,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: avatar,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          );
-        }
-        return _fullCard(context, theme, account, avatar, canSwitch);
+              );
+            }
+            return _fullCard(
+              context,
+              theme,
+              account,
+              avatar,
+              canSwitch,
+              openMenu,
+            );
+          },
+        );
       },
     );
   }
 
   /// The card's menu: every signed-in account to switch to, then the current
   /// account's profile.
-  Future<void> _openAccountMenu(BuildContext context) async {
-    final session = ref.read(sessionControllerProvider);
-    final active = session.active;
-    if (active == null) return;
-    final overlay = Overlay.maybeOf(context);
-    final box = context.findRenderObject() as RenderBox?;
-    final overlayBox = overlay?.context.findRenderObject() as RenderBox?;
-    if (box == null || overlayBox == null) return;
-    final card =
-        box.localToGlobal(Offset.zero, ancestor: overlayBox) & box.size;
-    // The card is pinned to the bottom of the window, so the menu opens
-    // upward from it, aligned to the card's left edge. `showMenu` puts the
-    // menu's top at the rect's top, so the rect is the menu's own footprint:
-    // passing the card's own rect would lay the menu over the card.
-    final menuHeight = _accountMenuHeight(session.accounts.length);
-    final overlaySize = overlayBox.size;
-    final choice = await showMenu<_AccountMenuChoice>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        card.left,
-        math.max(8, card.top - menuHeight),
-        overlaySize.width - card.right,
-        overlaySize.height - card.top,
-      ),
-      items: [
-        if (session.accounts.length > 1) ...[
-          for (final account in session.accounts)
-            PopupMenuItem<_AccountMenuChoice>(
-              value: _SwitchAccountChoice(account),
-              enabled: account.id != active.id,
-              height: _accountMenuItemHeight,
-              child: _AccountMenuRow(
-                account: account,
-                current: account.id == active.id,
-              ),
+  List<Widget> _accountMenuItems(BuildContext context, SessionState session) {
+    final theme = Theme.of(context);
+    final canSwitch = session.accounts.length > 1;
+    return [
+      if (canSwitch)
+        for (final account in session.accounts)
+          MenuItemButton(
+            leadingIcon: NyachiAvatar(
+              url: account.avatarUrl,
+              size: 24,
+              fallback: Text(account.username.characters.first),
             ),
-          const PopupMenuDivider(),
-        ],
-        PopupMenuItem<_AccountMenuChoice>(
-          value: const _OpenProfileChoice(),
-          height: _accountMenuProfileHeight,
-          child: Row(
-            children: [
-              const Icon(Icons.person_outline, size: 20),
-              const SizedBox(width: 12),
-              Text(context.l10n.profile),
-            ],
+            trailingIcon: account.id == session.active?.id
+                ? Icon(
+                    Icons.check_circle,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  )
+                : null,
+            onPressed: account.id == session.active?.id
+                ? null
+                : () => _switch(context, ref, account),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  account.displayName ?? account.username,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  '@${account.username}@${account.host}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    );
-    if (!context.mounted || choice == null) return;
-    switch (choice) {
-      case _SwitchAccountChoice(:final account):
-        await _switch(context, ref, account);
-      case _OpenProfileChoice():
-        widget.onOpenProfile();
-    }
+      MenuItemButton(
+        leadingIcon: const Icon(Icons.person_outline, size: 20),
+        onPressed: widget.onOpenProfile,
+        child: Text(context.l10n.profile),
+      ),
+    ];
   }
 
   Widget _fullCard(
@@ -712,6 +729,7 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
     LocalAccount? account,
     Widget avatar,
     bool canSwitch,
+    VoidCallback openMenu,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -720,7 +738,7 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: account == null ? null : () => _openAccountMenu(context),
+          onTap: account == null ? null : openMenu,
           child: MouseRegion(
             onEnter: (_) => setState(() => _hovering = true),
             onExit: (_) => setState(() => _hovering = false),
@@ -800,95 +818,6 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// A pick from the account card's menu.
-sealed class _AccountMenuChoice {
-  const _AccountMenuChoice();
-}
-
-/// The account item's height in the card's menu, shared by the item and the
-/// height the menu is positioned with.
-const double _accountMenuItemHeight = 56;
-
-/// The profile item's height in the card's menu.
-const double _accountMenuProfileHeight = 48;
-
-/// Extra vertical room the menu's own padding takes.
-const double _accountMenuPadding = 16;
-
-/// The menu's height before it is built, so it can be placed above the card
-/// instead of over it. Mirrors the item heights below; the popup layout
-/// clamps anything this misses.
-double _accountMenuHeight(int accountCount) {
-  final switchable = accountCount > 1;
-  return (switchable
-          ? accountCount * _accountMenuItemHeight + _kDividerHeight
-          : 0) +
-      _accountMenuProfileHeight +
-      _accountMenuPadding;
-}
-
-/// Height of the divider between the account list and the profile entry,
-/// matching `PopupMenuDivider`'s default.
-const double _kDividerHeight = 16;
-
-final class _SwitchAccountChoice extends _AccountMenuChoice {
-  const _SwitchAccountChoice(this.account);
-
-  final LocalAccount account;
-}
-
-final class _OpenProfileChoice extends _AccountMenuChoice {
-  const _OpenProfileChoice();
-}
-
-/// One account inside the card's menu: avatar, name, handle, and a check on
-/// the account already signed in.
-class _AccountMenuRow extends StatelessWidget {
-  const _AccountMenuRow({required this.account, required this.current});
-
-  final LocalAccount account;
-  final bool current;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        NyachiAvatar(
-          url: account.avatarUrl,
-          size: 28,
-          fallback: Text(account.username.characters.first),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                account.displayName ?? account.username,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-              Text(
-                '@${account.username}@${account.host}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (current)
-          Icon(Icons.check_circle, size: 18, color: theme.colorScheme.primary),
-      ],
     );
   }
 }
