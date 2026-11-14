@@ -193,6 +193,32 @@ class DrawerNavList extends StatelessWidget {
   }
 }
 
+/// Compact icon button for the sidebar footer row, so the account card keeps
+/// the rest of the width.
+class _FooterIconButton extends StatelessWidget {
+  const _FooterIconButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+      icon: Icon(icon, size: 20),
+    );
+  }
+}
+
 /// One full-width navigation row: icon + label with the selected pill.
 /// Shared by the drawer and the expanded desktop sidebar.
 class NavRow extends StatelessWidget {
@@ -364,34 +390,40 @@ class _ExpandedSidebar extends StatelessWidget {
             ),
           ),
         ),
-        // The pinned footer: the account row, settings and the collapse
-        // toggle stay visible without scrolling.
+        // The pinned footer: the account card with settings and the collapse
+        // toggle beside it, all visible without scrolling.
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SidebarUserPanel(
-                collapsed: false,
-                onOpenProfile: entries.onOpenProfile,
-              ),
-              Row(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Every width between 80 and 240 is on screen while the pane
+              // tweens. Below this the two buttons would not fit next to the
+              // card, and the rail (which owns that range once settled) has
+              // its own entries, so the card shrinks to its avatar.
+              final showButtons = constraints.maxWidth >= 140;
+              return Row(
                 children: [
                   Expanded(
-                    child: NavRow(
-                      icon: Icons.settings_outlined,
-                      label: context.l10n.settings,
-                      onTap: entries.onOpenSettings,
+                    child: SidebarUserPanel(
+                      collapsed: !showButtons,
+                      onOpenProfile: entries.onOpenProfile,
                     ),
                   ),
-                  IconButton(
-                    tooltip: context.l10n.collapse,
-                    onPressed: onToggleCollapse,
-                    icon: const Icon(Icons.chevron_left),
-                  ),
+                  if (showButtons) ...[
+                    _FooterIconButton(
+                      tooltip: context.l10n.settings,
+                      icon: Icons.settings_outlined,
+                      onPressed: entries.onOpenSettings,
+                    ),
+                    _FooterIconButton(
+                      tooltip: context.l10n.collapse,
+                      icon: Icons.chevron_left,
+                      onPressed: onToggleCollapse,
+                    ),
+                  ],
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ],
@@ -450,6 +482,13 @@ class _CollapsedSidebar extends StatelessWidget {
               onTap: entries.onOpenAdmin,
             ),
           const Divider(height: 16),
+          // Settings sits with the account card, the way the expanded footer
+          // puts it beside the card.
+          _RailIconTile(
+            icon: Icons.settings_outlined,
+            tooltip: context.l10n.settings,
+            onTap: entries.onOpenSettings,
+          ),
           SidebarUserPanel(
             collapsed: true,
             onOpenProfile: entries.onOpenProfile,
@@ -483,22 +522,27 @@ class _RailIconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: SizedBox(
-              width: 44,
-              height: 44,
-              child: Icon(
-                icon,
-                size: 22,
-                color: theme.colorScheme.onSurfaceVariant,
+    // The icon is the only content, so the tooltip carries the name for
+    // pointers and assistive tech alike.
+    return Tooltip(
+      message: tooltip,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onTap,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -530,8 +574,9 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
 
   /// Below this the card falls back to the avatar alone: the sidebar width
   /// tweens between 80 and 240, and the full row needs room for the avatar,
-  /// the gap and readable text.
-  static const _fullCardMinWidth = 150.0;
+  /// the gap and readable text — minus the settings and collapse buttons the
+  /// footer keeps beside it.
+  static const _fullCardMinWidth = 140.0;
 
   @override
   Widget build(BuildContext context) {

@@ -148,6 +148,9 @@ void main() {
     // branch content).
     expect(find.text('detail'), findsOneWidget);
     expect(find.text('Nyachi'), findsOneWidget);
+    // Settings is an icon button in the footer row, beside the account card.
+    expect(find.byTooltip('Settings'), findsOneWidget);
+    expect(find.byTooltip('Collapse'), findsOneWidget);
   });
 
   testWidgets('the account card is one tap target across its whole row', (
@@ -329,14 +332,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Collapsed means icon-only, not empty: the tab icons and the feature
-    // entries are all still there.
+    // Collapsed means icon-only, not empty: the tab icons, the feature
+    // entries and settings are all still there.
     expect(find.byIcon(Icons.home_outlined), findsWidgets);
     expect(find.byIcon(Icons.notifications_outlined), findsWidgets);
     expect(find.byIcon(Icons.chat_bubble_outline), findsWidgets);
     expect(find.byIcon(Icons.person_outline), findsWidgets);
     expect(find.byIcon(Icons.campaign_outlined), findsWidgets);
     expect(find.byIcon(Icons.cloud_outlined), findsWidgets);
+    expect(find.byTooltip('Settings'), findsOneWidget);
   });
 
   testWidgets('collapsing the sidebar animates instead of jumping', (
