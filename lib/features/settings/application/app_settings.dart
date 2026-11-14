@@ -77,6 +77,7 @@ class AppSettings {
     required this.detailBreakpoint,
     required this.oobeCompleted,
     this.showMeAtTop = false,
+    this.sidebarWidth = appSidebarDefaultWidth,
     this.centerContent = true,
     this.defaultVisibility = 'public',
     this.defaultLocalOnly = false,
@@ -107,6 +108,9 @@ class AppSettings {
 
   /// Desktop sidebar: the account header replaces the "me" tab row when set.
   final bool showMeAtTop;
+
+  /// Extended-rail width in logical pixels (drag-adjusted, 160-400).
+  final double sidebarWidth;
   final bool centerContent;
 
   /// Starting visibility and local-only flag for a new note. The composer
@@ -131,6 +135,7 @@ class AppSettings {
     int? detailBreakpoint,
     bool? oobeCompleted,
     bool? showMeAtTop,
+    double? sidebarWidth,
     bool? centerContent,
     String? defaultVisibility,
     bool? defaultLocalOnly,
@@ -146,6 +151,7 @@ class AppSettings {
       detailBreakpoint: detailBreakpoint ?? this.detailBreakpoint,
       oobeCompleted: oobeCompleted ?? this.oobeCompleted,
       showMeAtTop: showMeAtTop ?? this.showMeAtTop,
+      sidebarWidth: sidebarWidth ?? this.sidebarWidth,
       centerContent: centerContent ?? this.centerContent,
       defaultVisibility: defaultVisibility ?? this.defaultVisibility,
       defaultLocalOnly: defaultLocalOnly ?? this.defaultLocalOnly,
@@ -167,6 +173,7 @@ class SettingsController extends _$SettingsController {
   static const sidebarOrderKey = 'settings.sidebarTabOrder';
   static const sidebarHiddenKey = 'settings.sidebarHiddenTabs';
   static const showMeAtTopKey = 'layout.showMeAtTop';
+  static const sidebarWidthKey = 'layout.sidebarWidth';
   static const detailBreakpointKey = 'layout.detailBreakpoint';
   static const centerContentKey = 'layout.centerContent';
   static const oobeCompletedKey = 'oobe.completed';
@@ -206,6 +213,8 @@ class SettingsController extends _$SettingsController {
       sidebarNavConfig: sidebar,
       oobeCompleted: prefs.getBool(oobeCompletedKey) ?? false,
       showMeAtTop: prefs.getBool(showMeAtTopKey) ?? false,
+      sidebarWidth: (prefs.getDouble(sidebarWidthKey) ?? appSidebarDefaultWidth)
+          .clamp(appSidebarMinWidth, appSidebarMaxWidth),
       detailBreakpoint:
           (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
@@ -344,6 +353,20 @@ class SettingsController extends _$SettingsController {
   Future<void> setShowMeAtTop(bool value) async {
     state = state.copyWith(showMeAtTop: value);
     await _prefs.setBool(showMeAtTopKey, value);
+  }
+
+  Future<void> setSidebarWidth(double value) async {
+    final clamped = value.clamp(appSidebarMinWidth, appSidebarMaxWidth);
+    state = state.copyWith(sidebarWidth: clamped);
+    await _prefs.setDouble(sidebarWidthKey, clamped);
+  }
+
+  /// Drag-time width update: in-memory only, persisted by [setSidebarWidth]
+  /// when the drag gesture ends.
+  void setSidebarWidthLive(double value) {
+    state = state.copyWith(
+      sidebarWidth: value.clamp(appSidebarMinWidth, appSidebarMaxWidth),
+    );
   }
 
   AppTab? _parseTab(String value) {

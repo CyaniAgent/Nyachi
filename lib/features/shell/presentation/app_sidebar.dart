@@ -358,7 +358,7 @@ class _AccountHeaderState extends ConsumerState<AccountHeader> {
                   : null,
               onTap: account.id == session.active?.id
                   ? null
-                  : () => _switch(context, ref, account),
+                  : () => switchAccount(context, ref, account),
               onLongPress: () => _remove(context, ref, account),
             ),
           ListTile(
@@ -374,7 +374,9 @@ class _AccountHeaderState extends ConsumerState<AccountHeader> {
   }
 }
 
-Future<void> _switch(
+/// Switches the active account and lands on the home tab. Shared by the
+/// drawer header's account list and the wide rail's account chip menu.
+Future<void> switchAccount(
   BuildContext context,
   WidgetRef ref,
   LocalAccount account,

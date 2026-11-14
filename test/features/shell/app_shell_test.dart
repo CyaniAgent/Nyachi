@@ -85,7 +85,7 @@ void main() {
     expect(destinations, ['Home', 'Notifications', 'Chat', 'Me']);
   });
 
-  testWidgets('wide windows render the fixed icon rail', (tester) async {
+  testWidgets('wide windows render the extended-capable rail', (tester) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -144,120 +144,133 @@ void main() {
     await tester.pumpAndSettle();
 
     // The rail survives pushed detail routes (it is shell chrome, not
-    // branch content).
+    // branch content). Extended by default: destination labels are on and
+    // the feature entries read as rows.
     expect(find.text('detail'), findsOneWidget);
     expect(find.byType(NavigationRail), findsOneWidget);
-    // Menu, compose and settings — and nothing that collapses anything.
-    expect(find.byTooltip('Open navigation menu'), findsOneWidget);
-    expect(find.byTooltip('Compose'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.byTooltip('Collapse'), findsOneWidget);
+    expect(find.byIcon(Icons.menu_open), findsOneWidget);
+    // The compose fab is extended, and the feature entries are rows.
+    expect(find.text('Compose'), findsOneWidget);
+    expect(find.text('Announcements'), findsOneWidget);
+    expect(find.text('Drive'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+
+    // Collapsing swaps the toggle to its other style and the compose fab to
+    // its circle; the destination labels stay mounted, hidden by the rail's
+    // own transition. The feature entries collapse to icon tiles.
+    await tester.tap(find.byTooltip('Collapse'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Expand'), findsOneWidget);
+    expect(find.byIcon(Icons.menu), findsOneWidget);
+    expect(find.text('Compose'), findsNothing);
+    expect(find.byTooltip('Announcements'), findsOneWidget);
     expect(find.byTooltip('Settings'), findsOneWidget);
-    expect(find.byTooltip('Collapse'), findsNothing);
+
+    // Expanding brings the labels and rows back.
+    await tester.tap(find.byTooltip('Expand'));
+    await tester.pumpAndSettle();
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.byTooltip('Collapse'), findsOneWidget);
   });
 
-  testWidgets(
-    'the drawer header opens the account menu and the rail avatar switches',
-    (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      SharedPreferences.setMockInitialValues({});
-      final preferences = await SharedPreferences.getInstance();
-      final alice = LocalAccount(
-        id: 'alice',
-        host: 'example.test',
-        userId: 'u1',
-        username: 'alice',
-        addedAt: DateTime(2026),
-        lastUsedAt: DateTime(2026),
-      );
-      final bob = LocalAccount(
-        id: 'bob',
-        host: 'other.test',
-        userId: 'u2',
-        username: 'bob',
-        addedAt: DateTime(2026),
-        lastUsedAt: DateTime(2026),
-      );
+  testWidgets('the rail account chip opens the account menu and switches', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final alice = LocalAccount(
+      id: 'alice',
+      host: 'example.test',
+      userId: 'u1',
+      username: 'alice',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
+    final bob = LocalAccount(
+      id: 'bob',
+      host: 'other.test',
+      userId: 'u2',
+      username: 'bob',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
 
-      final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(preferences),
-          sessionControllerProvider.overrideWith(
-            () => _FakeSession(
-              SessionState(
-                accounts: [alice, bob],
-                active: alice,
-                initialized: true,
-              ),
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(preferences),
+        sessionControllerProvider.overrideWith(
+          () => _FakeSession(
+            SessionState(
+              accounts: [alice, bob],
+              active: alice,
+              initialized: true,
             ),
           ),
-          // A signed-in session would open a socket with retry timers.
-          realtimeServiceProvider.overrideWith((ref) => null),
-        ],
-      );
-      addTearDown(container.dispose);
-      final shellKey = GlobalKey<NavigatorState>();
-      final router = GoRouter(
-        initialLocation: '/home',
-        routes: [
-          ShellRoute(
-            navigatorKey: shellKey,
-            builder: (context, state, child) =>
-                RootShell(uri: state.uri, child: child),
-            routes: [
-              StatefulShellRoute.indexedStack(
-                builder: (context, state, navigationShell) =>
-                    AppShell(navigationShell: navigationShell),
-                branches: [
-                  StatefulShellBranch(
-                    routes: [
-                      GoRoute(
-                        path: '/home',
-                        builder: (_, _) => const Scaffold(),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      );
-      addTearDown(router.dispose);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp.router(
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            routerConfig: router,
-          ),
         ),
-      );
-      await tester.pumpAndSettle();
+        // A signed-in session would open a socket with retry timers.
+        realtimeServiceProvider.overrideWith((ref) => null),
+      ],
+    );
+    addTearDown(container.dispose);
+    final shellKey = GlobalKey<NavigatorState>();
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        ShellRoute(
+          navigatorKey: shellKey,
+          builder: (context, state, child) =>
+              RootShell(uri: state.uri, child: child),
+          routes: [
+            StatefulShellRoute.indexedStack(
+              builder: (context, state, navigationShell) =>
+                  AppShell(navigationShell: navigationShell),
+              branches: [
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(path: '/home', builder: (_, _) => const Scaffold()),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
 
-      // The drawer is the only full navigation on a wide window. Its account
-      // header lists both accounts once expanded, and switching reaches the
-      // session.
-      await tester.tap(find.byIcon(Icons.menu));
-      await tester.pumpAndSettle();
-      expect(find.byType(Drawer), findsOneWidget);
-      expect(find.text('alice'), findsWidgets);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Accounts'));
-      await tester.pumpAndSettle();
-      expect(find.text('@bob@other.test'), findsOneWidget);
+    // On a wide window the account chip's menu is the switcher: it lists
+    // both accounts, and switching reaches the session.
+    await tester.tap(find.text('alice'));
+    await tester.pumpAndSettle();
+    expect(find.text('@bob@other.test'), findsOneWidget);
 
-      await tester.tap(find.text('@bob@other.test'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('@bob@other.test'));
+    await tester.pumpAndSettle();
 
-      expect(container.read(sessionControllerProvider).active?.id, 'bob');
-    },
-  );
+    expect(container.read(sessionControllerProvider).active?.id, 'bob');
+  });
 
-  testWidgets('the rail lists every configured tab as an icon', (tester) async {
+  testWidgets('the extended rail lists tabs and feature entries', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -281,18 +294,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // One destination per visible sidebar tab, plus menu, compose and
-    // settings pinned in the rail. Features live in the drawer now.
+    // One labelled destination per visible sidebar tab, the feature entries
+    // as rows, and the extended compose fab — nothing lives in an overlay.
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byIcon(Icons.home_outlined), findsWidgets);
     expect(find.byIcon(Icons.notifications_outlined), findsWidgets);
     expect(find.byIcon(Icons.chat_bubble_outline), findsWidgets);
-    expect(find.byIcon(Icons.person_outline), findsWidgets);
-    expect(find.byIcon(Icons.campaign_outlined), findsNothing);
-    expect(find.byIcon(Icons.cloud_outlined), findsNothing);
-    expect(find.byTooltip('Open navigation menu'), findsOneWidget);
-    expect(find.byTooltip('Compose'), findsOneWidget);
-    expect(find.byTooltip('Settings'), findsOneWidget);
+    expect(find.text('Announcements'), findsOneWidget);
+    expect(find.text('Drive'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Compose'), findsOneWidget);
+    expect(find.byTooltip('Collapse'), findsOneWidget);
   });
 
   testWidgets('wide layouts have no drawer button and no leading gap', (

@@ -583,6 +583,7 @@
   "adminHomeSubtitle": "举报、用户、内容与服务器设置",
   "bottomBar": "底栏（窄屏）",
   "sidebarSection": "侧边栏（桌面）",
+  "sidebarWidth": "侧边栏宽度",
   "showMeAtTop": "在顶部显示我的账号",
   "showMeAtTopHint": "账号区域替代个人资料标签行",
   "maxTabsReached": "底栏最多容纳四个标签",

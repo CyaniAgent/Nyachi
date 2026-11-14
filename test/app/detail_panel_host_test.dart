@@ -116,7 +116,7 @@ void main() {
     expect(find.byIcon(Icons.send), findsOneWidget);
     expect(find.text('open'), findsOneWidget);
     // The icon rail is shell chrome: it survives the compose sheet above it.
-    expect(find.byTooltip('Open navigation menu'), findsOneWidget);
+    expect(find.byTooltip('Collapse'), findsOneWidget);
 
     // Dismissing the sheet keeps the feed intact.
     await tester.tapAt(const Offset(400, 40));

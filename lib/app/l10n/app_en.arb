@@ -599,6 +599,7 @@
   "adminHomeSubtitle": "Reports, users, content and server settings",
   "bottomBar": "Bottom bar (narrow screens)",
   "sidebarSection": "Sidebar (desktop)",
+  "sidebarWidth": "Sidebar width",
   "showMeAtTop": "Show my account at the top",
   "showMeAtTopHint": "The account header replaces the profile tab row",
   "maxTabsReached": "Up to four tabs fit in the bottom bar",
