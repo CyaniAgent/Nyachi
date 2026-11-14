@@ -503,10 +503,9 @@ class _RailTrailing extends StatelessWidget {
             tooltip: context.l10n.settings,
             onTap: entries.onOpenSettings,
           ),
-          _RailAccountChip(
+          _RailAccountCard(
             extended: extended,
             onOpenProfile: entries.onOpenProfile,
-            onOpenSettings: entries.onOpenSettings,
           ),
         ],
       ),
@@ -514,10 +513,12 @@ class _RailTrailing extends StatelessWidget {
   }
 }
 
-/// One feature entry pinned in the rail's trailing slot: an icon tile while
-/// collapsed, a full-width row while expanded. Rail destinations must report
-/// a selection and these are not persistent selections, so they live in the
-/// trailing slot where taps are free.
+/// One feature entry pinned in the rail's trailing slot. Rail destinations
+/// must report a selection and these are not persistent selections, so they
+/// live in the trailing slot where taps are free — styled like the
+/// destinations themselves so the rail reads as one column: collapsed, the
+/// same centred 22 px icon; expanded, the icon in the same 80 px icon zone
+/// with the label beside it.
 class _RailFeatureEntry extends StatelessWidget {
   const _RailFeatureEntry({
     required this.extended,
@@ -535,43 +536,57 @@ class _RailFeatureEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!extended) {
-      // The icon is the only content, so the tooltip carries the name for
-      // pointers and assistive tech alike.
-      return Tooltip(
-        message: tooltip,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onTap,
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(
-                    icon,
-                    size: 22,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
+    final theme = Theme.of(context);
+    // Expanded, the icon sits in the same 80 px zone the destinations use,
+    // so the column of icons stays aligned; collapsed, the icon is centred
+    // the way the destinations are.
+    Widget content = Row(
+      mainAxisAlignment: extended
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.center,
+      children: [
+        if (extended)
+          SizedBox(
+            width: 80,
+            child: Icon(
+              icon,
+              size: 22,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          )
+        else
+          Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
+        if (extended)
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ),
+      ],
+    );
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(height: 56, child: Center(child: content)),
         ),
-      );
-    }
-    return NavRow(icon: icon, label: label, onTap: onTap);
+      ),
+    );
   }
 }
 
 /// The leading compose button, following the framework's extended-animation
-/// example: collapsed it is a circular FAB, expanded a full labelled
-/// `FloatingActionButton.extended`, revealed from the start edge while the
-/// rail's width animates.
+/// example: a regular circular FAB collapsed, a `FloatingActionButton.
+/// extended` when expanded, revealed from the start edge while the rail's
+/// width animates. Flat in every state — no shadow — and each variant keeps
+/// its natural size (56 collapsed, 48 extended) instead of being squeezed.
 class _RailComposeFab extends StatelessWidget {
   const _RailComposeFab({required this.extended, required this.onPressed});
 
@@ -584,12 +599,8 @@ class _RailComposeFab extends StatelessWidget {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
-        // The extended fab has a shorter height than the regular fab.
         return Container(
-          height: 56,
-          padding: EdgeInsets.symmetric(
-            vertical: lerpDouble(0, 6, animation.value)!,
-          ),
+          height: lerpDouble(56, 48, animation.value)!,
           // Collapsed, the rail centres the circle like every destination.
           // Expanded, the labelled fab sits at the start edge instead of
           // floating mid-pane.
@@ -601,6 +612,9 @@ class _RailComposeFab extends StatelessWidget {
                   heroTag: null,
                   tooltip: context.l10n.compose,
                   onPressed: onPressed,
+                  elevation: 0,
+                  hoverElevation: 0,
+                  focusElevation: 0,
                   child: const Icon(Icons.edit_outlined),
                 )
               : Align(
@@ -612,6 +626,9 @@ class _RailComposeFab extends StatelessWidget {
                       heroTag: null,
                       tooltip: context.l10n.compose,
                       onPressed: onPressed,
+                      elevation: 0,
+                      hoverElevation: 0,
+                      focusElevation: 0,
                       icon: const Icon(Icons.edit_outlined),
                       label: Text(context.l10n.compose),
                     ),
@@ -686,60 +703,46 @@ class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
   }
 }
 
-/// The account chip pinned at the rail's bottom: avatar alone when
-/// collapsed, avatar + name when expanded. Tapping opens the account menu —
-/// switch account, open profile, settings.
-class _RailAccountChip extends ConsumerWidget {
-  const _RailAccountChip({
-    required this.extended,
-    required this.onOpenProfile,
-    required this.onOpenSettings,
-  });
+/// The account card pinned at the rail's bottom, the card refined for the
+/// sidebar: a rounded, whole-row tap target (avatar + name + handle) when
+/// expanded, the avatar alone when collapsed. Tapping anywhere opens the
+/// official menu anchor — every signed-in account to switch to, then the
+/// current account's profile.
+class _RailAccountCard extends ConsumerStatefulWidget {
+  const _RailAccountCard({required this.extended, required this.onOpenProfile});
 
   final bool extended;
   final VoidCallback onOpenProfile;
-  final VoidCallback onOpenSettings;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_RailAccountCard> createState() => _RailAccountCardState();
+}
+
+class _RailAccountCardState extends ConsumerState<_RailAccountCard> {
+  final _menuController = MenuController();
+  var _hovering = false;
+
+  /// Below this the card falls back to the avatar alone: the full row needs
+  /// room for the avatar, the gap and readable text.
+  static const _fullCardMinWidth = 140.0;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final session = ref.watch(sessionControllerProvider);
     final account = session.active;
-    final controller = MenuController();
-    Widget chip;
-    if (extended) {
-      chip = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NyachiAvatar(url: account?.avatarUrl, size: 32, showStatus: true),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                account?.displayName ??
-                    account?.username ??
-                    context.l10n.noAccounts,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-          ],
-        ),
-      );
-    } else {
-      chip = Padding(
-        padding: const EdgeInsets.all(4),
-        child: NyachiAvatar(
-          url: account?.avatarUrl,
-          size: 32,
-          showStatus: true,
-        ),
-      );
-    }
+    final canSwitch = session.accounts.length > 1;
+    final l10n = context.l10n;
+    final avatar = NyachiAvatar(
+      url: account?.avatarUrl,
+      size: 36,
+      showStatus: true,
+    );
+    // The official menu anchor handles the geometry this card needs: the
+    // card sits at the bottom of the window, so the menu flips above it,
+    // grows upward, and closes on outside taps.
     return MenuAnchor(
-      controller: controller,
+      controller: _menuController,
       style: MenuStyle(
         backgroundColor: WidgetStatePropertyAll(
           theme.colorScheme.surfaceContainer,
@@ -751,7 +754,7 @@ class _RailAccountChip extends ConsumerWidget {
         maximumSize: const WidgetStatePropertyAll(Size(260, double.infinity)),
       ),
       menuChildren: [
-        if (session.accounts.length > 1)
+        if (canSwitch)
           for (final item in session.accounts)
             MenuItemButton(
               leadingIcon: NyachiAvatar(
@@ -791,22 +794,138 @@ class _RailAccountChip extends ConsumerWidget {
             ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.person_outline, size: 20),
-          onPressed: onOpenProfile,
-          child: Text(context.l10n.profile),
-        ),
-        MenuItemButton(
-          leadingIcon: const Icon(Icons.settings_outlined, size: 20),
-          onPressed: onOpenSettings,
-          child: Text(context.l10n.settings),
+          onPressed: widget.onOpenProfile,
+          child: Text(l10n.profile),
         ),
       ],
-      builder: (context, menuController, child) {
-        final onTap = account == null
-            ? null
-            : () {
-                controller.isOpen ? controller.close() : controller.open();
-              };
-        return GestureDetector(onTap: onTap, child: chip);
+      builder: (context, controller, child) {
+        void openMenu() {
+          if (account != null) controller.open();
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // The rail, and every intermediate width the collapse animation
+            // passes through, gets the avatar alone.
+            if (!widget.extended || constraints.maxWidth < _fullCardMinWidth) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Material(
+                    color: Colors.transparent,
+                    shape: const CircleBorder(),
+                    child: Tooltip(
+                      message: canSwitch ? l10n.accounts : l10n.profile,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: openMenu,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: avatar,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(24),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: account == null ? null : openMenu,
+                  child: MouseRegion(
+                    onEnter: (_) => setState(() => _hovering = true),
+                    onExit: (_) => setState(() => _hovering = false),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          avatar,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  account?.displayName ??
+                                      account?.username ??
+                                      l10n.noAccounts,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                // Hovering slides the handle in over the
+                                // status line, so the handle is readable
+                                // without opening anything.
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 180),
+                                  switchInCurve: Curves.easeOut,
+                                  switchOutCurve: Curves.easeIn,
+                                  layoutBuilder:
+                                      (currentChild, previousChildren) => Stack(
+                                        alignment: Alignment.centerLeft,
+                                        children: [
+                                          ...previousChildren,
+                                          ?currentChild,
+                                        ],
+                                      ),
+                                  transitionBuilder: (child, animation) {
+                                    final incoming =
+                                        child.key == ValueKey(_hovering);
+                                    final position = incoming
+                                        ? Tween<Offset>(
+                                            begin: const Offset(0, 1),
+                                            end: Offset.zero,
+                                          ).animate(animation)
+                                        : Tween<Offset>(
+                                            begin: const Offset(0, -1),
+                                            end: Offset.zero,
+                                          ).animate(animation);
+                                    return ClipRect(
+                                      child: SlideTransition(
+                                        position: position,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    _hovering && account != null
+                                        ? '@${account.username}'
+                                        : l10n.online,
+                                    key: ValueKey(_hovering),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (canSwitch)
+                            Icon(
+                              Icons.unfold_more,
+                              size: 18,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
       },
     );
   }
