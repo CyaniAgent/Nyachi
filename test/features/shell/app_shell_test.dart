@@ -173,7 +173,15 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(preferences),
-          activeAccountProvider.overrideWithValue(account),
+          sessionControllerProvider.overrideWith(
+            () => _FakeSession(
+              SessionState(
+                accounts: [account],
+                active: account,
+                initialized: true,
+              ),
+            ),
+          ),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -197,10 +205,100 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The name is part of the card's tap target, not just the avatar.
+    // The name is part of the card's tap target, not just the avatar: the
+    // whole row opens the account menu.
     await tester.tap(find.text('Alice'));
     await tester.pumpAndSettle();
+    expect(find.text('Profile'), findsOneWidget);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
     expect(opened, 1);
+  });
+
+  testWidgets('the account card menu switches to another account', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final alice = LocalAccount(
+      id: 'alice',
+      host: 'example.test',
+      userId: 'u1',
+      username: 'alice',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
+    final bob = LocalAccount(
+      id: 'bob',
+      host: 'other.test',
+      userId: 'u2',
+      username: 'bob',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(preferences),
+        sessionControllerProvider.overrideWith(
+          () => _FakeSession(
+            SessionState(
+              accounts: [alice, bob],
+              active: alice,
+              initialized: true,
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        // Switching accounts ends by going home, so the card has to live
+        // inside a router for the flow to complete.
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => Scaffold(
+            body: SizedBox(
+              width: 240,
+              child: Column(
+                children: [
+                  SidebarUserPanel(collapsed: false, onOpenProfile: () {}),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('alice'));
+    await tester.pumpAndSettle();
+
+    // The other account is offered and switching to it reaches the session.
+    await tester.tap(find.text('@bob@other.test'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(sessionControllerProvider).active?.id, 'bob');
   });
 
   testWidgets('collapsed sidebar keeps every destination reachable', (
@@ -487,4 +585,22 @@ void main() {
     await tester.pump();
     expect(tapped, 1);
   });
+}
+
+/// Session controller that records a switch instead of touching storage, so
+/// the account card's menu can be exercised without a database. The id it was
+/// asked to switch to is left in `state`.
+class _FakeSession extends SessionController {
+  _FakeSession(this._initial);
+
+  final SessionState _initial;
+
+  @override
+  SessionState build() => _initial;
+
+  @override
+  Future<void> switchAccount(String id) async {
+    final target = _initial.accounts.firstWhere((account) => account.id == id);
+    state = state.copyWith(active: target);
+  }
 }

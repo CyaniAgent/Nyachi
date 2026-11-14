@@ -536,7 +536,9 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final account = ref.watch(activeAccountProvider);
+    final session = ref.watch(sessionControllerProvider);
+    final account = session.active;
+    final canSwitch = session.accounts.length > 1;
     final l10n = context.l10n;
     final avatar = NyachiAvatar(
       url: account?.avatarUrl,
@@ -555,10 +557,12 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
                 color: Colors.transparent,
                 shape: const CircleBorder(),
                 child: Tooltip(
-                  message: l10n.profile,
+                  message: canSwitch ? l10n.accounts : l10n.profile,
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: account == null ? null : widget.onOpenProfile,
+                    onTap: account == null
+                        ? null
+                        : () => _openAccountMenu(context),
                     child: Padding(
                       padding: const EdgeInsets.all(4),
                       child: avatar,
@@ -569,9 +573,67 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
             ),
           );
         }
-        return _fullCard(context, theme, account, avatar);
+        return _fullCard(context, theme, account, avatar, canSwitch);
       },
     );
+  }
+
+  /// The card's menu: every signed-in account to switch to, then the current
+  /// account's profile.
+  Future<void> _openAccountMenu(BuildContext context) async {
+    final session = ref.read(sessionControllerProvider);
+    final active = session.active;
+    if (active == null) return;
+    final overlay = Overlay.maybeOf(context);
+    final box = context.findRenderObject() as RenderBox?;
+    final overlayBox = overlay?.context.findRenderObject() as RenderBox?;
+    if (box == null || overlayBox == null) return;
+    final choice = await showMenu<_AccountMenuChoice>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(
+          box.localToGlobal(Offset.zero, ancestor: overlayBox),
+          box.localToGlobal(
+            box.size.bottomRight(Offset.zero),
+            ancestor: overlayBox,
+          ),
+        ),
+        Offset.zero & overlayBox.size,
+      ),
+      items: [
+        if (session.accounts.length > 1) ...[
+          for (final account in session.accounts)
+            PopupMenuItem<_AccountMenuChoice>(
+              value: _SwitchAccountChoice(account),
+              enabled: account.id != active.id,
+              height: 56,
+              child: _AccountMenuRow(
+                account: account,
+                current: account.id == active.id,
+              ),
+            ),
+          const PopupMenuDivider(),
+        ],
+        PopupMenuItem<_AccountMenuChoice>(
+          value: const _OpenProfileChoice(),
+          height: 48,
+          child: Row(
+            children: [
+              const Icon(Icons.person_outline, size: 20),
+              const SizedBox(width: 12),
+              Text(context.l10n.profile),
+            ],
+          ),
+        ),
+      ],
+    );
+    if (!context.mounted || choice == null) return;
+    switch (choice) {
+      case _SwitchAccountChoice(:final account):
+        await _switch(context, ref, account);
+      case _OpenProfileChoice():
+        widget.onOpenProfile();
+    }
   }
 
   Widget _fullCard(
@@ -579,6 +641,7 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
     ThemeData theme,
     LocalAccount? account,
     Widget avatar,
+    bool canSwitch,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -587,7 +650,7 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: account == null ? null : widget.onOpenProfile,
+          onTap: account == null ? null : () => _openAccountMenu(context),
           child: MouseRegion(
             onEnter: (_) => setState(() => _hovering = true),
             onExit: (_) => setState(() => _hovering = false),
@@ -610,28 +673,126 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium,
                         ),
-                        // Hovering swaps the muted status line for the
-                        // handle, the way the sidebar identified the
-                        // account before.
-                        Text(
-                          _hovering && account != null
-                              ? '@${account.username}'
-                              : context.l10n.online,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                        // Hovering slides the handle in over the status
+                        // line, so the handle is readable without opening
+                        // anything.
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          layoutBuilder: (currentChild, previousChildren) =>
+                              Stack(
+                                alignment: Alignment.centerLeft,
+                                children: [...previousChildren, ?currentChild],
+                              ),
+                          transitionBuilder: (child, animation) {
+                            final incoming = child.key == ValueKey(_hovering);
+                            final position = incoming
+                                ? Tween<Offset>(
+                                    begin: const Offset(0, 1),
+                                    end: Offset.zero,
+                                  ).animate(animation)
+                                : Tween<Offset>(
+                                    begin: const Offset(0, -1),
+                                    end: Offset.zero,
+                                  ).animate(animation);
+                            return ClipRect(
+                              child: SlideTransition(
+                                position: position,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Text(
+                            _hovering && account != null
+                                ? '@${account.username}'
+                                : context.l10n.online,
+                            key: ValueKey(_hovering),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
+                  if (canSwitch)
+                    Icon(
+                      Icons.unfold_more,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A pick from the account card's menu.
+sealed class _AccountMenuChoice {
+  const _AccountMenuChoice();
+}
+
+final class _SwitchAccountChoice extends _AccountMenuChoice {
+  const _SwitchAccountChoice(this.account);
+
+  final LocalAccount account;
+}
+
+final class _OpenProfileChoice extends _AccountMenuChoice {
+  const _OpenProfileChoice();
+}
+
+/// One account inside the card's menu: avatar, name, handle, and a check on
+/// the account already signed in.
+class _AccountMenuRow extends StatelessWidget {
+  const _AccountMenuRow({required this.account, required this.current});
+
+  final LocalAccount account;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        NyachiAvatar(
+          url: account.avatarUrl,
+          size: 28,
+          fallback: Text(account.username.characters.first),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                account.displayName ?? account.username,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+              Text(
+                '@${account.username}@${account.host}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (current)
+          Icon(Icons.check_circle, size: 18, color: theme.colorScheme.primary),
+      ],
     );
   }
 }
