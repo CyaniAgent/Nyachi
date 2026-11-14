@@ -403,7 +403,7 @@ class _DesktopRail extends ConsumerWidget {
                 icon: Icon(extended ? Icons.menu_open : Icons.menu),
               ),
               const SizedBox(height: 12),
-              _RailComposeFab(onPressed: onCompose),
+              _RailComposeFab(extended: extended, onPressed: onCompose),
             ],
           ),
           destinations: [
@@ -496,11 +496,8 @@ class _RailTrailing extends StatelessWidget {
 
 /// One feature entry pinned in the rail's trailing slot. Rail destinations
 /// must report a selection and these are not persistent selections, so they
-/// live in the trailing slot where taps are free — laid out with the same
-/// parts the framework's own extended destination row uses: the icon in its
-/// 56 px circular indicator area, the label beside it in the destination
-/// label style, and the destination bottom spacing, so the column reads as
-/// one list.
+/// live in the trailing slot where taps are free: a full-width nav row while
+/// expanded, an icon tile while collapsed.
 class _RailFeatureEntry extends StatelessWidget {
   const _RailFeatureEntry({
     required this.extended,
@@ -518,69 +515,93 @@ class _RailFeatureEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // The destination icon sits in a 56 px circular indicator area; its
-    // label uses the theme's bodyLarge like the rail's own labels.
-    final iconPart = SizedBox(
-      width: 56,
-      height: 56,
-      child: Icon(icon, size: 24, color: theme.colorScheme.onSurfaceVariant),
-    );
-    final label = Text(
-      this.label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.bodyLarge?.copyWith(
-        color: theme.colorScheme.onSurface,
-      ),
-    );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Tooltip(
+    if (!extended) {
+      // The icon is the only content, so the tooltip carries the name for
+      // pointers and assistive tech alike.
+      return Tooltip(
         message: tooltip,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            child: extended
-                ? Row(
-                    children: [
-                      iconPart,
-                      Expanded(
-                        child: Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: label,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                  )
-                : Center(child: iconPart),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onTap,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(
+                    icon,
+                    size: 22,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
+    return NavRow(icon: icon, label: label, onTap: onTap);
   }
 }
 
-/// The leading compose button: the same regular circular flat FAB in both
-/// rail states — it never shrinks or morphs, so the rail's leading column
-/// reads identically collapsed and expanded.
+/// The leading compose button, following the framework's extended-animation
+/// example: collapsed it is a circular FAB, expanded a full labelled
+/// `FloatingActionButton.extended`, revealed from the start edge while the
+/// rail's width animates. Flat in every state, and each variant keeps its
+/// natural size (56 collapsed, 48 extended) instead of being squeezed.
 class _RailComposeFab extends StatelessWidget {
-  const _RailComposeFab({required this.onPressed});
+  const _RailComposeFab({required this.extended, required this.onPressed});
 
+  final bool extended;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      heroTag: null,
-      tooltip: context.l10n.compose,
-      onPressed: onPressed,
-      elevation: 0,
-      hoverElevation: 0,
-      focusElevation: 0,
-      child: const Icon(Icons.edit_outlined),
+    final animation = NavigationRail.extendedAnimation(context);
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        return Container(
+          height: lerpDouble(56, 48, animation.value)!,
+          // Collapsed, the rail centres the circle like every destination.
+          // Expanded, the labelled fab sits at the start edge instead of
+          // floating mid-pane.
+          alignment: animation.value == 0
+              ? Alignment.center
+              : AlignmentDirectional.centerStart,
+          child: animation.value == 0
+              ? FloatingActionButton(
+                  heroTag: null,
+                  tooltip: context.l10n.compose,
+                  onPressed: onPressed,
+                  elevation: 0,
+                  hoverElevation: 0,
+                  focusElevation: 0,
+                  child: const Icon(Icons.edit_outlined),
+                )
+              : Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  widthFactor: animation.value,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 8),
+                    child: FloatingActionButton.extended(
+                      heroTag: null,
+                      tooltip: context.l10n.compose,
+                      onPressed: onPressed,
+                      elevation: 0,
+                      hoverElevation: 0,
+                      focusElevation: 0,
+                      icon: const Icon(Icons.edit_outlined),
+                      label: Text(context.l10n.compose),
+                    ),
+                  ),
+                ),
+        );
+      },
     );
   }
 }
