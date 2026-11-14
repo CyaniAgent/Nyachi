@@ -624,6 +624,7 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
           EdgeInsets.symmetric(vertical: 6),
         ),
         minimumSize: const WidgetStatePropertyAll(Size(220, 0)),
+        maximumSize: const WidgetStatePropertyAll(Size(260, double.infinity)),
       ),
       menuChildren: _accountMenuItems(context, session),
       builder: (context, controller, child) {

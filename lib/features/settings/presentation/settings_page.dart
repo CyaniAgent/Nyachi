@@ -10,6 +10,7 @@ import '../../../app/detail_panel/open_detail.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/mfm/mfm_motion.dart';
 import '../../../core/ui/avatar.dart';
+import '../../../core/ui/breakpoints.dart';
 import '../../../core/network/instance_repository.dart';
 import '../../../core/update/app_version.dart';
 import '../../../core/ui/l10n_ext.dart';
@@ -232,85 +233,92 @@ class NavigationSettingsPage extends ConsumerWidget {
     final l10n = context.l10n;
     final settings = ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
+    // The page edits the chrome of the form factor it is shown in: the
+    // bottom bar on narrow windows, the sidebar on wide ones. Showing both
+    // at once reads as two competing states for one navigation.
+    final wide = MediaQuery.sizeOf(context).width >= kCompactBreakpoint;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navigation)),
       body: _SettingsBody(
         children: [
-          _SettingsSectionHeader(label: l10n.bottomBar),
-          _NavList(
-            config: settings.navConfig,
-            capped: true,
-            onReorder: (order) => controller.setNavConfig(
-              settings.navConfig.copyWith(order: order),
+          if (wide) ...[
+            _SettingsSectionHeader(label: l10n.sidebarSection),
+            _NavList(
+              config: settings.sidebarNavConfig,
+              capped: false,
+              onReorder: (order) => controller.setSidebarNavConfig(
+                settings.sidebarNavConfig.copyWith(order: order),
+              ),
+              onToggle: (tab, value) {
+                final visible = {...settings.sidebarNavConfig.visible};
+                if (value) {
+                  visible.add(tab);
+                } else {
+                  visible.remove(tab);
+                }
+                controller.setSidebarNavConfig(
+                  settings.sidebarNavConfig.copyWith(visible: visible),
+                );
+              },
             ),
-            onToggle: (tab, value) {
-              final visible = {...settings.navConfig.visible};
-              if (value) {
-                visible.add(tab);
-              } else {
-                visible.remove(tab);
-              }
-              controller.setNavConfig(
-                settings.navConfig.copyWith(visible: visible),
-              );
-            },
-          ),
-          _SettingsSectionHeader(label: l10n.sidebarSection),
-          _NavList(
-            config: settings.sidebarNavConfig,
-            capped: false,
-            onReorder: (order) => controller.setSidebarNavConfig(
-              settings.sidebarNavConfig.copyWith(order: order),
+            SwitchListTile(
+              title: Text(l10n.showMeAtTop),
+              subtitle: Text(l10n.showMeAtTopHint),
+              value: settings.showMeAtTop,
+              onChanged: controller.setShowMeAtTop,
             ),
-            onToggle: (tab, value) {
-              final visible = {...settings.sidebarNavConfig.visible};
-              if (value) {
-                visible.add(tab);
-              } else {
-                visible.remove(tab);
-              }
-              controller.setSidebarNavConfig(
-                settings.sidebarNavConfig.copyWith(visible: visible),
-              );
-            },
-          ),
-          SwitchListTile(
-            title: Text(l10n.showMeAtTop),
-            subtitle: Text(l10n.showMeAtTopHint),
-            value: settings.showMeAtTop,
-            onChanged: controller.setShowMeAtTop,
-          ),
-          ListTile(
-            title: Text(l10n.sidebarWidth),
-            subtitle: Text('${settings.sidebarWidth.round()} px'),
-          ),
-          Slider(
-            value: settings.sidebarWidth,
-            min: appSidebarMinWidth,
-            max: appSidebarMaxWidth,
-            label: '${settings.sidebarWidth.round()} px',
-            // Dragging updates memory only; the write lands once on release.
-            onChanged: controller.setSidebarWidthLive,
-            onChangeEnd: controller.setSidebarWidth,
-          ),
-          SwitchListTile(
-            title: Text(l10n.sidebarAutoCollapse),
-            subtitle: Text(l10n.sidebarAutoCollapseHint),
-            value: settings.sidebarAutoCollapse,
-            onChanged: controller.setSidebarAutoCollapse,
-          ),
-          SwitchListTile(
-            title: Text(l10n.sidebarCollapseForPanel),
-            subtitle: Text(l10n.sidebarCollapseForPanelHint),
-            value: settings.sidebarCollapseForPanel,
-            onChanged: controller.setSidebarCollapseForPanel,
-          ),
-          SwitchListTile(
-            title: Text(l10n.sidebarToggle),
-            subtitle: Text(l10n.sidebarToggleHint),
-            value: settings.sidebarToggle,
-            onChanged: controller.setSidebarToggle,
-          ),
+            ListTile(
+              title: Text(l10n.sidebarWidth),
+              subtitle: Text('${settings.sidebarWidth.round()} px'),
+            ),
+            Slider(
+              value: settings.sidebarWidth,
+              min: appSidebarMinWidth,
+              max: appSidebarMaxWidth,
+              label: '${settings.sidebarWidth.round()} px',
+              // Dragging updates memory only; the write lands once on release.
+              onChanged: controller.setSidebarWidthLive,
+              onChangeEnd: controller.setSidebarWidth,
+            ),
+            SwitchListTile(
+              title: Text(l10n.sidebarAutoCollapse),
+              subtitle: Text(l10n.sidebarAutoCollapseHint),
+              value: settings.sidebarAutoCollapse,
+              onChanged: controller.setSidebarAutoCollapse,
+            ),
+            SwitchListTile(
+              title: Text(l10n.sidebarCollapseForPanel),
+              subtitle: Text(l10n.sidebarCollapseForPanelHint),
+              value: settings.sidebarCollapseForPanel,
+              onChanged: controller.setSidebarCollapseForPanel,
+            ),
+            SwitchListTile(
+              title: Text(l10n.sidebarToggle),
+              subtitle: Text(l10n.sidebarToggleHint),
+              value: settings.sidebarToggle,
+              onChanged: controller.setSidebarToggle,
+            ),
+          ] else ...[
+            _SettingsSectionHeader(label: l10n.bottomBar),
+            _NavList(
+              config: settings.navConfig,
+              capped: true,
+              onReorder: (order) => controller.setNavConfig(
+                settings.navConfig.copyWith(order: order),
+              ),
+              onToggle: (tab, value) {
+                final visible = {...settings.navConfig.visible};
+                if (value) {
+                  visible.add(tab);
+                } else {
+                  visible.remove(tab);
+                }
+                controller.setNavConfig(
+                  settings.navConfig.copyWith(visible: visible),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
