@@ -6,12 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nyachi/app/detail_panel/detail_location.dart';
-import 'package:nyachi/app/detail_panel/detail_panel_controller.dart';
 import 'package:nyachi/core/l10n/app_localizations.dart';
 import 'package:nyachi/core/auth/session_controller.dart';
 import 'package:nyachi/core/storage/storage_models.dart';
 import 'package:nyachi/core/storage/storage_providers.dart';
+import 'package:nyachi/features/notifications/application/realtime_providers.dart';
 import 'package:nyachi/features/settings/application/app_settings.dart';
 import 'package:nyachi/features/shell/presentation/app_sidebar.dart';
 import 'package:nyachi/features/shell/presentation/app_shell.dart';
@@ -86,7 +85,7 @@ void main() {
     expect(destinations, ['Home', 'Notifications', 'Chat', 'Me']);
   });
 
-  testWidgets('wide windows render the persistent sidebar', (tester) async {
+  testWidgets('wide windows render the fixed icon rail', (tester) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -144,193 +143,43 @@ void main() {
     unawaited(router.push('/notes/1'));
     await tester.pumpAndSettle();
 
-    // The sidebar survives pushed detail routes (it is shell chrome, not
+    // The rail survives pushed detail routes (it is shell chrome, not
     // branch content).
     expect(find.text('detail'), findsOneWidget);
-    expect(find.text('Nyachi'), findsOneWidget);
-    // Settings is an icon button in the footer row, beside the account card.
+    expect(find.byType(NavigationRail), findsOneWidget);
+    // Menu, compose and settings — and nothing that collapses anything.
+    expect(find.byTooltip('Open navigation menu'), findsOneWidget);
+    expect(find.byTooltip('Compose'), findsOneWidget);
     expect(find.byTooltip('Settings'), findsOneWidget);
-    expect(find.byTooltip('Collapse'), findsOneWidget);
+    expect(find.byTooltip('Collapse'), findsNothing);
   });
 
-  testWidgets('the account card is one tap target across its whole row', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1200, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
-    final account = LocalAccount(
-      id: 'account',
-      host: 'example.test',
-      userId: 'u1',
-      username: 'alice',
-      displayName: 'Alice',
-      addedAt: DateTime(2026),
-      lastUsedAt: DateTime(2026),
-    );
+  testWidgets(
+    'the drawer header opens the account menu and the rail avatar switches',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      SharedPreferences.setMockInitialValues({});
+      final preferences = await SharedPreferences.getInstance();
+      final alice = LocalAccount(
+        id: 'alice',
+        host: 'example.test',
+        userId: 'u1',
+        username: 'alice',
+        addedAt: DateTime(2026),
+        lastUsedAt: DateTime(2026),
+      );
+      final bob = LocalAccount(
+        id: 'bob',
+        host: 'other.test',
+        userId: 'u2',
+        username: 'bob',
+        addedAt: DateTime(2026),
+        lastUsedAt: DateTime(2026),
+      );
 
-    var opened = 0;
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(preferences),
-          sessionControllerProvider.overrideWith(
-            () => _FakeSession(
-              SessionState(
-                accounts: [account],
-                active: account,
-                initialized: true,
-              ),
-            ),
-          ),
-        ],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: SizedBox(
-              width: 240,
-              child: Column(
-                children: [
-                  SidebarUserPanel(
-                    collapsed: false,
-                    onOpenProfile: () => opened++,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // The name is part of the card's tap target, not just the avatar: the
-    // whole row opens the account menu.
-    await tester.tap(find.text('Alice'));
-    await tester.pumpAndSettle();
-    expect(find.text('Profile'), findsOneWidget);
-
-    await tester.tap(find.text('Profile'));
-    await tester.pumpAndSettle();
-    expect(opened, 1);
-  });
-
-  testWidgets('the account card menu switches to another account', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1200, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
-    final alice = LocalAccount(
-      id: 'alice',
-      host: 'example.test',
-      userId: 'u1',
-      username: 'alice',
-      addedAt: DateTime(2026),
-      lastUsedAt: DateTime(2026),
-    );
-    final bob = LocalAccount(
-      id: 'bob',
-      host: 'other.test',
-      userId: 'u2',
-      username: 'bob',
-      addedAt: DateTime(2026),
-      lastUsedAt: DateTime(2026),
-    );
-
-    final container = ProviderContainer(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(preferences),
-        sessionControllerProvider.overrideWith(
-          () => _FakeSession(
-            SessionState(
-              accounts: [alice, bob],
-              active: alice,
-              initialized: true,
-            ),
-          ),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    final router = GoRouter(
-      initialLocation: '/home',
-      routes: [
-        // Switching accounts ends by going home, so the card has to live
-        // inside a router for the flow to complete.
-        GoRoute(
-          path: '/home',
-          builder: (_, _) => Scaffold(
-            body: SizedBox(
-              width: 240,
-              child: Column(
-                children: [
-                  SidebarUserPanel(collapsed: false, onOpenProfile: () {}),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-    addTearDown(router.dispose);
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp.router(
-          locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: router,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('alice'));
-    await tester.pumpAndSettle();
-
-    // The other account is offered and switching to it reaches the session.
-    await tester.tap(find.text('@bob@other.test'));
-    await tester.pumpAndSettle();
-
-    expect(container.read(sessionControllerProvider).active?.id, 'bob');
-  });
-
-  testWidgets('the account menu opens above the card, never over it', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1200, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
-    final alice = LocalAccount(
-      id: 'alice',
-      host: 'example.test',
-      userId: 'u1',
-      username: 'alice',
-      addedAt: DateTime(2026),
-      lastUsedAt: DateTime(2026),
-    );
-    final bob = LocalAccount(
-      id: 'bob',
-      host: 'other.test',
-      userId: 'u2',
-      username: 'bob',
-      addedAt: DateTime(2026),
-      lastUsedAt: DateTime(2026),
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
+      final container = ProviderContainer(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(preferences),
           sessionControllerProvider.overrideWith(
@@ -342,128 +191,73 @@ void main() {
               ),
             ),
           ),
+          // A signed-in session would open a socket with retry timers.
+          realtimeServiceProvider.overrideWith((ref) => null),
         ],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.bottomLeft,
-              child: SizedBox(
-                width: 240,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SidebarUserPanel(collapsed: false, onOpenProfile: () {}),
-                  ],
-                ),
+      );
+      addTearDown(container.dispose);
+      final shellKey = GlobalKey<NavigatorState>();
+      final router = GoRouter(
+        initialLocation: '/home',
+        routes: [
+          ShellRoute(
+            navigatorKey: shellKey,
+            builder: (context, state, child) =>
+                RootShell(uri: state.uri, child: child),
+            routes: [
+              StatefulShellRoute.indexedStack(
+                builder: (context, state, navigationShell) =>
+                    AppShell(navigationShell: navigationShell),
+                branches: [
+                  StatefulShellBranch(
+                    routes: [
+                      GoRoute(
+                        path: '/home',
+                        builder: (_, _) => const Scaffold(),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    final card = tester.getRect(find.byType(SidebarUserPanel));
-    await tester.tap(find.text('alice'));
-    await tester.pumpAndSettle();
+      // The drawer is the only full navigation on a wide window. Its account
+      // header lists both accounts once expanded, and switching reaches the
+      // session.
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+      expect(find.byType(Drawer), findsOneWidget);
+      expect(find.text('alice'), findsWidgets);
 
-    // The menu is a stack of its items; none of them may cover the card.
-    final menuItems = [
-      tester.getRect(find.text('alice').last),
-      tester.getRect(find.text('bob')),
-      tester.getRect(find.text('Profile')),
-    ];
-    for (final item in menuItems) {
-      // ignore: avoid_print
-      print('MENU-GEOM item=$item card=$card');
-      final overlaps =
-          item.left < card.right &&
-          item.right > card.left &&
-          item.top < card.bottom &&
-          item.bottom > card.top;
-      expect(overlaps, isFalse, reason: 'menu item $item covers card $card');
-    }
-  });
+      await tester.tap(find.byTooltip('Accounts'));
+      await tester.pumpAndSettle();
+      expect(find.text('@bob@other.test'), findsOneWidget);
 
-  testWidgets('with the toggle hidden the sidebar stays expanded', (
-    tester,
-  ) async {
-    // 900 is inside the auto-collapse range; with the toggle hidden the pane
-    // does not collapse at all, because nothing could bring it back.
-    tester.view.physicalSize = const Size(900, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({'layout.sidebarToggle': false});
-    final preferences = await SharedPreferences.getInstance();
+      await tester.tap(find.text('@bob@other.test'));
+      await tester.pumpAndSettle();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: ShellChrome(
-            selectedTab: AppTab.home,
-            onSelectTab: (_) {},
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      expect(container.read(sessionControllerProvider).active?.id, 'bob');
+    },
+  );
 
-    expect(tester.getSize(find.byType(AppSidebar)).width, greaterThan(80));
-    // Neither state offers the button that would collapse it.
-    expect(find.byTooltip('Expand'), findsNothing);
-    expect(find.byTooltip('Collapse'), findsNothing);
-  });
-
-  testWidgets('collapsed sidebar keeps every destination reachable', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(900, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    // 900 is wide enough for the sidebar but below the auto-expand width, so
-    // it starts collapsed.
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: ShellChrome(
-            selectedTab: AppTab.home,
-            onSelectTab: (_) {},
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // Collapsed means icon-only, not empty: the tab icons, the feature
-    // entries and settings are all still there.
-    expect(find.byIcon(Icons.home_outlined), findsWidgets);
-    expect(find.byIcon(Icons.notifications_outlined), findsWidgets);
-    expect(find.byIcon(Icons.chat_bubble_outline), findsWidgets);
-    expect(find.byIcon(Icons.person_outline), findsWidgets);
-    expect(find.byIcon(Icons.campaign_outlined), findsWidgets);
-    expect(find.byIcon(Icons.cloud_outlined), findsWidgets);
-    expect(find.byTooltip('Settings'), findsOneWidget);
-  });
-
-  testWidgets('collapsing the sidebar animates instead of jumping', (
-    tester,
-  ) async {
+  testWidgets('the rail lists every configured tab as an icon', (tester) async {
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -487,28 +281,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    Size sidebarSize() => tester.getSize(find.byType(AppSidebar));
-
-    final expandedWidth = sidebarSize().width;
-    expect(expandedWidth, greaterThan(200));
-
-    await tester.tap(find.byTooltip('Collapse'));
-    await tester.pump();
-    // Mid-flight the pane is narrower than expanded but wider than collapsed:
-    // that is the animation, not a subtree swap.
-    await tester.pump(const Duration(milliseconds: 80));
-    final midWidth = sidebarSize().width;
-    expect(midWidth, lessThan(expandedWidth));
-    expect(midWidth, greaterThan(80));
-
-    await tester.pumpAndSettle();
-    expect(sidebarSize().width, 80);
-    // Every destination remains.
-    expect(find.byIcon(Icons.home_outlined), findsOneWidget);
-    // The collapse state is announced by exactly one control, and it says what
-    // the next tap does.
-    expect(find.byTooltip('Expand'), findsOneWidget);
-    expect(find.byTooltip('Collapse'), findsNothing);
+    // One destination per visible sidebar tab, plus menu, compose and
+    // settings pinned in the rail. Features live in the drawer now.
+    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byIcon(Icons.home_outlined), findsWidgets);
+    expect(find.byIcon(Icons.notifications_outlined), findsWidgets);
+    expect(find.byIcon(Icons.chat_bubble_outline), findsWidgets);
+    expect(find.byIcon(Icons.person_outline), findsWidgets);
+    expect(find.byIcon(Icons.campaign_outlined), findsNothing);
+    expect(find.byIcon(Icons.cloud_outlined), findsNothing);
+    expect(find.byTooltip('Open navigation menu'), findsOneWidget);
+    expect(find.byTooltip('Compose'), findsOneWidget);
+    expect(find.byTooltip('Settings'), findsOneWidget);
   });
 
   testWidgets('wide layouts have no drawer button and no leading gap', (
@@ -541,100 +325,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The sidebar is already on screen, so a hamburger would open nothing.
+    // The rail is already on screen, so a hamburger in the AppBar would open
+    // nothing.
     expect(find.byIcon(Icons.menu), findsNothing);
     final titleLeft = tester.getTopLeft(find.text('Title')).dx;
     // No reserved leading slot: the title starts at the normal inset.
     expect(titleLeft, lessThan(40));
-  });
-
-  testWidgets('opening the detail panel collapses the sidebar', (tester) async {
-    tester.view.physicalSize = const Size(1200, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    // The panel-collapse behavior is opt-in; the default keeps the pane
-    // as it is and lets the panel take the room from the feed.
-    SharedPreferences.setMockInitialValues({
-      'layout.sidebarCollapseForPanel': true,
-    });
-    final preferences = await SharedPreferences.getInstance();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: ShellChrome(
-            selectedTab: AppTab.home,
-            onSelectTab: (_) {},
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    Size sidebarSize() => tester.getSize(find.byType(AppSidebar));
-    // Above the auto-breakpoint the pane starts expanded.
-    expect(sidebarSize().width, greaterThan(80));
-
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(ShellChrome)),
-    );
-    container
-        .read(detailPanelControllerProvider.notifier)
-        .replaceStack(NoteDetailLocation('n1'));
-    await tester.pumpAndSettle();
-    // The panel squeezed the content column: the pane collapsed to make room.
-    expect(sidebarSize().width, 80);
-
-    container.read(detailPanelControllerProvider.notifier).close();
-    await tester.pumpAndSettle();
-    // Closing restores the pre-panel state.
-    expect(sidebarSize().width, greaterThan(80));
-  });
-
-  testWidgets('the detail panel keeps the sidebar expanded by default', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1200, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: ShellChrome(
-            selectedTab: AppTab.home,
-            onSelectTab: (_) {},
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    Size sidebarSize() => tester.getSize(find.byType(AppSidebar));
-    expect(sidebarSize().width, greaterThan(80));
-
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(ShellChrome)),
-    );
-    container
-        .read(detailPanelControllerProvider.notifier)
-        .replaceStack(NoteDetailLocation('n1'));
-    await tester.pumpAndSettle();
-    // Opt-in is off: the pane keeps its width and the panel squeezes the
-    // feed instead.
-    expect(sidebarSize().width, greaterThan(80));
   });
 
   testWidgets('drawer hamburger opens the shell drawer', (tester) async {

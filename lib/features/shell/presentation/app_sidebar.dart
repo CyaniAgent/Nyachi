@@ -6,9 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/detail_panel/detail_location.dart';
 import '../../../app/detail_panel/open_detail.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
-import '../../../core/network/instance_repository.dart';
 import '../../../core/storage/storage_models.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/ui/breakpoints.dart';
@@ -41,10 +39,10 @@ class AppDrawerScope extends InheritedWidget {
 
 /// Leading slot for a tab-root AppBar.
 ///
-/// Narrow screens get the drawer hamburger. Wide screens already have the
-/// persistent sidebar, so this returns null: a control that cannot open
-/// anything would be announced to assistive tech and would still make the
-/// AppBar reserve leading space for it.
+/// Narrow screens get the drawer hamburger. Wide screens have the persistent
+/// icon rail with its own menu button, so this returns null there: a control
+/// that cannot open anything would be announced to assistive tech and would
+/// still make the AppBar reserve leading space for it.
 Widget? appBarDrawerLeading(BuildContext context) {
   if (MediaQuery.sizeOf(context).width >= kCompactBreakpoint) return null;
   return const AppDrawerButton();
@@ -111,9 +109,10 @@ class AppNavEntries {
   };
 }
 
-/// Narrow-screen drawer: account switcher, then every tab in bottom-bar order
-/// (including the ones the bottom bar hides) and the feature entries. Every
-/// action closes the drawer before acting on the shell.
+/// The navigation drawer, both as the narrow-screen drawer and as the desktop
+/// overlay the icon rail opens: account switcher, then every tab (including
+/// the ones the current chrome hides) and the feature entries. Every action
+/// closes the drawer before acting on the shell.
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({required this.entries, super.key});
 
@@ -154,15 +153,17 @@ class AppDrawer extends ConsumerWidget {
   }
 }
 
-/// The drawer's navigation list: the same destinations as the desktop
-/// sidebar's expanded menu, rendered as full-width rows for touch.
-class DrawerNavList extends StatelessWidget {
+/// The drawer's navigation list: every destination of the current form
+/// factor, rendered as full-width rows for touch. The admin entry is gated
+/// here, once, by the server-reported moderator role.
+class DrawerNavList extends ConsumerWidget {
   const DrawerNavList({required this.entries, super.key});
 
   final AppNavEntries entries;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canModerate = ref.watch(canModerateProvider).value ?? false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -183,6 +184,12 @@ class DrawerNavList extends StatelessWidget {
           label: context.l10n.drive,
           onTap: entries.onOpenDrive,
         ),
+        if (canModerate)
+          NavRow(
+            icon: Icons.shield_outlined,
+            label: context.l10n.adminHome,
+            onTap: entries.onOpenAdmin,
+          ),
         NavRow(
           icon: Icons.settings_outlined,
           label: context.l10n.settings,
@@ -193,34 +200,8 @@ class DrawerNavList extends StatelessWidget {
   }
 }
 
-/// Compact icon button for the sidebar footer row, so the account card keeps
-/// the rest of the width.
-class _FooterIconButton extends StatelessWidget {
-  const _FooterIconButton({
-    required this.tooltip,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-      icon: Icon(icon, size: 20),
-    );
-  }
-}
-
 /// One full-width navigation row: icon + label with the selected pill.
-/// Shared by the drawer and the expanded desktop sidebar.
+/// Shared by the drawer on every form factor.
 class NavRow extends StatelessWidget {
   const NavRow({
     required this.icon,
@@ -273,625 +254,6 @@ class NavRow extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Desktop sidebar.
-///
-/// Expanded it is a nav menu: full-width rows like the drawer's, at the
-/// width a menu needs. Collapsed to 80 px it becomes a [NavigationRail]:
-/// the icon column the rail widget is designed for. Each state uses the
-/// widget built for that shape.
-class AppSidebar extends ConsumerWidget {
-  const AppSidebar({
-    required this.entries,
-    required this.collapsed,
-    required this.showToggle,
-    required this.onToggleCollapse,
-    super.key,
-  });
-
-  final AppNavEntries entries;
-  final bool collapsed;
-
-  /// Whether the expand/collapse button is offered at all. Hidden, the pane
-  /// stays expanded; `ShellChrome` guarantees that.
-  final bool showToggle;
-  final VoidCallback onToggleCollapse;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final showMeAtTop = ref.watch(
-      settingsControllerProvider.select((s) => s.showMeAtTop),
-    );
-    final canModerate = ref.watch(canModerateProvider).value ?? false;
-    return Material(
-      color: theme.colorScheme.surfaceContainerLow,
-      child: SafeArea(
-        right: false,
-        child: collapsed
-            ? _CollapsedSidebar(
-                entries: entries,
-                canModerate: canModerate,
-                showToggle: showToggle,
-                onToggleCollapse: onToggleCollapse,
-              )
-            : _ExpandedSidebar(
-                entries: entries,
-                canModerate: canModerate,
-                showMeAtTop: showMeAtTop,
-                showToggle: showToggle,
-                onToggleCollapse: onToggleCollapse,
-              ),
-      ),
-    );
-  }
-}
-
-/// The expanded nav menu: header block, scrollable row list, pinned footer.
-class _ExpandedSidebar extends StatelessWidget {
-  const _ExpandedSidebar({
-    required this.entries,
-    required this.canModerate,
-    required this.showMeAtTop,
-    required this.showToggle,
-    required this.onToggleCollapse,
-  });
-
-  final AppNavEntries entries;
-  final bool canModerate;
-  final bool showMeAtTop;
-  final bool showToggle;
-  final VoidCallback onToggleCollapse;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AnimatedSwitcher(
-          duration: appSidebarAnimationDuration,
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          layoutBuilder: (current, previous) => current ?? previous.first,
-          transitionBuilder: (child, animation) =>
-              FadeTransition(opacity: animation, child: child),
-          child: KeyedSubtree(
-            key: const ValueKey('expanded-header'),
-            child: showMeAtTop
-                ? AccountHeader(onNavigate: entries.onSelectTab)
-                : const SidebarBrandHeader(),
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final tab in entries.tabs)
-                  NavRow(
-                    icon: entries.icon(tab),
-                    label: entries.label(context, tab),
-                    selected: tab == entries.selectedTab,
-                    onTap: () => entries.onSelectTab(tab),
-                  ),
-                const Divider(height: 16),
-                NavRow(
-                  icon: Icons.campaign_outlined,
-                  label: context.l10n.announcements,
-                  onTap: entries.onOpenAnnouncements,
-                ),
-                NavRow(
-                  icon: Icons.cloud_outlined,
-                  label: context.l10n.drive,
-                  onTap: entries.onOpenDrive,
-                ),
-                if (canModerate)
-                  NavRow(
-                    icon: Icons.shield_outlined,
-                    label: context.l10n.adminHome,
-                    onTap: entries.onOpenAdmin,
-                  ),
-              ],
-            ),
-          ),
-        ),
-        // The pinned footer: the account card with settings and the collapse
-        // toggle beside it, all visible without scrolling.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Every width between 80 and 240 is on screen while the pane
-              // tweens. Below this the two buttons would not fit next to the
-              // card, and the rail (which owns that range once settled) has
-              // its own entries, so the card shrinks to its avatar.
-              final showButtons = constraints.maxWidth >= 140;
-              return Row(
-                children: [
-                  Expanded(
-                    child: SidebarUserPanel(
-                      collapsed: !showButtons,
-                      onOpenProfile: entries.onOpenProfile,
-                    ),
-                  ),
-                  if (showButtons) ...[
-                    _FooterIconButton(
-                      tooltip: context.l10n.settings,
-                      icon: Icons.settings_outlined,
-                      onPressed: entries.onOpenSettings,
-                    ),
-                    if (showToggle)
-                      _FooterIconButton(
-                        tooltip: context.l10n.collapse,
-                        icon: Icons.chevron_left,
-                        onPressed: onToggleCollapse,
-                      ),
-                  ],
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// The collapsed rail: icon column for the tabs, with the account avatar and
-/// the expand toggle pinned in the rail's trailing slot.
-class _CollapsedSidebar extends StatelessWidget {
-  const _CollapsedSidebar({
-    required this.entries,
-    required this.canModerate,
-    required this.showToggle,
-    required this.onToggleCollapse,
-  });
-
-  final AppNavEntries entries;
-  final bool canModerate;
-  final bool showToggle;
-  final VoidCallback onToggleCollapse;
-
-  @override
-  Widget build(BuildContext context) {
-    return NavigationRail(
-      selectedIndex: entries.tabs.indexOf(entries.selectedTab),
-      labelType: NavigationRailLabelType.none,
-      // Without this the trailing slot follows the destinations instead of
-      // sitting at the bottom, so the feature icons and the account would
-      // ride up under the tabs.
-      trailingAtBottom: true,
-      leading: const SidebarBrandMark(),
-      groupAlignment: -1,
-      destinations: [
-        for (final tab in entries.tabs)
-          NavigationRailDestination(
-            icon: Icon(entries.icon(tab), size: 22),
-            selectedIcon: Icon(entries.icon(tab), size: 22),
-            label: Text(entries.label(context, tab)),
-          ),
-      ],
-      trailing: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // The feature entries as icon-only rows: rail destinations must
-          // report a selection and these are not persistent selections, so
-          // they live in the trailing slot where taps are free.
-          _RailIconTile(
-            icon: Icons.campaign_outlined,
-            tooltip: context.l10n.announcements,
-            onTap: entries.onOpenAnnouncements,
-          ),
-          _RailIconTile(
-            icon: Icons.cloud_outlined,
-            tooltip: context.l10n.drive,
-            onTap: entries.onOpenDrive,
-          ),
-          if (canModerate)
-            _RailIconTile(
-              icon: Icons.shield_outlined,
-              tooltip: context.l10n.adminHome,
-              onTap: entries.onOpenAdmin,
-            ),
-          const Divider(height: 16),
-          // Settings sits with the account card, the way the expanded footer
-          // puts it beside the card.
-          _RailIconTile(
-            icon: Icons.settings_outlined,
-            tooltip: context.l10n.settings,
-            onTap: entries.onOpenSettings,
-          ),
-          SidebarUserPanel(
-            collapsed: true,
-            onOpenProfile: entries.onOpenProfile,
-          ),
-          // Without the toggle the pane never collapses, so there is nothing
-          // for this button to bring back.
-          if (showToggle)
-            IconButton(
-              tooltip: context.l10n.expand,
-              onPressed: onToggleCollapse,
-              icon: const Icon(Icons.chevron_right),
-            ),
-        ],
-      ),
-      onDestinationSelected: (index) =>
-          entries.onSelectTab(entries.tabs[index]),
-    );
-  }
-}
-
-/// Icon-only tile for the collapsed rail's trailing column: a square tap
-/// target with a tooltip, matching the rail's icon look.
-class _RailIconTile extends StatelessWidget {
-  const _RailIconTile({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // The icon is the only content, so the tooltip carries the name for
-    // pointers and assistive tech alike.
-    return Tooltip(
-      message: tooltip,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: onTap,
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: Icon(
-                  icon,
-                  size: 22,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Account card pinned to the sidebar's footer: a rounded, whole-row tap
-/// target (avatar + name + handle). Collapsed to the rail it is the avatar
-/// alone. Tapping anywhere on the row opens the profile.
-class SidebarUserPanel extends ConsumerStatefulWidget {
-  const SidebarUserPanel({
-    required this.collapsed,
-    required this.onOpenProfile,
-    super.key,
-  });
-
-  final bool collapsed;
-  final VoidCallback onOpenProfile;
-
-  @override
-  ConsumerState<SidebarUserPanel> createState() => _SidebarUserPanelState();
-}
-
-class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
-  final _menuController = MenuController();
-  var _hovering = false;
-
-  /// Below this the card falls back to the avatar alone: the sidebar width
-  /// tweens between 80 and 240, and the full row needs room for the avatar,
-  /// the gap and readable text — minus the settings and collapse buttons the
-  /// footer keeps beside it.
-  static const _fullCardMinWidth = 140.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final session = ref.watch(sessionControllerProvider);
-    final account = session.active;
-    final canSwitch = session.accounts.length > 1;
-    final l10n = context.l10n;
-    final avatar = NyachiAvatar(
-      url: account?.avatarUrl,
-      size: 36,
-      showStatus: true,
-    );
-    // The official menu anchor handles the geometry this card needs: the
-    // card sits at the bottom of the window, so the menu flips above it,
-    // grows upward, and closes on outside taps.
-    return MenuAnchor(
-      controller: _menuController,
-      style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(
-          theme.colorScheme.surfaceContainer,
-        ),
-        elevation: const WidgetStatePropertyAll(4),
-        padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(vertical: 6),
-        ),
-        minimumSize: const WidgetStatePropertyAll(Size(220, 0)),
-        maximumSize: const WidgetStatePropertyAll(Size(260, double.infinity)),
-      ),
-      menuChildren: _accountMenuItems(context, session),
-      builder: (context, controller, child) {
-        void openMenu() {
-          if (account != null) controller.open();
-        }
-
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            // The rail, and every intermediate width the collapse animation
-            // passes through, gets the avatar alone.
-            if (widget.collapsed || constraints.maxWidth < _fullCardMinWidth) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Material(
-                    color: Colors.transparent,
-                    shape: const CircleBorder(),
-                    child: Tooltip(
-                      message: canSwitch ? l10n.accounts : l10n.profile,
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: openMenu,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: avatar,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-            return _fullCard(
-              context,
-              theme,
-              account,
-              avatar,
-              canSwitch,
-              openMenu,
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// The card's menu: every signed-in account to switch to, then the current
-  /// account's profile.
-  List<Widget> _accountMenuItems(BuildContext context, SessionState session) {
-    final theme = Theme.of(context);
-    final canSwitch = session.accounts.length > 1;
-    return [
-      if (canSwitch)
-        for (final account in session.accounts)
-          MenuItemButton(
-            leadingIcon: NyachiAvatar(
-              url: account.avatarUrl,
-              size: 24,
-              fallback: Text(account.username.characters.first),
-            ),
-            trailingIcon: account.id == session.active?.id
-                ? Icon(
-                    Icons.check_circle,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  )
-                : null,
-            onPressed: account.id == session.active?.id
-                ? null
-                : () => _switch(context, ref, account),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  account.displayName ?? account.username,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  '@${account.username}@${account.host}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-      MenuItemButton(
-        leadingIcon: const Icon(Icons.person_outline, size: 20),
-        onPressed: widget.onOpenProfile,
-        child: Text(context.l10n.profile),
-      ),
-    ];
-  }
-
-  Widget _fullCard(
-    BuildContext context,
-    ThemeData theme,
-    LocalAccount? account,
-    Widget avatar,
-    bool canSwitch,
-    VoidCallback openMenu,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: account == null ? null : openMenu,
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _hovering = true),
-            onExit: (_) => setState(() => _hovering = false),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  avatar,
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          account?.displayName ??
-                              account?.username ??
-                              context.l10n.noAccounts,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                        // Hovering slides the handle in over the status
-                        // line, so the handle is readable without opening
-                        // anything.
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 180),
-                          switchInCurve: Curves.easeOut,
-                          switchOutCurve: Curves.easeIn,
-                          layoutBuilder: (currentChild, previousChildren) =>
-                              Stack(
-                                alignment: Alignment.centerLeft,
-                                children: [...previousChildren, ?currentChild],
-                              ),
-                          transitionBuilder: (child, animation) {
-                            final incoming = child.key == ValueKey(_hovering);
-                            final position = incoming
-                                ? Tween<Offset>(
-                                    begin: const Offset(0, 1),
-                                    end: Offset.zero,
-                                  ).animate(animation)
-                                : Tween<Offset>(
-                                    begin: const Offset(0, -1),
-                                    end: Offset.zero,
-                                  ).animate(animation);
-                            return ClipRect(
-                              child: SlideTransition(
-                                position: position,
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Text(
-                            _hovering && account != null
-                                ? '@${account.username}'
-                                : context.l10n.online,
-                            key: ValueKey(_hovering),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (canSwitch)
-                    Icon(
-                      Icons.unfold_more,
-                      size: 18,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Brand mark shown in the collapsed rail's leading slot: the app icon
-/// alone, so the pane still identifies the app without a label.
-class SidebarBrandMark extends StatelessWidget {
-  const SidebarBrandMark({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Center(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: Image.asset(
-            'assets/brand/app_icon_full.png',
-            width: 28,
-            height: 28,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Sidebar brand block: logo + app name, with the instance's display name
-/// (falling back to the host) muted underneath.
-class SidebarBrandHeader extends ConsumerWidget {
-  const SidebarBrandHeader({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final instance = ref.watch(instanceInfoProvider).value;
-    final host = ref.watch(activeAccountProvider)?.host;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 12, 8),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Image.asset(
-              'assets/brand/app_icon_full.png',
-              width: 28,
-              height: 28,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  context.l10n.appTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium,
-                ),
-                Text(
-                  instance?.name ?? host ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -100,7 +100,7 @@ void main() {
     },
   );
 
-  test('showMeAtTop and sidebar width round-trip', () async {
+  test('showMeAtTop round-trip', () async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
     final container = newContainer(preferences);
@@ -108,15 +108,12 @@ void main() {
 
     final controller = container.read(settingsControllerProvider.notifier);
     await controller.setShowMeAtTop(true);
-    await controller.setSidebarWidth(320);
 
     final reopened = await SharedPreferences.getInstance();
     expect(reopened.getBool('layout.showMeAtTop'), isTrue);
-    expect(reopened.getDouble('layout.sidebarWidth'), 320);
 
     final state = container.read(settingsControllerProvider);
     expect(state.showMeAtTop, isTrue);
-    expect(state.sidebarWidth, 320);
   });
 
   test('sanitizeBottomNavConfig forces home even with everything hidden', () {
