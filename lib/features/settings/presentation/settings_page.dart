@@ -267,6 +267,31 @@ class NavigationSettingsPage extends ConsumerWidget {
               value: settings.showMeAtTop,
               onChanged: controller.setShowMeAtTop,
             ),
+            ListTile(
+              title: Text(l10n.sidebarWidth),
+              subtitle: Text('${settings.sidebarWidth.round()} px'),
+            ),
+            Slider(
+              value: settings.sidebarWidth,
+              min: appSidebarMinWidth,
+              max: appSidebarMaxWidth,
+              label: '${settings.sidebarWidth.round()} px',
+              // Dragging updates memory only; the write lands once on release.
+              onChanged: controller.setSidebarWidthLive,
+              onChangeEnd: controller.setSidebarWidth,
+            ),
+            SwitchListTile(
+              title: Text(l10n.sidebarAutoCollapse),
+              subtitle: Text(l10n.sidebarAutoCollapseHint),
+              value: settings.sidebarAutoCollapse,
+              onChanged: controller.setSidebarAutoCollapse,
+            ),
+            SwitchListTile(
+              title: Text(l10n.sidebarCollapseForPanel),
+              subtitle: Text(l10n.sidebarCollapseForPanelHint),
+              value: settings.sidebarCollapseForPanel,
+              onChanged: controller.setSidebarCollapseForPanel,
+            ),
           ] else ...[
             _SettingsSectionHeader(label: l10n.bottomBar),
             _NavList(

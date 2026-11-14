@@ -77,6 +77,9 @@ class AppSettings {
     required this.detailBreakpoint,
     required this.oobeCompleted,
     this.showMeAtTop = false,
+    this.sidebarWidth = appSidebarDefaultWidth,
+    this.sidebarAutoCollapse = true,
+    this.sidebarCollapseForPanel = false,
     this.centerContent = true,
     this.defaultVisibility = 'public',
     this.defaultLocalOnly = false,
@@ -107,6 +110,18 @@ class AppSettings {
 
   /// Desktop sidebar: the account header replaces the "me" tab row when set.
   final bool showMeAtTop;
+
+  /// Desktop sidebar width in logical pixels (drag-adjusted, 160-400).
+  final double sidebarWidth;
+
+  /// Desktop sidebar collapses/expands automatically with window width until
+  /// the user toggles it manually or turns the automation off.
+  final bool sidebarAutoCollapse;
+
+  /// Whether opening the wide-screen detail panel collapses the sidebar.
+  /// Off by default: the panel just squeezes the feed. When the window is
+  /// too narrow for both, the panel still wins (feed minimum width).
+  final bool sidebarCollapseForPanel;
   final bool centerContent;
 
   /// Starting visibility and local-only flag for a new note. The composer
@@ -131,6 +146,9 @@ class AppSettings {
     int? detailBreakpoint,
     bool? oobeCompleted,
     bool? showMeAtTop,
+    double? sidebarWidth,
+    bool? sidebarAutoCollapse,
+    bool? sidebarCollapseForPanel,
     bool? centerContent,
     String? defaultVisibility,
     bool? defaultLocalOnly,
@@ -146,6 +164,10 @@ class AppSettings {
       detailBreakpoint: detailBreakpoint ?? this.detailBreakpoint,
       oobeCompleted: oobeCompleted ?? this.oobeCompleted,
       showMeAtTop: showMeAtTop ?? this.showMeAtTop,
+      sidebarWidth: sidebarWidth ?? this.sidebarWidth,
+      sidebarAutoCollapse: sidebarAutoCollapse ?? this.sidebarAutoCollapse,
+      sidebarCollapseForPanel:
+          sidebarCollapseForPanel ?? this.sidebarCollapseForPanel,
       centerContent: centerContent ?? this.centerContent,
       defaultVisibility: defaultVisibility ?? this.defaultVisibility,
       defaultLocalOnly: defaultLocalOnly ?? this.defaultLocalOnly,
@@ -167,6 +189,9 @@ class SettingsController extends _$SettingsController {
   static const sidebarOrderKey = 'settings.sidebarTabOrder';
   static const sidebarHiddenKey = 'settings.sidebarHiddenTabs';
   static const showMeAtTopKey = 'layout.showMeAtTop';
+  static const sidebarWidthKey = 'layout.sidebarWidth';
+  static const sidebarAutoCollapseKey = 'layout.sidebarAutoCollapse';
+  static const sidebarCollapseForPanelKey = 'layout.sidebarCollapseForPanel';
   static const detailBreakpointKey = 'layout.detailBreakpoint';
   static const centerContentKey = 'layout.centerContent';
   static const oobeCompletedKey = 'oobe.completed';
@@ -206,6 +231,11 @@ class SettingsController extends _$SettingsController {
       sidebarNavConfig: sidebar,
       oobeCompleted: prefs.getBool(oobeCompletedKey) ?? false,
       showMeAtTop: prefs.getBool(showMeAtTopKey) ?? false,
+      sidebarWidth: (prefs.getDouble(sidebarWidthKey) ?? appSidebarDefaultWidth)
+          .clamp(appSidebarMinWidth, appSidebarMaxWidth),
+      sidebarAutoCollapse: prefs.getBool(sidebarAutoCollapseKey) ?? true,
+      sidebarCollapseForPanel:
+          prefs.getBool(sidebarCollapseForPanelKey) ?? false,
       detailBreakpoint:
           (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
@@ -344,6 +374,30 @@ class SettingsController extends _$SettingsController {
   Future<void> setShowMeAtTop(bool value) async {
     state = state.copyWith(showMeAtTop: value);
     await _prefs.setBool(showMeAtTopKey, value);
+  }
+
+  Future<void> setSidebarWidth(double value) async {
+    final clamped = value.clamp(appSidebarMinWidth, appSidebarMaxWidth);
+    state = state.copyWith(sidebarWidth: clamped);
+    await _prefs.setDouble(sidebarWidthKey, clamped);
+  }
+
+  /// Drag-time width update: in-memory only, persisted by [setSidebarWidth]
+  /// when the drag gesture ends.
+  void setSidebarWidthLive(double value) {
+    state = state.copyWith(
+      sidebarWidth: value.clamp(appSidebarMinWidth, appSidebarMaxWidth),
+    );
+  }
+
+  Future<void> setSidebarAutoCollapse(bool value) async {
+    state = state.copyWith(sidebarAutoCollapse: value);
+    await _prefs.setBool(sidebarAutoCollapseKey, value);
+  }
+
+  Future<void> setSidebarCollapseForPanel(bool value) async {
+    state = state.copyWith(sidebarCollapseForPanel: value);
+    await _prefs.setBool(sidebarCollapseForPanelKey, value);
   }
 
   AppTab? _parseTab(String value) {
