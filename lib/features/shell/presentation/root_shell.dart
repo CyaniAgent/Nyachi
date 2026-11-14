@@ -303,9 +303,16 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
         ),
       );
     }
+    // With the toggle hidden nothing could bring the pane back from the
+    // rail, so the pane does not collapse at all: neither on width nor by
+    // hand.
     final autoCollapse =
-        settings.sidebarAutoCollapse && width < appSidebarAutoBreakpoint;
-    final collapsed = _collapsedOverride ?? autoCollapse;
+        settings.sidebarToggle &&
+        settings.sidebarAutoCollapse &&
+        width < appSidebarAutoBreakpoint;
+    final collapsed = settings.sidebarToggle
+        ? (_collapsedOverride ?? autoCollapse)
+        : false;
     final targetWidth = collapsed
         ? appSidebarCollapsedWidth
         : settings.sidebarWidth;
@@ -325,6 +332,7 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
             child: AppSidebar(
               entries: _entries(settings, widget.selectedTab),
               collapsed: collapsed,
+              showToggle: settings.sidebarToggle,
               onToggleCollapse: () =>
                   setState(() => _collapsedOverride = !collapsed),
             ),

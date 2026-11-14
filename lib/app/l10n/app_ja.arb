@@ -299,6 +299,8 @@
     }
   },
   "noteDetail": "投稿",
+  "viewDetail": "詳細を表示",
+  "viewContext": "文脈を表示",
   "removeAccount": "アカウントを削除",
   "signIn": "サインイン",
   "refresh": "更新",
@@ -588,6 +590,8 @@
   "sidebarAutoCollapseHint": "1000 px 未満で折りたたみ、以上で展開",
   "sidebarCollapseForPanel": "詳細パネル開時にサイドバーを折りたたむ",
   "sidebarCollapseForPanelHint": "パネルが開いている間サイドバーを畳み、閉じると戻す",
+  "sidebarToggle": "サイドバー折りたたみボタンを表示",
+  "sidebarToggleHint": "非表示の場合、サイドバーは展開されたままになります",
   "maxTabsReached": "ボトムバーには最大4つのタブが入ります",
   "viewAllAnnouncements": "すべて表示",
   "discover": "見つける",

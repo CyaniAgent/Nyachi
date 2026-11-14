@@ -307,6 +307,8 @@
     }
   },
   "noteDetail": "Note",
+  "viewDetail": "View detail",
+  "viewContext": "View context",
   "removeAccount": "Remove account",
   "signIn": "Sign in",
   "refresh": "Refresh",
@@ -604,6 +606,8 @@
   "sidebarAutoCollapseHint": "Collapses below 1000 px, expands above",
   "sidebarCollapseForPanel": "Collapse sidebar for detail panel",
   "sidebarCollapseForPanelHint": "Fold the sidebar while a panel is open, restore it on close",
+  "sidebarToggle": "Show sidebar collapse button",
+  "sidebarToggleHint": "Hidden, the sidebar stays expanded",
   "maxTabsReached": "Up to four tabs fit in the bottom bar",
   "viewAllAnnouncements": "View all",
   "discover": "Discover",

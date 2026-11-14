@@ -80,6 +80,7 @@ class AppSettings {
     this.sidebarWidth = appSidebarDefaultWidth,
     this.sidebarAutoCollapse = true,
     this.sidebarCollapseForPanel = false,
+    this.sidebarToggle = true,
     this.centerContent = true,
     this.defaultVisibility = 'public',
     this.defaultLocalOnly = false,
@@ -122,6 +123,10 @@ class AppSettings {
   /// Off by default: the panel just squeezes the feed. When the window is
   /// too narrow for both, the panel still wins (feed minimum width).
   final bool sidebarCollapseForPanel;
+
+  /// Whether the sidebar offers its expand/collapse button. Hidden, the pane
+  /// stays expanded — nothing could bring it back from the collapsed rail.
+  final bool sidebarToggle;
   final bool centerContent;
 
   /// Starting visibility and local-only flag for a new note. The composer
@@ -149,6 +154,7 @@ class AppSettings {
     double? sidebarWidth,
     bool? sidebarAutoCollapse,
     bool? sidebarCollapseForPanel,
+    bool? sidebarToggle,
     bool? centerContent,
     String? defaultVisibility,
     bool? defaultLocalOnly,
@@ -168,6 +174,7 @@ class AppSettings {
       sidebarAutoCollapse: sidebarAutoCollapse ?? this.sidebarAutoCollapse,
       sidebarCollapseForPanel:
           sidebarCollapseForPanel ?? this.sidebarCollapseForPanel,
+      sidebarToggle: sidebarToggle ?? this.sidebarToggle,
       centerContent: centerContent ?? this.centerContent,
       defaultVisibility: defaultVisibility ?? this.defaultVisibility,
       defaultLocalOnly: defaultLocalOnly ?? this.defaultLocalOnly,
@@ -192,6 +199,7 @@ class SettingsController extends _$SettingsController {
   static const sidebarWidthKey = 'layout.sidebarWidth';
   static const sidebarAutoCollapseKey = 'layout.sidebarAutoCollapse';
   static const sidebarCollapseForPanelKey = 'layout.sidebarCollapseForPanel';
+  static const sidebarToggleKey = 'layout.sidebarToggle';
   static const detailBreakpointKey = 'layout.detailBreakpoint';
   static const centerContentKey = 'layout.centerContent';
   static const oobeCompletedKey = 'oobe.completed';
@@ -236,6 +244,7 @@ class SettingsController extends _$SettingsController {
       sidebarAutoCollapse: prefs.getBool(sidebarAutoCollapseKey) ?? true,
       sidebarCollapseForPanel:
           prefs.getBool(sidebarCollapseForPanelKey) ?? false,
+      sidebarToggle: prefs.getBool(sidebarToggleKey) ?? true,
       detailBreakpoint:
           (prefs.getInt(detailBreakpointKey) ?? appDetailBreakpointDefault)
               .clamp(appDetailBreakpointMin, appDetailBreakpointMax)
@@ -398,6 +407,11 @@ class SettingsController extends _$SettingsController {
   Future<void> setSidebarCollapseForPanel(bool value) async {
     state = state.copyWith(sidebarCollapseForPanel: value);
     await _prefs.setBool(sidebarCollapseForPanelKey, value);
+  }
+
+  Future<void> setSidebarToggle(bool value) async {
+    state = state.copyWith(sidebarToggle: value);
+    await _prefs.setBool(sidebarToggleKey, value);
   }
 
   AppTab? _parseTab(String value) {

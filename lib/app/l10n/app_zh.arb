@@ -299,6 +299,8 @@
     }
   },
   "noteDetail": "帖子",
+  "viewDetail": "查看详情",
+  "viewContext": "查看上下文",
   "removeAccount": "移除账号",
   "signIn": "登录",
   "refresh": "刷新",
@@ -588,6 +590,8 @@
   "sidebarAutoCollapseHint": "低于 1000 px 折叠，高于则展开",
   "sidebarCollapseForPanel": "打开详情面板时折叠侧栏",
   "sidebarCollapseForPanelHint": "面板打开期间收起侧栏，关闭后恢复",
+  "sidebarToggle": "显示侧栏折叠按钮",
+  "sidebarToggleHint": "隐藏后侧栏将保持展开状态",
   "maxTabsReached": "底栏最多容纳四个标签",
   "viewAllAnnouncements": "查看全部",
   "discover": "发现",

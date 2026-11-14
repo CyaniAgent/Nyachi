@@ -304,6 +304,122 @@ void main() {
     expect(container.read(sessionControllerProvider).active?.id, 'bob');
   });
 
+  testWidgets('the account menu opens above the card, never over it', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final alice = LocalAccount(
+      id: 'alice',
+      host: 'example.test',
+      userId: 'u1',
+      username: 'alice',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
+    final bob = LocalAccount(
+      id: 'bob',
+      host: 'other.test',
+      userId: 'u2',
+      username: 'bob',
+      addedAt: DateTime(2026),
+      lastUsedAt: DateTime(2026),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          sessionControllerProvider.overrideWith(
+            () => _FakeSession(
+              SessionState(
+                accounts: [alice, bob],
+                active: alice,
+                initialized: true,
+              ),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomLeft,
+              child: SizedBox(
+                width: 240,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SidebarUserPanel(collapsed: false, onOpenProfile: () {}),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final card = tester.getRect(find.byType(SidebarUserPanel));
+    await tester.tap(find.text('alice'));
+    await tester.pumpAndSettle();
+
+    // The menu is a stack of its items; none of them may cover the card.
+    final menuItems = [
+      tester.getRect(find.text('alice').last),
+      tester.getRect(find.text('bob')),
+      tester.getRect(find.text('Profile')),
+    ];
+    for (final item in menuItems) {
+      final overlaps =
+          item.left < card.right &&
+          item.right > card.left &&
+          item.top < card.bottom &&
+          item.bottom > card.top;
+      expect(overlaps, isFalse, reason: 'menu item $item covers card $card');
+    }
+  });
+
+  testWidgets('with the toggle hidden the sidebar stays expanded', (
+    tester,
+  ) async {
+    // 900 is inside the auto-collapse range; with the toggle hidden the pane
+    // does not collapse at all, because nothing could bring it back.
+    tester.view.physicalSize = const Size(900, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({'layout.sidebarToggle': false});
+    final preferences = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ShellChrome(
+            selectedTab: AppTab.home,
+            onSelectTab: (_) {},
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.getSize(find.byType(AppSidebar)).width, greaterThan(80));
+    // Neither state offers the button that would collapse it.
+    expect(find.byTooltip('Expand'), findsNothing);
+    expect(find.byTooltip('Collapse'), findsNothing);
+  });
+
   testWidgets('collapsed sidebar keeps every destination reachable', (
     tester,
   ) async {

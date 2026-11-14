@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -288,12 +290,17 @@ class AppSidebar extends ConsumerWidget {
   const AppSidebar({
     required this.entries,
     required this.collapsed,
+    required this.showToggle,
     required this.onToggleCollapse,
     super.key,
   });
 
   final AppNavEntries entries;
   final bool collapsed;
+
+  /// Whether the expand/collapse button is offered at all. Hidden, the pane
+  /// stays expanded; `ShellChrome` guarantees that.
+  final bool showToggle;
   final VoidCallback onToggleCollapse;
 
   @override
@@ -311,12 +318,14 @@ class AppSidebar extends ConsumerWidget {
             ? _CollapsedSidebar(
                 entries: entries,
                 canModerate: canModerate,
+                showToggle: showToggle,
                 onToggleCollapse: onToggleCollapse,
               )
             : _ExpandedSidebar(
                 entries: entries,
                 canModerate: canModerate,
                 showMeAtTop: showMeAtTop,
+                showToggle: showToggle,
                 onToggleCollapse: onToggleCollapse,
               ),
       ),
@@ -330,12 +339,14 @@ class _ExpandedSidebar extends StatelessWidget {
     required this.entries,
     required this.canModerate,
     required this.showMeAtTop,
+    required this.showToggle,
     required this.onToggleCollapse,
   });
 
   final AppNavEntries entries;
   final bool canModerate;
   final bool showMeAtTop;
+  final bool showToggle;
   final VoidCallback onToggleCollapse;
 
   @override
@@ -415,11 +426,12 @@ class _ExpandedSidebar extends StatelessWidget {
                       icon: Icons.settings_outlined,
                       onPressed: entries.onOpenSettings,
                     ),
-                    _FooterIconButton(
-                      tooltip: context.l10n.collapse,
-                      icon: Icons.chevron_left,
-                      onPressed: onToggleCollapse,
-                    ),
+                    if (showToggle)
+                      _FooterIconButton(
+                        tooltip: context.l10n.collapse,
+                        icon: Icons.chevron_left,
+                        onPressed: onToggleCollapse,
+                      ),
                   ],
                 ],
               );
@@ -437,11 +449,13 @@ class _CollapsedSidebar extends StatelessWidget {
   const _CollapsedSidebar({
     required this.entries,
     required this.canModerate,
+    required this.showToggle,
     required this.onToggleCollapse,
   });
 
   final AppNavEntries entries;
   final bool canModerate;
+  final bool showToggle;
   final VoidCallback onToggleCollapse;
 
   @override
@@ -449,6 +463,10 @@ class _CollapsedSidebar extends StatelessWidget {
     return NavigationRail(
       selectedIndex: entries.tabs.indexOf(entries.selectedTab),
       labelType: NavigationRailLabelType.none,
+      // Without this the trailing slot follows the destinations instead of
+      // sitting at the bottom, so the feature icons and the account would
+      // ride up under the tabs.
+      trailingAtBottom: true,
       leading: const SidebarBrandMark(),
       groupAlignment: -1,
       destinations: [
@@ -493,11 +511,14 @@ class _CollapsedSidebar extends StatelessWidget {
             collapsed: true,
             onOpenProfile: entries.onOpenProfile,
           ),
-          IconButton(
-            tooltip: context.l10n.expand,
-            onPressed: onToggleCollapse,
-            icon: const Icon(Icons.chevron_right),
-          ),
+          // Without the toggle the pane never collapses, so there is nothing
+          // for this button to bring back.
+          if (showToggle)
+            IconButton(
+              tooltip: context.l10n.expand,
+              onPressed: onToggleCollapse,
+              icon: const Icon(Icons.chevron_right),
+            ),
         ],
       ),
       onDestinationSelected: (index) =>
@@ -633,17 +654,21 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
     final box = context.findRenderObject() as RenderBox?;
     final overlayBox = overlay?.context.findRenderObject() as RenderBox?;
     if (box == null || overlayBox == null) return;
+    final card =
+        box.localToGlobal(Offset.zero, ancestor: overlayBox) & box.size;
+    // The card is pinned to the bottom of the window, so the menu opens
+    // upward from it, aligned to the card's left edge. `showMenu` puts the
+    // menu's top at the rect's top, so the rect is the menu's own footprint:
+    // passing the card's own rect would lay the menu over the card.
+    final menuHeight = _accountMenuHeight(session.accounts.length);
+    final overlaySize = overlayBox.size;
     final choice = await showMenu<_AccountMenuChoice>(
       context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromPoints(
-          box.localToGlobal(Offset.zero, ancestor: overlayBox),
-          box.localToGlobal(
-            box.size.bottomRight(Offset.zero),
-            ancestor: overlayBox,
-          ),
-        ),
-        Offset.zero & overlayBox.size,
+      position: RelativeRect.fromLTRB(
+        card.left,
+        math.max(8, card.top - menuHeight),
+        overlaySize.width - card.right,
+        overlaySize.height - card.top,
       ),
       items: [
         if (session.accounts.length > 1) ...[
@@ -651,7 +676,7 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
             PopupMenuItem<_AccountMenuChoice>(
               value: _SwitchAccountChoice(account),
               enabled: account.id != active.id,
-              height: 56,
+              height: _accountMenuItemHeight,
               child: _AccountMenuRow(
                 account: account,
                 current: account.id == active.id,
@@ -661,7 +686,7 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
         ],
         PopupMenuItem<_AccountMenuChoice>(
           value: const _OpenProfileChoice(),
-          height: 48,
+          height: _accountMenuProfileHeight,
           child: Row(
             children: [
               const Icon(Icons.person_outline, size: 20),
@@ -783,6 +808,32 @@ class _SidebarUserPanelState extends ConsumerState<SidebarUserPanel> {
 sealed class _AccountMenuChoice {
   const _AccountMenuChoice();
 }
+
+/// The account item's height in the card's menu, shared by the item and the
+/// height the menu is positioned with.
+const double _accountMenuItemHeight = 56;
+
+/// The profile item's height in the card's menu.
+const double _accountMenuProfileHeight = 48;
+
+/// Extra vertical room the menu's own padding takes.
+const double _accountMenuPadding = 16;
+
+/// The menu's height before it is built, so it can be placed above the card
+/// instead of over it. Mirrors the item heights below; the popup layout
+/// clamps anything this misses.
+double _accountMenuHeight(int accountCount) {
+  final switchable = accountCount > 1;
+  return (switchable
+          ? accountCount * _accountMenuItemHeight + _kDividerHeight
+          : 0) +
+      _accountMenuProfileHeight +
+      _accountMenuPadding;
+}
+
+/// Height of the divider between the account list and the profile entry,
+/// matching `PopupMenuDivider`'s default.
+const double _kDividerHeight = 16;
 
 final class _SwitchAccountChoice extends _AccountMenuChoice {
   const _SwitchAccountChoice(this.account);

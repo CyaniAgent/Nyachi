@@ -232,9 +232,17 @@ class _NoteCardState extends ConsumerState<NoteCard> {
                         onLongPress: _busy ? null : () => _pickReaction(note),
                       ),
                       _NoteAction(
-                        icon: Icons.article_outlined,
+                        // The detail page renders the whole conversation —
+                        // the ancestor chain above and the replies below —
+                        // so a reply advertises context, a standalone note
+                        // detail.
+                        icon: note.replyId != null
+                            ? Icons.forum_outlined
+                            : Icons.article_outlined,
                         value: 0,
-                        label: context.l10n.noteDetail,
+                        label: note.replyId != null
+                            ? context.l10n.viewContext
+                            : context.l10n.viewDetail,
                         onTap: () => _openDetail(note.id),
                       ),
                       const Spacer(),

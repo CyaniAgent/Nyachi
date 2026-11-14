@@ -305,6 +305,12 @@ class NavigationSettingsPage extends ConsumerWidget {
             value: settings.sidebarCollapseForPanel,
             onChanged: controller.setSidebarCollapseForPanel,
           ),
+          SwitchListTile(
+            title: Text(l10n.sidebarToggle),
+            subtitle: Text(l10n.sidebarToggleHint),
+            value: settings.sidebarToggle,
+            onChanged: controller.setSidebarToggle,
+          ),
         ],
       ),
     );
