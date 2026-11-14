@@ -16,18 +16,6 @@ const int appDetailBreakpointMax = 1600;
 const int appDetailBreakpointStep = 40;
 const int appDetailBreakpointDefault = 1200;
 
-/// Desktop sidebar width bounds (drag-adjusted).
-const double appSidebarMinWidth = 160;
-const double appSidebarMaxWidth = 400;
-const double appSidebarDefaultWidth = 240;
-const double appSidebarCollapsedWidth = 80;
-
-/// Below this window width the sidebar collapses automatically while
-/// auto-collapse is on.
-const double appSidebarAutoBreakpoint = 1000;
-const Duration appSidebarAnimationDuration = Duration(milliseconds: 220);
-const Curve appSidebarAnimationCurve = Curves.easeOutCubic;
-
 /// Neutral seed used when neither the user nor the instance provides a colour.
 const Color appFallbackSeed = Color(0xFF6750A4);
 

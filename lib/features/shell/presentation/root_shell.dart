@@ -13,7 +13,6 @@ import '../../../app/detail_panel/open_detail.dart';
 import '../../../app/router/back_navigation.dart';
 import '../../../app/router/navigator_keys.dart';
 import '../../../app/router/router_guards.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/ui/breakpoints.dart';
@@ -237,44 +236,12 @@ class ShellChrome extends ConsumerStatefulWidget {
 class _ShellChromeState extends ConsumerState<ShellChrome> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// Collapsed state of the desktop sidebar for this session. Seeded from the
-  /// window width while auto-collapse is on; a manual toggle wins afterwards.
-  bool? _collapsedOverride;
-
-  /// True while the sidebar edge is being dragged; disables the width tween so
-  /// the pane tracks the pointer exactly instead of lagging behind it.
-  var _draggingWidth = false;
-
-  /// The detail-panel open state the sidebar last reconciled against.
-  var _panelWasOpen = false;
-
-  /// The sidebar's collapse override as it was when the panel opened,
-  /// restored when the panel closes.
-  bool? _savedOverride;
-
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= kCompactBreakpoint;
     final child = widget.child;
-    // While the detail panel is open the content column is squeezed. By
-    // default the sidebar keeps its state and the panel takes the room from
-    // the feed; when the user turned the panel-collapse option on, the pane
-    // folds for the panel and restores on close. Either way the feed keeps
-    // its minimum: when the window is too narrow for both, the panel wins.
-    if (wide && settings.sidebarCollapseForPanel) {
-      final panelOpen = ref.watch(detailPanelControllerProvider).isOpen;
-      if (panelOpen != _panelWasOpen) {
-        _panelWasOpen = panelOpen;
-        if (panelOpen) {
-          _savedOverride = _collapsedOverride;
-          _collapsedOverride = true;
-        } else {
-          _collapsedOverride = _savedOverride;
-        }
-      }
-    }
     if (!wide) {
       return AppDrawerScope(
         openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
@@ -303,50 +270,34 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
         ),
       );
     }
-    final autoCollapse =
-        settings.sidebarAutoCollapse && width < appSidebarAutoBreakpoint;
-    final collapsed = _collapsedOverride ?? autoCollapse;
-    final targetWidth = collapsed
-        ? appSidebarCollapsedWidth
-        : settings.sidebarWidth;
-    return Scaffold(
-      body: Row(
-        children: [
-          // Animated so the collapse toggle and the auto switch at the
-          // breakpoint read as one motion. During a width drag the target
-          // changes every frame, and an animation there would lag the cursor,
-          // so the tween is skipped while dragging.
-          AnimatedContainer(
-            duration: _draggingWidth
-                ? Duration.zero
-                : appSidebarAnimationDuration,
-            curve: appSidebarAnimationCurve,
-            width: targetWidth,
-            child: AppSidebar(
-              entries: _entries(settings, widget.selectedTab),
-              collapsed: collapsed,
-              onToggleCollapse: () =>
-                  setState(() => _collapsedOverride = !collapsed),
-            ),
+    // Wide: a fixed icon rail next to the content. The full navigation lives
+    // one tap away in the drawer, which slides over the feed instead of
+    // squeezing it — the rail never resizes and never collapses.
+    return AppDrawerScope(
+      openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: AppDrawer(
+          entries: _entries(
+            settings,
+            widget.selectedTab,
+            config: settings.sidebarNavConfig,
+            allTabs: true,
           ),
-          if (!collapsed)
-            SidebarResizeHandle(
-              width: settings.sidebarWidth,
-              onDragStateChanged: (dragging) =>
-                  setState(() => _draggingWidth = dragging),
-              onChanged: (value) => ref
-                  .read(settingsControllerProvider.notifier)
-                  .setSidebarWidthLive(value),
-              onCommit: (value) => ref
-                  .read(settingsControllerProvider.notifier)
-                  .setSidebarWidth(value),
+        ),
+        body: Row(
+          children: [
+            _DesktopRail(
+              entries: _entries(settings, widget.selectedTab),
+              selectedTab: widget.selectedTab,
+              onSelectTab: widget.onSelectTab,
+              onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+              onCompose: () =>
+                  openDetail(context, const ComposeDetailLocation(null)),
             ),
-          Expanded(child: child),
-        ],
-      ),
-      floatingActionButton: _ComposeFab(
-        visibleTab: widget.selectedTab,
-        covered: ref.watch(detailPanelControllerProvider).isOpen,
+            Expanded(child: child),
+          ],
+        ),
       ),
     );
   }
@@ -380,74 +331,97 @@ class _ShellChromeState extends ConsumerState<ShellChrome> {
   }
 }
 
-/// Drag handle between the sidebar and the content column. Deltas accumulate
-/// locally and are written once when the gesture ends, so a drag does not
-/// touch preferences on every frame.
-class SidebarResizeHandle extends StatefulWidget {
-  const SidebarResizeHandle({
-    required this.width,
-    required this.onChanged,
-    required this.onCommit,
-    required this.onDragStateChanged,
-    super.key,
+/// Wide-screen icon rail: menu button and compose on top, one destination per
+/// visible tab, settings pinned at the bottom. The full navigation lives in
+/// the drawer this rail opens, which slides over the feed instead of
+/// squeezing it.
+class _DesktopRail extends ConsumerWidget {
+  const _DesktopRail({
+    required this.entries,
+    required this.selectedTab,
+    required this.onSelectTab,
+    required this.onOpenDrawer,
+    required this.onCompose,
   });
 
-  final double width;
-  final ValueChanged<double> onChanged;
-  final ValueChanged<double> onCommit;
-
-  /// Lets the shell disable its width tween for the duration of the drag.
-  final ValueChanged<bool> onDragStateChanged;
-
-  @override
-  State<SidebarResizeHandle> createState() => _SidebarResizeHandleState();
-}
-
-class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
-  double? _dragWidth;
+  final AppNavEntries entries;
+  final AppTab selectedTab;
+  final ValueChanged<AppTab> onSelectTab;
+  final VoidCallback onOpenDrawer;
+  final VoidCallback onCompose;
 
   @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeLeftRight,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onHorizontalDragStart: (_) {
-          _dragWidth = widget.width;
-          widget.onDragStateChanged(true);
-        },
-        onHorizontalDragUpdate: (details) {
-          final current = _dragWidth;
-          if (current == null) return;
-          final next = (current + details.delta.dx).clamp(
-            appSidebarMinWidth,
-            appSidebarMaxWidth,
-          );
-          _dragWidth = next;
-          widget.onChanged(next);
-        },
-        onHorizontalDragEnd: (_) => _finishDrag(),
-        onHorizontalDragCancel: _finishDrag,
-        child: SizedBox(
-          width: 8,
-          height: double.infinity,
-          child: Center(
-            child: SizedBox(
-              width: 1,
-              height: double.infinity,
-              child: ColoredBox(color: Theme.of(context).dividerColor),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final account = ref.watch(activeAccountProvider);
+    final selectedIndex = entries.tabs.indexOf(selectedTab);
+    Widget destinationIcon(AppTab tab, bool selected) {
+      if (tab == AppTab.profile && account != null) {
+        return NyachiAvatar(
+          url: account.avatarUrl,
+          size: 26,
+          showStatus: true,
+          statusRingColor: theme.colorScheme.surfaceContainerLow,
+        );
+      }
+      return Icon(
+        entries.icon(tab),
+        size: 22,
+        color: selected
+            ? theme.colorScheme.onSecondaryContainer
+            : theme.colorScheme.onSurfaceVariant,
+      );
+    }
+
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      child: SafeArea(
+        right: false,
+        child: NavigationRail(
+          selectedIndex: selectedIndex == -1 ? null : selectedIndex,
+          labelType: NavigationRailLabelType.none,
+          // The account avatar, settings and the rest of the trailing slot
+          // stay pinned at the bottom.
+          trailingAtBottom: true,
+          groupAlignment: -1,
+          backgroundColor: Colors.transparent,
+          leading: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                onPressed: onOpenDrawer,
+                icon: const Icon(Icons.menu),
+              ),
+              const SizedBox(height: 12),
+              FloatingActionButton.small(
+                heroTag: null,
+                tooltip: context.l10n.compose,
+                onPressed: onCompose,
+                child: const Icon(Icons.edit_outlined),
+              ),
+            ],
+          ),
+          destinations: [
+            for (final tab in entries.tabs)
+              NavigationRailDestination(
+                icon: destinationIcon(tab, false),
+                selectedIcon: destinationIcon(tab, true),
+                label: Text(entries.label(context, tab)),
+              ),
+          ],
+          onDestinationSelected: (index) => onSelectTab(entries.tabs[index]),
+          trailing: Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: IconButton(
+              tooltip: context.l10n.settings,
+              onPressed: entries.onOpenSettings,
+              icon: const Icon(Icons.settings_outlined),
             ),
           ),
         ),
       ),
     );
-  }
-
-  void _finishDrag() {
-    final value = _dragWidth;
-    _dragWidth = null;
-    widget.onDragStateChanged(false);
-    if (value != null) widget.onCommit(value);
   }
 }
 
