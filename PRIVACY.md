@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-10-22  
+Effective date: 2026-11-14  
 Controller: SakuraCake (individual)  
 Project: Nyachi
 
@@ -28,6 +28,9 @@ on an instance are controlled by that instance's administrator.
   posts, private messages, files, or account data.
 - Instance administrators may log, process, or publish data under their own
   privacy policies.
+- Some features may route data through additional services beyond the
+  instance (for example, future opt-in push notification delivery). Such a
+  feature will not be enabled before this policy is updated to describe it.
 
 ### 1.3 Local data
 
@@ -40,7 +43,8 @@ on an instance are controlled by that instance's administrator.
 
 ### 1.4 Diagnostics and telemetry
 
-The current rewrite codebase **does not include** telemetry or analytics SDKs.
+As of the effective date, the app's codebase **does not include** telemetry
+or analytics SDKs.
 We plan to evaluate whether anonymous crash or usage statistics are needed, but
 no decision has been made. If we add them, we will update this policy before
 release and explain:
@@ -60,6 +64,21 @@ Information you provide through GitHub issues, PRs, Security Advisories, or the
 CLA process is processed by GitHub under GitHub's privacy policy. Do not post
 tokens, private messages, or other sensitive data in public issues.
 
+### 1.6 Microsoft Store crash and analytics data
+
+If you install Nyachi through the Microsoft Store, Microsoft collects its own
+installation, crash, and performance data under Microsoft's terms and privacy
+policy; that processing is Microsoft's, not the maintainer's.
+
+The maintainer currently does not receive Error Reporting Data or App
+Analytics Data from Microsoft. If we enable them later, we will update this
+policy before doing so, and we will use that data only to diagnose defects
+and improve Nyachi. We will delete any Personal Information it contains
+within 30 days of receipt, keep it only on secured systems with restricted
+access, not disclose it, and not use it to identify individual users. Only
+non-identifying technical data (such as error counts, exception codes, call
+stacks, and module lists) would be kept beyond 30 days.
+
 ## 2. Purposes and legal bases
 
 We process data only to:
@@ -70,10 +89,13 @@ We process data only to:
 - respond to your support, security, or CLA requests;
 - comply with legal obligations.
 
-Where the Personal Information Protection Law of the People's Republic of China
-or other laws apply, the legal basis may be performance of a contract, consent,
-compliance with a legal obligation, or necessity for security. Where separate
-consent is required, we will obtain it.
+Where data protection laws apply, the legal bases are: performance of a
+contract (providing the app's features), your consent where requested,
+legitimate interests in security and abuse prevention, and compliance with
+legal obligations. This covers the Personal Information Protection Law of
+the People's Republic of China (PIPL), the EU General Data Protection
+Regulation (GDPR), and Japan's Act on the Protection of Personal
+Information (APPI). Where separate consent is required, we will obtain it.
 
 ## 3. Sharing and third parties
 
@@ -81,8 +103,13 @@ consent is required, we will obtain it.
   controller; its privacy policy applies to data on that instance.
 - **GitHub**: repositories, issues, PRs, advisories, and the CLA process are
   provided by GitHub.
-- **App stores and operating systems**: if you install through a store, the
-  store and OS may collect installation, crash, or device data.
+- **App stores and operating systems**: if you install Nyachi through a
+  store such as the Microsoft Store, the store and OS may collect
+  installation, crash, or device data under their own terms. The maintainer
+  does not receive that data; see section 1.6.
+- **skono.dev**: features of the app may access skono.dev or its subdomains
+  to fetch resource information. Requests are delivered through the EdgeOne
+  CDN, which transiently processes request data such as your IP address.
 - **Legal requirements**: we may disclose data to authorities when required by
   law, but the project maintainer does not hold your Misskey account data.
 
@@ -104,16 +131,36 @@ HTTPS/WSS, and limiting sensitive log data. No system can guarantee absolute
 security; use strong credentials, protect your device, and keep the app
 updated.
 
-## 6. Your rights
+## 6. Your rights and controls
 
 Where applicable law provides, you may:
 
-- access, correct, or delete local data;
+- access, correct, or delete local data; your settings, caches, logs, and
+  databases stay on your device and are reachable through the app or the
+  operating system's app-data tools;
+- disconnect an account in the app, which removes that account's access
+  token from the device;
 - clear caches/logs or uninstall the app;
+- withdraw consent where processing relies on consent, for example by
+  disconnecting an account or uninstalling;
+- control what you share: what you post, and to which instance, is chosen by
+  you in the app;
 - request deletion of personal information you provided on GitHub, except where
   retention is legally required;
 - exercise rights regarding instance data with the instance administrator;
+  your posts, reactions, follows, and files on an instance are accessed and
+  managed through the instance's own settings and tools;
 - complain to a supervisory authority.
+
+Under the GDPR (EU/EEA) you may additionally request restriction or
+portability of your data and object to processing; under the CCPA/CPRA
+(California) the rights above apply as rights to know, access, correct, and
+delete; under the APPI (Japan) you may request disclosure, correction,
+deletion, or cessation of use.
+
+We do not sell personal information or share it for cross-context behavioral
+advertising, and we will not discriminate against you for exercising these
+rights.
 
 Contact the maintainer through a GitHub Issue; for sensitive information, use
 Security Advisories.
@@ -127,9 +174,13 @@ by mistake, contact us for deletion.
 
 ## 8. International transfers
 
-The Misskey instance you choose, GitHub, app stores, and operating systems may be
-located in other countries or regions. Using those services may involve
-cross-border processing; review their privacy policies.
+The Misskey instance you choose, GitHub, app stores, operating systems, and
+other services the app accesses may be located in other countries or
+regions. Using those services may involve cross-border processing; review
+their privacy policies. Where required — for example under the GDPR —
+transfers rely on safeguards such as adequacy decisions or standard
+contractual clauses; under Japan's APPI, we disclose recipient countries
+and ensure recipients apply comparable protection measures.
 
 ## 9. Changes
 

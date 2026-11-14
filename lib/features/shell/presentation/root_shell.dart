@@ -439,7 +439,10 @@ class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
         child: SizedBox(
           width: 8,
           height: double.infinity,
-          child: Center(
+          // One visual pixel, flush against the sidebar's edge; the rest of
+          // the strip is silent drag room.
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: SizedBox(
               width: 1,
               height: double.infinity,

@@ -1,6 +1,6 @@
 # Terms of Service
 
-Effective date: 2026-10-22  
+Effective date: 2026-11-14  
 Provider: SakuraCake (individual)  
 Project: Nyachi
 
@@ -9,12 +9,21 @@ Project: Nyachi
 By downloading, installing, running, or using Nyachi, you agree to these terms.
 If you do not agree, do not use the app.
 
-## 2. Relationship to the license
+## 2. License and relationship to the source license
 
 Nyachi source code is licensed under AGPL-3.0-or-later; the full text is in
 the LICENSE file of the source repository. These terms govern your use of
 the official app/service and do not limit rights granted by the AGPL. If
 these terms conflict with the AGPL, the AGPL governs the code license.
+
+The app binary is licensed to you, not sold. You may install and use the app
+on devices you own or control. These usage rights are no more restrictive
+than the Microsoft Usage Rules that govern apps acquired through the
+Microsoft Store. These terms and the privacy policy (PRIVACY.md of the
+source repository) are provided to Microsoft for publication as the
+developer's license terms for the app; Microsoft's Standard Application
+License Terms apply only for a market where these developer-provided terms
+are not published.
 
 ## 3. The service
 
@@ -22,10 +31,14 @@ these terms conflict with the AGPL, the AGPL governs the code license.
 - You connect the client to a Misskey instance you choose; the account,
   content, moderation, data retention, and availability of that instance are
   controlled by the instance.
-- The maintainer does not provide a hosted service and does not guarantee that
-  any instance is available.
-- There is no public release yet; features, UI, and compatibility may change
-  during the rewrite.
+- The maintainer does not provide a hosted service for your account or
+  content and does not guarantee that any instance is available.
+- The app is under active development; features, UI, and compatibility may
+  change as development continues.
+- The app is currently provided free of charge. If paid features or in-app
+  products are introduced later, their terms and any legally required
+  disclosures will be presented in the app and in the store listing before
+  any purchase.
 
 ## 4. Accounts and credentials
 
@@ -57,11 +70,24 @@ You must not use Nyachi to:
 - You must have the right to publish the text, images, audio, video, and files
   you submit.
 
-## 7. Third-party services
+## 7. Third-party services and content
 
 Nyachi may link to or integrate third-party services (Misskey instances,
 GitHub, app stores, font/audio hosting, and others). Those services have their
 own terms and privacy policies; the maintainer is not responsible for them.
+
+Content you see through Nyachi — posts, media, profiles, reactions, links,
+and similar material — is supplied by the instances you connect to and by
+their users. Such third-party content is the responsibility of whoever
+provides it; it is not attributable to the maintainer and does not represent
+the maintainer's opinion. The maintainer does not review or endorse it and,
+to the maximum extent permitted by law, is not liable for it. Report
+problems with content to the instance that hosts it.
+
+If you install Nyachi through the Microsoft Store, Microsoft's terms and
+privacy policy govern Microsoft's collection of installation, crash, and
+device data. Microsoft is not a party to these terms and does not operate
+the app; the app itself is governed by these terms and the privacy policy.
 
 ## 8. No warranty
 
@@ -96,11 +122,14 @@ rights).
 These terms are governed by the laws of the People's Republic of China,
 excluding its conflict-of-law rules. Disputes arising from these terms shall be
 submitted to a court of competent jurisdiction. Mandatory rights available to
-consumers in their habitual residence are not affected.
+consumers in their habitual residence — including in the European Union, the
+United States, and Japan — are not affected.
 
 ## 12. Miscellaneous
 
 - If any provision is held invalid, the remaining provisions remain in effect.
+- Except for rights in the source code granted by the AGPL, the maintainer
+  reserves all rights not expressly granted by these terms.
 - These terms do not grant a trademark license; see the TRADEMARK file of the
   source repository.
 - If you install through an app store, the store's terms may also apply.
