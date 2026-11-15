@@ -15,7 +15,6 @@ import '../../../app/detail_panel/open_detail.dart';
 import '../../../app/router/back_navigation.dart';
 import '../../../app/router/navigator_keys.dart';
 import '../../../app/router/router_guards.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/ui/avatar.dart';
 import '../../../core/ui/breakpoints.dart';
@@ -386,7 +385,6 @@ class _DesktopRail extends ConsumerWidget {
           selectedIndex: selectedIndex == -1 ? null : selectedIndex,
           labelType: NavigationRailLabelType.none,
           extended: extended,
-          minExtendedWidth: appRailExtendedWidth,
           // The feature entries and the account card stay pinned at the
           // bottom in both states.
           trailingAtBottom: true,
@@ -430,7 +428,8 @@ class _DesktopRail extends ConsumerWidget {
 /// the bottom. Lives inside the rail's subtree so it can read the rail's
 /// extended animation: the slot passes unbounded width constraints, so the
 /// rows inside need the rail's own animated width — this box lerps between
-/// the rail's collapsed width (its default 80) and the fixed extended width.
+/// the rail's collapsed width (its default 80) and the framework's default
+/// extended width (256).
 class _RailTrailing extends StatelessWidget {
   const _RailTrailing({
     required this.extended,
@@ -447,10 +446,8 @@ class _RailTrailing extends StatelessWidget {
     final animation = NavigationRail.extendedAnimation(context);
     return AnimatedBuilder(
       animation: animation,
-      builder: (context, child) => SizedBox(
-        width: lerpDouble(80, appRailExtendedWidth, animation.value)!,
-        child: child,
-      ),
+      builder: (context, child) =>
+          SizedBox(width: lerpDouble(80, 256, animation.value)!, child: child),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -548,9 +545,10 @@ class _RailFeatureEntry extends StatelessWidget {
   }
 }
 
-/// The leading compose button: a regular circular flat FAB while the rail
-/// is collapsed, the large circular flat FAB while expanded — the expanded
-/// rail's bigger compose target. Flat in every state, no shadow.
+/// The leading compose button, exactly the framework's extended-animation
+/// example: a circular FAB collapsed, a labelled `FloatingActionButton.
+/// extended` revealed from the start edge while the rail's width animates.
+/// Flat in every state.
 class _RailComposeFab extends StatelessWidget {
   const _RailComposeFab({required this.extended, required this.onPressed});
 
@@ -564,34 +562,43 @@ class _RailComposeFab extends StatelessWidget {
       animation: animation,
       builder: (context, child) {
         return Container(
-          height: lerpDouble(56, 96, animation.value)!,
-          alignment: Alignment.center,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 180),
-            transitionBuilder: (child, animation) =>
-                FadeTransition(opacity: animation, child: child),
-            child: animation.value == 0
-                ? FloatingActionButton(
-                    key: const ValueKey('regular'),
-                    heroTag: null,
-                    tooltip: context.l10n.compose,
-                    onPressed: onPressed,
-                    elevation: 0,
-                    hoverElevation: 0,
-                    focusElevation: 0,
-                    child: const Icon(Icons.edit_outlined),
-                  )
-                : FloatingActionButton.large(
-                    key: const ValueKey('large'),
-                    heroTag: null,
-                    tooltip: context.l10n.compose,
-                    onPressed: onPressed,
-                    elevation: 0,
-                    hoverElevation: 0,
-                    focusElevation: 0,
-                    child: const Icon(Icons.edit_outlined, size: 36),
-                  ),
+          height: 56,
+          padding: EdgeInsets.symmetric(
+            vertical: lerpDouble(0, 6, animation.value)!,
           ),
+          // Collapsed, the rail centres the circle like every destination.
+          // Expanded, the labelled fab sits at the start edge instead of
+          // floating mid-pane.
+          alignment: animation.value == 0
+              ? Alignment.center
+              : AlignmentDirectional.centerStart,
+          child: animation.value == 0
+              ? FloatingActionButton(
+                  heroTag: null,
+                  tooltip: context.l10n.compose,
+                  onPressed: onPressed,
+                  elevation: 0,
+                  hoverElevation: 0,
+                  focusElevation: 0,
+                  child: const Icon(Icons.edit_outlined),
+                )
+              : Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  widthFactor: animation.value,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 8),
+                    child: FloatingActionButton.extended(
+                      heroTag: null,
+                      tooltip: context.l10n.compose,
+                      onPressed: onPressed,
+                      elevation: 0,
+                      hoverElevation: 0,
+                      focusElevation: 0,
+                      icon: const Icon(Icons.edit_outlined),
+                      label: Text(context.l10n.compose),
+                    ),
+                  ),
+                ),
         );
       },
     );
