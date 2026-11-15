@@ -548,11 +548,9 @@ class _RailFeatureEntry extends StatelessWidget {
   }
 }
 
-/// The leading compose button, following the framework's extended-animation
-/// example: collapsed it is a circular FAB, expanded a full labelled
-/// `FloatingActionButton.extended`, revealed from the start edge while the
-/// rail's width animates. Flat in every state, and each variant keeps its
-/// natural size (56 collapsed, 48 extended) instead of being squeezed.
+/// The leading compose button: a regular circular flat FAB while the rail
+/// is collapsed, the large circular flat FAB while expanded — the expanded
+/// rail's bigger compose target. Flat in every state, no shadow.
 class _RailComposeFab extends StatelessWidget {
   const _RailComposeFab({required this.extended, required this.onPressed});
 
@@ -566,40 +564,34 @@ class _RailComposeFab extends StatelessWidget {
       animation: animation,
       builder: (context, child) {
         return Container(
-          height: lerpDouble(56, 48, animation.value)!,
-          // Collapsed, the rail centres the circle like every destination.
-          // Expanded, the labelled fab sits at the start edge instead of
-          // floating mid-pane.
-          alignment: animation.value == 0
-              ? Alignment.center
-              : AlignmentDirectional.centerStart,
-          child: animation.value == 0
-              ? FloatingActionButton(
-                  heroTag: null,
-                  tooltip: context.l10n.compose,
-                  onPressed: onPressed,
-                  elevation: 0,
-                  hoverElevation: 0,
-                  focusElevation: 0,
-                  child: const Icon(Icons.edit_outlined),
-                )
-              : Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  widthFactor: animation.value,
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.only(start: 8),
-                    child: FloatingActionButton.extended(
-                      heroTag: null,
-                      tooltip: context.l10n.compose,
-                      onPressed: onPressed,
-                      elevation: 0,
-                      hoverElevation: 0,
-                      focusElevation: 0,
-                      icon: const Icon(Icons.edit_outlined),
-                      label: Text(context.l10n.compose),
-                    ),
+          height: lerpDouble(56, 96, animation.value)!,
+          alignment: Alignment.center,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: animation.value == 0
+                ? FloatingActionButton(
+                    key: const ValueKey('regular'),
+                    heroTag: null,
+                    tooltip: context.l10n.compose,
+                    onPressed: onPressed,
+                    elevation: 0,
+                    hoverElevation: 0,
+                    focusElevation: 0,
+                    child: const Icon(Icons.edit_outlined),
+                  )
+                : FloatingActionButton.large(
+                    key: const ValueKey('large'),
+                    heroTag: null,
+                    tooltip: context.l10n.compose,
+                    onPressed: onPressed,
+                    elevation: 0,
+                    hoverElevation: 0,
+                    focusElevation: 0,
+                    child: const Icon(Icons.edit_outlined, size: 36),
                   ),
-                ),
+          ),
         );
       },
     );
