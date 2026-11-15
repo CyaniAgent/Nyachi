@@ -108,12 +108,24 @@ deb_depends() {
     echo "error: dpkg is required to derive deb dependencies (set NYACHI_DEB_DEPENDS to override, e.g. for local testing)" >&2
     exit 1
   fi
-  local soname pkg
+  local soname pkg matches
   local -a pkgs=()
   while IFS= read -r soname; do
     [ -n "$soname" ] || continue
     case " $EXCLUDE_SONAMES " in *" $soname "*) continue ;; esac
-    pkg="$(dpkg -S "*/$soname" 2>/dev/null | head -n1 | cut -d: -f1 || true)"
+    # dpkg -S pattern-matches paths, and the build host also carries 32-bit
+    # compatibility files (/lib32/libc.so.6, owned by libc6-i386): those
+    # match the same soname and can win a plain "head -n1", which would
+    # declare a bogus multilib dependency for this amd64 package. Prefer
+    # the 64-bit paths, then any non-32-bit match. Multiarch-qualified
+    # names ("libc6:amd64: ...") keep their package field via cut -f1.
+    matches="$(dpkg -S "*/$soname" 2>/dev/null || true)"
+    pkg="$(printf '%s\n' "$matches" | grep -E 'x86_64-linux-gnu|/lib64/' \
+      | head -n1 | cut -d: -f1 || true)"
+    if [ -z "$pkg" ]; then
+      pkg="$(printf '%s\n' "$matches" | grep -vE '/lib32/|/usr/lib32|/i386-linux-gnu/' \
+        | head -n1 | cut -d: -f1 || true)"
+    fi
     if [ -z "$pkg" ]; then
       echo "error: no Debian package owns */$soname" >&2
       echo "error: if it is never needed at runtime, add it to EXCLUDE_SONAMES in tool/packaging/linux/package.sh" >&2
@@ -179,6 +191,12 @@ cp "$DESKTOP" "$APPDIR/usr/share/applications/nyachi.desktop"
 cp "$ICON" "$APPDIR/usr/share/icons/hicolor/256x256/apps/nyachi.png"
 cp "$ICON" "$APPDIR/nyachi.png"
 ln -sf nyachi.png "$APPDIR/.DirIcon"
+# appimagetool does not synthesize AppRun, and the type-2 runtime execs
+# exactly /AppRun at launch — without it the image dies with "execv error".
+# A relative symlink matches what linuxdeploy generates: the runtime
+# resolves it to usr/bin/nyachi inside the mount, and $ORIGIN then points
+# at usr/bin where lib/ and data/ sit.
+ln -sfn usr/bin/nyachi "$APPDIR/AppRun"
 
 # CI runners have no FUSE; --appimage-extract-and-run unpacks to a temporary
 # directory instead of mounting. ARCH names the target for appimagetool.
