@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Nyachi
+GenericName=Misskey Client
+Comment=A Misskey client for Android, iOS, Windows, macOS, Linux, and the web
+Exec=nyachi
+Icon=nyachi
+Terminal=false
+Type=Application
+Categories=Network;InstantMessaging;Chat;GTK;
+# Must match APPLICATION_ID in linux/CMakeLists.txt: the runner passes it to
+# g_set_prgname, which is what the desktop shell reads as the window's
+# WM_CLASS. A mismatch breaks icon association and window grouping.
+StartupWMClass=app.cyaniagent.nyachi

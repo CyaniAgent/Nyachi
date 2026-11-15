@@ -3,6 +3,16 @@
 All notable changes to Nyachi. Versions follow [Semantic Versioning](https://semver.org/);
 a `-beta.N` suffix marks a pre-release from the `develop` line.
 
+## [Unreleased]
+
+### Added
+
+- **Installer packages on every desktop platform.** The Release workflow now
+  publishes a Windows `setup.exe` (Inno Setup, per-user install), a macOS
+  dmg, and Linux deb, rpm and AppImage builds alongside the existing
+  portable zips. Linux package dependencies are derived from the bundle's
+  actual dynamic-link surface at build time.
+
 ## [2.1.0-beta.8] - 2026-11-10
 
 ### Codename

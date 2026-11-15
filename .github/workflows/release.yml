@@ -1,7 +1,8 @@
 name: Release
 
 # Builds and publishes a version tag (e.g. v2.1.0-beta.1).
-# Artifacts: split-per-ABI APKs, AAB, and Windows/macOS/Linux bundles.
+# Artifacts: split-per-ABI APKs, AAB, desktop bundles, and installers
+# (Windows setup.exe, macOS dmg, Linux deb/rpm/AppImage).
 #
 # Release semantics come from the tag itself:
 #   - any tag containing `-beta` or `-rc` → marked as a pre-release
@@ -28,6 +29,9 @@ on:
 
 permissions:
   contents: write
+  # Lets the release job delete its transit artifacts once they have been
+  # copied into the release (see "Purge transit artifacts").
+  actions: write
 
 jobs:
   android:
@@ -97,10 +101,15 @@ jobs:
           cp build/app/outputs/bundle/release/app-release.aab "out/nyachi-$V-android.aab"
           ls -lh out
 
+      # Artifacts exist only so the release job can download them within this
+      # same run; one day is the shortest retention GitHub allows, and keeps
+      # the repo's artifact storage (500MB on the Free plan) near zero instead
+      # of accumulating ~290MB per release run for 90 days.
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: android
           path: out/*
+          retention-days: 1
 
   desktop:
     runs-on: ${{ matrix.os }}
@@ -164,9 +173,11 @@ jobs:
             -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
             -o Dir::Cache::archives=$HOME/.cache/apt-archives"
           $APT update
+          # desktop-file-utils ships desktop-file-validate, used by
+          # tool/packaging/linux/package.sh to check the .desktop entry.
           $APT install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libsecret-1-dev libjsoncpp-dev \
-            libmpv-dev mpv
+            libmpv-dev mpv desktop-file-utils
 
       - name: Cache CocoaPods
         if: matrix.target == 'macos-arm64'
@@ -194,6 +205,39 @@ jobs:
             web-wasm) flutter build web --release --wasm ;;
           esac
 
+      # Installer formats on top of the plain bundles; each writes into out/,
+      # which Collect artifacts then zips alongside. See tool/packaging/README.md.
+      - name: Package deb/rpm/AppImage
+        if: matrix.target == 'linux-x64'
+        run: tool/packaging/linux/package.sh "${{ steps.version.outputs.name }}" out
+
+      - name: Package Windows installer
+        if: matrix.target == 'windows-x64'
+        shell: pwsh
+        run: |
+          $v = "${{ steps.version.outputs.name }}"
+          New-Item -ItemType Directory -Force out | Out-Null
+          # Inno Setup 6 is preinstalled on GitHub's Windows runners.
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=$v" "/O$env:GITHUB_WORKSPACE\out" `
+            "tool\packaging\windows\nyachi.iss"
+
+      - name: Package macOS dmg
+        if: matrix.target == 'macos-arm64'
+        shell: bash
+        run: |
+          V="${{ steps.version.outputs.name }}"
+          mkdir -p out
+          app=(build/macos/Build/Products/Release/*.app)
+          # Stage the .app next to an /Applications symlink so the dmg opens
+          # on the classic drag-to-install view (create-dmg style).
+          stage=$(mktemp -d)
+          cp -R "${app[0]}" "$stage/"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname Nyachi -srcfolder "$stage" -ov -format UDZO \
+            "out/nyachi-$V-macos-arm64.dmg"
+          rm -rf "$stage"
+
       - name: Collect artifacts
         shell: bash
         run: |
@@ -219,10 +263,13 @@ jobs:
           esac
           ls -lh out
 
+      # Same one-day transit retention as the android job: the release job
+      # downloads these within this run, so nothing needs to outlive it.
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: desktop-${{ matrix.target }}
           path: out/*
+          retention-days: 1
 
   release:
     runs-on: ubuntu-latest
@@ -329,3 +376,21 @@ jobs:
           else
             gh release create -R CyaniAgent/Nyachi "$TAG" "${FLAGS[@]}" out/*
           fi
+
+      # The release assets are now the durable copy; the transit artifacts
+      # have served their purpose. Delete them immediately so this run leaves
+      # nothing behind (retention-days is the backstop, not the plan). This
+      # step inherits the default `success()` condition: when an earlier step
+      # failed the artifacts stay downloadable for debugging and a re-run.
+      - name: Purge transit artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ids=$(gh api --paginate \
+            "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.expired == false) | .id')
+          for id in $ids; do
+            gh api -X DELETE \
+              "repos/${{ github.repository }}/actions/artifacts/$id" \
+              || echo "::warning::failed to delete artifact $id"
+          done

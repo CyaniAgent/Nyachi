@@ -12,8 +12,9 @@ The rewrite on `develop` replaces the archived 1.3.4 app. The legacy snapshot at
   tags, profiles, and 1:1/room chat with text and media.
 - First-run OOBE wizard (language, compliance, sign-in, appearance) shipped;
   the in-app brand mark doubles as the launcher icon on every platform.
-- Pre-releases are cut from `develop` version tags; the `Prerelease` workflow
-  builds split-per-ABI APKs, an AAB, and desktop bundles automatically.
+- Pre-releases are cut from `develop` version tags; the `Release` workflow
+  builds split-per-ABI APKs, an AAB, desktop bundles, and installers
+  (Windows setup.exe, macOS dmg, Linux deb/rpm/AppImage) automatically.
   Releases are infrequent by policy — only when the maintainer calls for one.
 
 ## Requirements

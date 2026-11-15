@@ -1,0 +1,49 @@
+# Linux package metadata shared by the deb and rpm builds; package.sh runs
+# nfpm twice against this file.
+#
+# nfpm expands ${...} environment variables in every field (there is no
+# templating beyond that). package.sh exports:
+#   NYACHI_VERSION       version from the release tag
+#   NYACHI_DEB_DEPENDS   comma-separated, derived from the bundle's link surface
+#   NYACHI_RPM_DEPENDS   same, in RPM soname-requirement form
+#
+# Runtime dependencies deliberately live in package.sh, not here: they are
+# derived from readelf output at build time so a new plugin linking a new
+# library cannot silently ship a broken package.
+name: nyachi
+arch: amd64
+platform: linux
+# semver parsing lets nfpm mold the pre-release into each packager's ordering
+# rules (deb sorts 2.1.0-beta.8 before 2.1.0; rpm keeps it out of the release
+# field), so tag versions land as-is.
+version: ${NYACHI_VERSION}
+maintainer: AyaxYuna <109059640+SakuraCake@users.noreply.github.com>
+vendor: AyaxYuna
+homepage: https://github.com/CyaniAgent/Nyachi
+license: AGPL-3.0-or-later
+section: net
+priority: optional
+description: >
+  Nyachi is a Misskey client for Android, iOS, Windows, macOS, Linux, and the
+  web. This package contains the Linux desktop build (x86_64).
+contents:
+  # The whole Flutter bundle lands in /opt/nyachi: lib/ and data/ must sit
+  # next to the binary because the binary resolves them relative to its own
+  # location ($ORIGIN), not to /usr.
+  - src: build/linux/x64/release/bundle/
+    dst: /opt/nyachi
+    type: tree
+  - src: /opt/nyachi/nyachi
+    dst: /usr/bin/nyachi
+    type: symlink
+  - src: tool/packaging/linux/nyachi.desktop
+    dst: /usr/share/applications/nyachi.desktop
+  - src: tool/packaging/linux/nyachi.png
+    dst: /usr/share/icons/hicolor/256x256/apps/nyachi.png
+overrides:
+  deb:
+    depends:
+      - ${NYACHI_DEB_DEPENDS}
+  rpm:
+    depends:
+      - ${NYACHI_RPM_DEPENDS}
