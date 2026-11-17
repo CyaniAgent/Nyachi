@@ -1,0 +1,11 @@
+{
+  "modelVersion": "26.0.0",
+  "name": "nyachi",
+  "version": "2.0.0",
+  "description": "Nyachi - A Misskey client for HarmonyOS",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.21"
+  }
+}

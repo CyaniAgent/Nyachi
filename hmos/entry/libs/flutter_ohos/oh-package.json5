@@ -1,0 +1,8 @@
+{
+  "name": "@ohos/flutter_ohos",
+  "version": "0.0.1",
+  "description": "Flutter Engine embedder for HarmonyOS (placeholder)",
+  "license": "BSD-3-Clause",
+  "main": "index.ets",
+  "dependencies": {}
+}

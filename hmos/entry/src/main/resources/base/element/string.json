@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "Nyachi Misskey Client" },
+    { "name": "entry_ability_desc", "value": "Nyachi main entry" },
+    { "name": "entry_ability_label", "value": "Nyachi" }
+  ]
+}

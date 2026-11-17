@@ -1,0 +1,10 @@
+{
+  "name": "entry",
+  "version": "2.0.0",
+  "description": "Nyachi entry module for HarmonyOS",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@ohos/flutter_ohos": "file:./libs/flutter_ohos"
+  },
+  "devDependencies": {}
+}
