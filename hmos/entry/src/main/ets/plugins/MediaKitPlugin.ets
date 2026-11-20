@@ -3,7 +3,7 @@
 // MediaKitPlugin — bridges media_kit to HarmonyOS media playback.
 // Uses HarmonyOS AVPlayer (audio/video) and AVCodec for media decoding.
 
-import { FlutterPlugin, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
+import { FlutterPlugin, FlutterPluginBinding, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
 import { media } from '@kit.MediaKit';
 
 const CHANNEL_NAME = 'plugins.flutter.io/media_kit';
@@ -12,16 +12,16 @@ export class MediaKitPlugin implements FlutterPlugin {
   private channel: MethodChannel | null = null;
   private players: Map<number, media.AVPlayer> = new Map();
 
-  getName(): string {
+  getUniqueClassName(): string {
     return 'MediaKitPlugin';
   }
 
-  onAttachedToEngine(channel: MethodChannel): void {
-    this.channel = channel;
+  onAttachedToEngine(binding: FlutterPluginBinding): void {
+    this.channel = new MethodChannel(binding.getBinaryMessenger(), CHANNEL_NAME);
     this.channel.setMethodCallHandler(this.handleMethodCall.bind(this));
   }
 
-  onDetachedFromEngine(): void {
+  onDetachedFromEngine(binding: FlutterPluginBinding): void {
     this.channel?.setMethodCallHandler(null);
     this.channel = null;
     // Release all players

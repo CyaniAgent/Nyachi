@@ -3,7 +3,7 @@
 // UrlLauncherPlugin — bridges url_launcher to HarmonyOS Web browser.
 // Opens URLs in the system browser using HarmonyOS WebviewController.
 
-import { FlutterPlugin, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
+import { FlutterPlugin, FlutterPluginBinding, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
 import { webview } from '@kit.ArkWeb';
 
 const CHANNEL_NAME = 'plugins.flutter.io/url_launcher';
@@ -11,16 +11,16 @@ const CHANNEL_NAME = 'plugins.flutter.io/url_launcher';
 export class UrlLauncherPlugin implements FlutterPlugin {
   private channel: MethodChannel | null = null;
 
-  getName(): string {
+  getUniqueClassName(): string {
     return 'UrlLauncherPlugin';
   }
 
-  onAttachedToEngine(channel: MethodChannel): void {
-    this.channel = channel;
+  onAttachedToEngine(binding: FlutterPluginBinding): void {
+    this.channel = new MethodChannel(binding.getBinaryMessenger(), CHANNEL_NAME);
     this.channel.setMethodCallHandler(this.handleMethodCall.bind(this));
   }
 
-  onDetachedFromEngine(): void {
+  onDetachedFromEngine(binding: FlutterPluginBinding): void {
     this.channel?.setMethodCallHandler(null);
     this.channel = null;
   }

@@ -4,7 +4,7 @@
 // Token storage uses HarmonyOS Universal KeyStore (HUKS) for secure
 // key-value storage, replacing the Android Keystore / iOS Keychain backend.
 
-import { FlutterPlugin, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
+import { FlutterPlugin, FlutterPluginBinding, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
 import { huks } from '@kit.UniversalKeystoreKit';
 
 const CHANNEL_NAME = 'plugins.it_nomads.com/flutter_secure_storage';
@@ -12,16 +12,16 @@ const CHANNEL_NAME = 'plugins.it_nomads.com/flutter_secure_storage';
 export class SecureStoragePlugin implements FlutterPlugin {
   private channel: MethodChannel | null = null;
 
-  getName(): string {
+  getUniqueClassName(): string {
     return 'SecureStoragePlugin';
   }
 
-  onAttachedToEngine(channel: MethodChannel): void {
-    this.channel = channel;
+  onAttachedToEngine(binding: FlutterPluginBinding): void {
+    this.channel = new MethodChannel(binding.getBinaryMessenger(), CHANNEL_NAME);
     this.channel.setMethodCallHandler(this.handleMethodCall.bind(this));
   }
 
-  onDetachedFromEngine(): void {
+  onDetachedFromEngine(binding: FlutterPluginBinding): void {
     this.channel?.setMethodCallHandler(null);
     this.channel = null;
   }

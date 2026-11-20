@@ -3,9 +3,8 @@
 // PathProviderPlugin — bridges path_provider to HarmonyOS file system.
 // Maps Flutter's path_provider API to HarmonyOS sandbox directories.
 
-import { FlutterPlugin, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
+import { FlutterPlugin, FlutterPluginBinding, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
 import { Context } from '@kit.AbilityKit';
-import { fileIo as fs } from '@kit.CoreFileKit';
 
 const CHANNEL_NAME = 'plugins.flutter.io/path_provider';
 
@@ -13,22 +12,20 @@ export class PathProviderPlugin implements FlutterPlugin {
   private channel: MethodChannel | null = null;
   private context: Context | null = null;
 
-  getName(): string {
+  getUniqueClassName(): string {
     return 'PathProviderPlugin';
   }
 
-  onAttachedToEngine(channel: MethodChannel): void {
-    this.channel = channel;
+  onAttachedToEngine(binding: FlutterPluginBinding): void {
+    this.context = binding.getApplicationContext() as Context;
+    this.channel = new MethodChannel(binding.getBinaryMessenger(), CHANNEL_NAME);
     this.channel.setMethodCallHandler(this.handleMethodCall.bind(this));
   }
 
-  onDetachedFromEngine(): void {
+  onDetachedFromEngine(binding: FlutterPluginBinding): void {
     this.channel?.setMethodCallHandler(null);
     this.channel = null;
-  }
-
-  setContext(context: Context): void {
-    this.context = context;
+    this.context = null;
   }
 
   private async handleMethodCall(call: MethodCall, result: MethodResult): Promise<void> {

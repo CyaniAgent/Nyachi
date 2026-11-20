@@ -3,7 +3,7 @@
 // FilePickerPlugin — bridges file_picker to HarmonyOS file selection.
 // Uses HarmonyOS FilePicker (photoView, documentView) for file selection.
 
-import { FlutterPlugin, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
+import { FlutterPlugin, FlutterPluginBinding, MethodChannel, MethodCall, MethodResult } from '@ohos/flutter_ohos';
 import { picker } from '@kit.CoreFileKit';
 
 const CHANNEL_NAME = 'plugins.miguelruivo.com/file_picker';
@@ -11,16 +11,16 @@ const CHANNEL_NAME = 'plugins.miguelruivo.com/file_picker';
 export class FilePickerPlugin implements FlutterPlugin {
   private channel: MethodChannel | null = null;
 
-  getName(): string {
+  getUniqueClassName(): string {
     return 'FilePickerPlugin';
   }
 
-  onAttachedToEngine(channel: MethodChannel): void {
-    this.channel = channel;
+  onAttachedToEngine(binding: FlutterPluginBinding): void {
+    this.channel = new MethodChannel(binding.getBinaryMessenger(), CHANNEL_NAME);
     this.channel.setMethodCallHandler(this.handleMethodCall.bind(this));
   }
 
-  onDetachedFromEngine(): void {
+  onDetachedFromEngine(binding: FlutterPluginBinding): void {
     this.channel?.setMethodCallHandler(null);
     this.channel = null;
   }

@@ -1,8 +1,1 @@
-{
-  "name": "@ohos/flutter_ohos",
-  "version": "0.0.1",
-  "description": "Flutter Engine embedder for HarmonyOS (placeholder)",
-  "license": "BSD-3-Clause",
-  "main": "index.ets",
-  "dependencies": {}
-}
+{"license":"Apache-2.0","author":"","name":"@ohos/flutter_ohos","description":"The embedder of flutter in ohos.","main":"index.ets","version":"1.0.0-a7e1b96ad3","dependencies":{},"devDependencies":{"@types/libflutter.so":"file:./src/main/cpp/types/libflutter"},"metadata":{"workers":["./src/main/ets/embedding/engine/workers/PlatformChannelWorker.ets"],"sourceRoots":["./src/main"],"debug":true,"nativeDebugSymbol":false},"compatibleSdkVersionStage":"beta1","compatibleSdkVersion":12,"compatibleSdkType":"HarmonyOS","obfuscated":false}
